@@ -1,0 +1,351 @@
+#!/usr/bin/perl -s
+#
+# Script to build some/all installers for release
+#
+# Files get copied into $RELEASEDIR, where this can be used to do a smoke test:
+#
+#  cd release
+#  java -cp .:`ls *.jar | tr '\n' ':'` com.donohoedigital.ddphotos.PhotosMain
+#
+# options: see below
+#
+
+$OSTYPE=$^O;
+# mac?
+if ($OSTYPE =~ "darwin.*")
+{
+	$MAC = 1;
+	$OSNAME = "mac";
+}
+elsif ($OSTYPE =~ "linux.*")
+{
+    $LINUX = 1;
+	$OSNAME = "linux";
+}
+else
+{
+	$WIN = 1;
+	$OSNAME = "win";
+}
+
+#
+# product we are building and location of builds
+#
+$FULL = "DD Photos";
+$PRODUCT="ddphotos";
+$MAIN_MVN_MODULE="photos";
+$MVN_VERSION="1.0"; # current version (should match photos maven module version)
+$BUILDDIR="photos1.x";
+$BASEDIR="builds/$BUILDDIR";
+$GITREPO="ddphotos-admin-poc";
+
+# base dir
+if ($MAC)
+{
+	$BASELOC="$ENV{HOME}/$BASEDIR";
+}
+else
+{
+	$BASELOC="C:/$BASEDIR";
+}
+
+# dev option - special case
+if ($dev)
+{
+	$BASELOC="$ENV{WORK}";
+	$nogit=1;
+}
+
+# place to copy installers
+
+#
+# if github, skip git, mvn, unpack, buildrelease, installer (assumes done previously).
+# The idea is that you first build (and verify) then upload to github
+#
+if ($github) {
+ $nogit = 1;
+ $nomvn = 1;
+ $nobuildrelease = 1;
+ $nounpack = 1;
+ $noinstaller = 1;
+}
+
+#
+# builds
+#
+if ($dev)
+{
+	build("dev");
+}
+elsif ($full)
+{
+	build("full");
+}
+
+# done
+if (!$builtsomething)
+{
+	print ("\noptions:\n"); 
+	print ("   -full            build full installer in ~/$BASEDIR\n");
+	print ("   -dev             build installer in local dev tree [-full ignored]\n");
+	print ("   -clean           use clean flags with mvn and buildrelease\n");
+	print ("   -nogit           skip git update step\n");
+	print ("   -nomvn           skip mvn step\n");
+	print ("   -nounpack        skip unpack jars step\n");
+	print ("   -nobuildrelease  skip buildrelease step\n");
+	print ("   -noinstaller     skip install4j build step\n");
+	print ("   -nonotarize      skip notarize step\n");
+	print ("   -github          create a release at github with all installers\n");
+	print ("   -exitearly       just print env vars\n");
+	print ("\n");
+	exit(1);
+}
+else
+{
+	exit(0);
+}
+
+#####
+##### Sub routines
+#####
+sub build
+{
+	my($module) = @_;
+
+	$indent = "    ";
+	$builtsomething = 1;
+
+	if ($module eq "dev")
+	{
+		$displayname = "work";
+		$DEVPARENT = $BASELOC
+	}
+	else
+	{
+		$displayname = "$BASEDIR/$module";
+		$DEVPARENT = "$BASELOC/$module";
+	}
+	$DEVDIR = "$DEVPARENT/$GITREPO";
+	$STAGINGDIR = "$DEVDIR/build";
+	$MVNDIR = "$DEVDIR/code";
+    $RELEASEDIR="$DEVDIR/release";
+	$INS4JDIR = "$DEVDIR/installer/install4j";
+	$INSTALLERDIR="$DEVDIR/installer/builds";
+
+	print ("\nBUILDING $module ($displayname)\n\n");
+
+	# delimiter
+    if ($WIN) {
+        $DELIM = ";";
+    } else {
+        $DELIM = ":";
+    }
+
+	# make sure dev parent dir exists
+	`mkdir -vp $DEVPARENT`;
+
+	print("  OSTYPE:       $OSTYPE\n");
+	print("  OSNAME:       $OSNAME\n");
+	print("  MVN_VERSION:  $MVN_VERSION\n");
+	print("  BASELOC:      $BASELOC\n");
+	print("  BASEDIR:      $BASEDIR\n");
+	print("  DEVPARENT:    $DEVPARENT\n");
+	print("  DEVDIR:       $DEVDIR\n");
+	print("  MVNDIR:       $MVNDIR\n");
+	print("  STAGINGDIR:   $STAGINGDIR\n");
+	print("  RELEASEDIR:   $RELEASEDIR\n");
+	print("  INS4JDIR:     $INS4JDIR\n");
+	print("  INSTALLERDIR: $INSTALLERDIR\n");
+	print("\n");
+
+	exit(0) if ($exitearly);
+
+	# git update
+	if (!$nogit)
+	{
+		cd($DEVPARENT);
+
+		if ( ! -d $DEVDIR ) {
+            runIndented("git clone --progress --no-checkout git\@github.com:dougdonohoe/$GITREPO.git", $indent);
+            cd($DEVDIR);
+            runIndented("git checkout --progress", $indent); # TODO git checkout <tag>
+		} else {
+		    cd($DEVDIR);
+            runIndented("git pull --progress ", $indent);
+		}
+	} else {
+	    print($indent . "Skipping git.\n");
+	}
+
+    # make sure various dir exist (need to do this after git otherwise clone will fail)
+	`mkdir -vp $RELEASEDIR`;
+	`mkdir -vp $STAGINGDIR`;
+    `mkdir -vp $INSTALLERDIR`;
+
+	# compile
+	if (!$nomvn)
+	{
+		cd($MVNDIR);
+
+		if ($clean)
+		{
+			runIndented("mvn clean", $indent);
+		}
+		runIndented("mvn install -Dmaven.test.skip=true", $indent);
+	}
+
+	# get version
+	getVersion();
+
+	# unpack jars and generate config files
+	if (!$nounpack)
+	{
+		# determine git hash version - TODO: use a tag instead?
+		cd("$MVNDIR");
+		$githash = `git rev-parse --short HEAD`;
+		chop $githash;
+
+		# go to staging dir
+		cd($STAGINGDIR);
+
+		# clean
+		if ($clean)
+		{
+			runIndented("rm -rvf $STAGINGDIR/*", $indent);
+		}
+
+		# copy/unpack jars
+		$targetdir = "$MVNDIR/$MAIN_MVN_MODULE/target";
+		$classpathfile = "$targetdir/classpath.txt";
+		open (CP, "$classpathfile") || die "Couldn't open $classspathfile";
+		while ($classpath = <CP>)
+		{
+			# get dependencies
+			@jars = split($DELIM, $classpath);
+
+			# add main jar (not in classpath.txt)
+			push @jars, "$targetdir/$MAIN_MVN_MODULE-$MVN_VERSION.jar";
+
+			# loop and extract Donohoe Digital jars, copy rest
+			for $jar (@jars) {
+				$jar =~ s/\\/\//g; # convert \ to /
+				if ($jar =~ /\/target\//) {
+					runIndented("jar xvf $jar", $indent);
+				} else {
+					runIndented("cp $jar .", $indent);
+				}
+			}
+		}
+		close(CP);
+
+		# copy installer jar
+		$jar = "$MVNDIR/installer/target/installer-$MVN_VERSION.jar";
+		runIndented("cp $jar .", $indent);
+
+		# remove META-INF from jars
+		runIndented("rm -rvf META-INF", $indent);
+
+		# write git build number
+		`echo "build.number= $githash" > config/buildnumber.properties`;
+	}
+
+	# buildrelease
+	if (!$nobuildrelease)
+	{
+		cd($DEVDIR);
+		$OPTIONS="-releasedir $RELEASEDIR -devdir $DEVDIR -stagingdir $STAGINGDIR -product $PRODUCT";
+		if ($module eq "testing") {
+			$OPTIONS .= " -testing";
+		}
+		if ($clean) {
+			$OPTIONS .= " -clean";
+		}
+
+		runIndented("buildrelease.pl $OPTIONS", $indent);
+	}
+
+	# run installer
+	if (!$noinstaller)
+	{
+		cd($INS4JDIR);
+
+		# determine installer file name
+		$install4j = $PRODUCT . ".install4j";
+
+		# copy cert
+        runIndented("~/work/donohoe/installer/cp-certs.sh '$DEVDIR/target'");
+
+        # get passwords
+        $mac_pw = `~/work/donohoe/installer/get-password.sh "ddpoker-dev-app-p12" "Apple P12 cert"`;
+        chop $mac_pw;
+        $win_pw = `~/work/donohoe/installer/get-password.sh "ddpoker-sectigo-token-password" "Windows Sectigo cert"`;
+        chop $win_pw;
+
+        # clean old builds
+        runIndented("rm -vf $INSTALLERDIR/${PRODUCT}${VERSION_FILE}.*");
+
+		# run install4j
+        $cmd = "/Applications/install4j.app/Contents/Resources/app/bin/install4jc --release=$VERSION " .
+                "--mac-keystore-password='$mac_pw' --win-keystore-password='$win_pw' --build-selected $install4j";
+        runIndented($cmd);
+
+        # Set icons in Mac installer and notarize
+        if (!$nonotarize) {
+            runIndented("${DEVDIR}/tools/bin/mac-set-icons-notarize.sh $VERSION_FILE");
+        } else {
+            print($indent . "Notarization skipped.\n");
+        }
+
+        # Create md5sums.txt
+        cd($INSTALLERDIR);
+        runIndented("md5 $PRODUCT$VERSION_FILE.* > md5sums.txt");
+
+        print("Installers are in $INSTALLERDIR\n");
+	}
+
+	# push installers to GitHub
+	if ($github)
+	{
+	    cd($INSTALLERDIR);
+        my $files = join " ", map { "$PRODUCT$VERSION_FILE$_" } (".dmg", ".sh", ".exe");
+	    runIndented("gh release create $VERSION --title 'DD Photos $VERSION' --notes-file md5sums.txt $files");
+	}
+}
+
+# run given command and indent output, and optionally filter lines
+sub runIndented
+{
+	my($command, $indent, $filter) = @_;
+    print("\n" . $indent . "Running '$command'...\n");
+	open (OUTPUT, "$command 2>&1 |") || die "can't open $!";
+	while (<OUTPUT>)
+	{
+		next if ($filter && $_ =~ /$filter/);
+		print($indent . "  " . $_);
+	}
+	close OUTPUT;
+	my $exit_code = $? >> 8;
+	if ($exit_code != 0) {
+		print("\n*** Error (exit code $exit_code) running '$command'\n\n");
+		exit($exit_code);
+	}
+}
+
+# set VERSION and VERSION_FILE (assumes mvn has been run)
+sub getVersion
+{
+    return if ($VERSION);
+    # Set WORK to location of code so 'runjava' runs that code and not local code
+	$VERSION=`WORK=$DEVPARENT runjava photos com.donohoedigital.ddphotos.PrintVersion`;
+	chop $VERSION;
+	$VERSION_FILE = $VERSION =~ s/\./_/gr;
+	print("\nVERSION is '$VERSION', file extension is '$VERSION_FILE'\n");
+}
+
+# chdir with error checking
+sub cd
+{
+	my($dir) = @_;
+
+	chdir($dir) || die "Can't chdir to $dir";
+}

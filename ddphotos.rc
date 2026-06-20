@@ -1,0 +1,60 @@
+#
+# DD Photos Helpful environment vars and aliases
+#
+DDHOME=${1-$(git rev-parse --show-toplevel)}
+
+# Expected vars
+export WORK=$(dirname "${DDHOME}") # parent dir
+CODE="${DDHOME}/code"
+
+# Tools
+export PATH=${DDHOME}/tools/bin:${PATH}
+export PATH=${DDHOME}/tools/db:${PATH}
+
+# maven shortcuts
+alias mvn-install-notests='(cd $CODE;mvn install -DskipTests=true)'
+alias mvn-install='(cd $CODE;mvn install)'
+alias mvn-clean='(cd $CODE;mvn clean)'
+alias mvn-package-notests='(cd $CODE;mvn package -DskipTests=true)'
+alias mvn-package='(cd $CODE;mvn package)'
+alias mvn-test='(cd $CODE;mvn test -Dskip.unit.tests=false)'
+alias mvn-tree='mvn dependency:tree -q -Dscope=runtime -Ddependency.classpath.outputFile=/tmp/t && cat /tmp/t && rm -f /tmp/t'
+
+# act shortcut
+alias act-ddphotos-admin='mkdir -p $HOME/.m2-act && act --platform ubuntu-latest=ddphotos-act-runner --pull=false  \
+  --container-options "-v $HOME/.m2-act:/home/runner/.m2" \
+  --job test pull_request'
+
+# attempt to auto-set JAVA_HOME to 25 if on mac
+if [[ "${OSTYPE:0:6}" == "darwin" ]]; then
+  JAVA25_HOME=$(/usr/libexec/java_home -F -v 25 2>/dev/null || echo "/java25/not/found")
+  if [[ -d "${JAVA25_HOME}" && "${JAVA25_HOME}" != "${JAVA_HOME}" ]]; then
+    export JAVA_HOME="${JAVA25_HOME}"
+    export PATH="${JAVA25_HOME}/bin:${PATH}"
+    echo "JAVA_HOME changed, version now '$(java -version 2>&1 | head -1)'"
+  fi
+fi
+
+# See if java 25 is installed
+if ! test -x "$(command -v java)"; then
+  if [[ "${OSTYPE:0:6}" == "darwin" ]]; then
+    echo "WARNING: Java 25 is not installed. Have your run 'brew install temurin@25'?"
+  else
+    echo "WARNING: Java 25 is not installed."
+  fi
+else
+  # Java is installed, check version is 25
+  if ! java -version 2>&1 | head -1 | grep -q "\"25"; then
+    echo "WARNING: Java version is not 25 (which DD Photos requires).  Version is:"
+    java -version
+  fi
+fi
+
+# See if maven is installed
+if ! test -x "$(command -v mvn)"; then
+  if [[ "${OSTYPE:0:6}" == "darwin" ]]; then
+    echo "WARNING: Maven is not installed.  Have you run 'brew install maven'?"
+  else
+    echo "WARNING: Maven is not installed."
+  fi
+fi

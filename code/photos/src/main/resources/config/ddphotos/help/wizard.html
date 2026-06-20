@@ -1,0 +1,62 @@
+<html lang="en">
+<head>
+    <title>Welcome to the DD Photos Setup Wizard!</title>
+</head>
+<body>
+
+<table cellpadding="0" cellspacing="0">
+    <tr>
+        <td valign="top"><img src="../images/logo_128x128.png" alt="DD Photos"></td>
+        <td valign="top" width="20"></td>
+        <td valign="middle">
+            <h2>Welcome to the DD Photos Setup Wizard!</h2>
+            <p>
+                DD Photos helps you quickly create, manage, and publish photo self-hosted
+                photo galleries.  It uses the open-source <a href="https://github.com/dougdonohoe/ddphotos"><tt>ddphotos</tt></a>
+                project under the hood, which itself uses <a href="https://www.docker.com/get-started/">Docker</a>.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<p>
+    This Wizard walks through some steps to help you get started:
+</p>
+<br>
+<ol>
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Docker Check</b> -
+        Ensure <b>Docker</b> is installed and running and that we know the location of the <tt>docker</tt> executable.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Locate Git Bash</b> <i>(Windows Only)</i> -
+        On Windows, the <tt>ddphotos</tt> script runs under <b>Git Bash</b>, so we need the location of
+        your <tt>bash.exe</tt> from <a href="https://git-scm.com/download/win">Git for Windows</a>.
+        This step is skipped on macOS and Linux.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Install <tt>ddphotos</tt> script</b> -
+        Using Docker, download the <b>ddphotos</b> image and use it to install
+        the <tt>ddphotos</tt> script, which is used to run all commands.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Create a starter site</b> -
+        If you don't have a DD Photos site yet, run <tt>ddphotos init</tt> to create the DD Photos folders and a sample
+        configuration so you can explore commands right away.
+    </p></li>
+
+    <li><p style="margin: 0 0 6px 0;">
+        <b>Add DD Photos Site</b> -
+        Add the site you just created (or already had) and then start the normal DD Photos editor.
+    </p></li>
+
+</ol>
+<p>
+    Click the <b>Next</b> button to continue.
+</p>
+
+</body>
+</html>

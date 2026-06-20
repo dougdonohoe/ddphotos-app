@@ -1,0 +1,110 @@
+<html lang="en">
+<head>
+    <title>Deploying Your Site</title>
+</head>
+<body>
+
+<h2>Deploying Your Site</h2>
+
+<p>
+    Once you are happy with your site preview, <i>deploying</i> means publishing it to the
+    internet so anyone can visit it.  DD Photos first creates a self-contained copy of your
+    finished site (the <tt>build</tt> step), then uploads it to the hosting service of your
+    choice.
+</p>
+
+<p>
+    The two easiest options are <b>Cloudflare Pages</b> and <b>Surge</b> - both are free and
+    work well for photo galleries.  More advanced options (your own server via <tt>rsync</tt>,
+    or Amazon S3) are described further down.
+</p>
+
+<br>
+<h3>Cloudflare Pages (recommended)</h3>
+
+<p>
+    <a href="https://pages.cloudflare.com">Cloudflare Pages</a> is a free hosting service with
+    unlimited bandwidth, which makes it a great fit for photo sites.  Your site will be published
+    at an address like <tt>https://my-unique-site.pages.dev</tt>.
+</p>
+
+<ol>
+    <li><p style="margin: 0 0 8px 0;">
+        <b>Export your site.</b>
+        Run <tt>export</tt> with the <tt>--cloudflare</tt> option so the special files Cloudflare needs are
+        included automatically.  This creates an <tt>export</tt> folder inside your DD Photos folder.
+    </p></li>
+    <li><p style="margin: 0 0 8px 0;">
+        <b>Sign in (first time only).</b>
+        DD Photos runs <tt>wrangler login</tt> for you, which opens a web page for you to
+        log in to and connect your free Cloudflare account.  Your login is remembered for next time.
+    </p></li>
+    <li><p style="margin: 0 0 8px 0;">
+        <b>Publish.</b>
+        Run <tt>wrangler</tt> to upload the exported site.  The very first upload creates the project
+        for you and assigns your <tt>.pages.dev</tt> address.
+    </p></li>
+</ol>
+
+<h3>Surge</h3>
+
+<p>
+    <a href="https://surge.sh">Surge</a> is another simple, free option.  Your site will be published
+    at an address like <tt>https://my-unique-site.surge.sh</tt>.
+</p>
+
+<ol>
+    <li><p style="margin: 0 0 8px 0;">
+        <b>Export your site.</b>
+        Surge needs real copies of every file rather than shortcuts, so run <tt>export</tt> with the
+        <tt>--copy</tt> option.
+    </p></li>
+    <li><p style="margin: 0 0 8px 0;">
+        <b>Publish.</b>
+        Run <tt>surge</tt> to upload the exported site.  The first time you run, you'll be
+        directed to run a command in Terminal so you can create your account and/or login.
+        Your login is remembered after that.
+    </p></li>
+</ol>
+
+<h3>Advanced: your own server (rsync) or Amazon S3</h3>
+
+<p>
+    DD Photos can also publish directly to your own web server (via <tt>rsync</tt>) or to Amazon S3
+    with CloudFront.  These options require a one-time setup: create a text file named <tt>site.env</tt>
+    inside your <i>Config</i> folder containing your server or bucket details.  Once that file exists,
+    you publish by running the <tt>deploy</tt> command, which figures out which method to use.
+</p>
+
+<p>
+    For publishing to your own server with <tt>rsync</tt>, <tt>site.env</tt> looks like:
+</p>
+<pre>
+    RSYNC_HOST=user@your-server.example.com
+    RSYNC_DEST=/path/to/your/web/root/
+    CLOUDFRONT_ID=YOUR_CLOUDFRONT_DISTRIBUTION_ID   # optional
+</pre>
+
+<p>
+    For publishing to Amazon S3 (with CloudFront), <tt>site.env</tt> looks like:
+</p>
+<pre>
+    S3_BUCKET=your-s3-bucket
+    CLOUDFRONT_ID=YOUR_CLOUDFRONT_DISTRIBUTION_ID   # optional
+</pre>
+
+<p>
+    These advanced methods also need valid credentials (an SSH key for <tt>rsync</tt>, or AWS
+    credentials for S3).  See the official guide for the complete details.
+</p>
+
+<br>
+<h3>More information</h3>
+
+<p>
+    The full deployment reference, including all options and server configuration, is available at
+    <a href="https://github.com/dougdonohoe/ddphotos/blob/main/docs/DEPLOY.md">github.com/dougdonohoe/ddphotos/blob/main/docs/DEPLOY.md</a>.
+</p>
+
+</body>
+</html>

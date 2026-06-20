@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# Script to run buildall.pl command
+#
+# Current way we typically run this: buildall -dev (in current tree)
+#
+buildall.pl "$@"
+RESULT=$?
+
+if [ "$RESULT" = "0" ]; then
+	echo 
+	echo Done.
+fi

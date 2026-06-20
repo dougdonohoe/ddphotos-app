@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<HELPS xmlns="http://www.donohoedigital.com"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.donohoedigital.com ../../../../main/resources/config/xml-schema/help.xsd">
+		<helpdir>help</helpdir>
+		
+		<help name="test1" display="Main Menu" location="help1.html"/>
+			<help name="test2" display="Practice" location="help2.html" indent="1"/>
+                <help name="test3" display="Select Tournament" location="help3.html" indent="2"/>
+</HELPS>

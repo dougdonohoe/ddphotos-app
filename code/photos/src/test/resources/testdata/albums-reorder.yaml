@@ -1,0 +1,29 @@
+# Fixture for testing scalar-style preservation across insert / reorder.
+settings:
+  id: reorder-test
+  copyright_year: 2024
+
+bases:
+  t7: /Volumes/T7/Photos
+  dropbox: /Users/example/Dropbox/Photos
+
+albums:
+  # plain cover - ScalarStyle.PLAIN; has manual_sort_order: true
+  - slug: first
+    name: First Album
+    base: t7
+    source: 2024-First
+    cover: plain.jpg
+    manual_sort_order: true
+
+  # source and cover with spaces - both must stay DOUBLE_QUOTED after reorder
+  - slug: second
+    name: Second Album
+    base: dropbox
+    source: "2024 Summer Vacation/Best Photos"
+    cover: "cover with spaces.jpg"
+
+  # no base, no cover
+  - slug: third
+    name: Third Album
+    source: /tmp/local

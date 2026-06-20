@@ -1,0 +1,14 @@
+#
+# Expected to be invoked by Shelly framework.
+#
+ROOT=$1
+cd "$ROOT" || true
+
+# Java 25
+export JAVA_HOME=${JAVA25_HOME}
+
+# DD Photos settings
+source ddphotos.rc
+
+# Aliases
+alias i4j='open $ROOT/installer/install4j/ddphotos.install4j'

@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.donohoedigital.com"
+            xmlns="http://www.donohoedigital.com"
+            elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="classpath:config/xml-schema/data-elements.xsd"/>
+
+<!-- ********************************** -->
+<!-- DEFINES TYPES                      -->
+<!-- ********************************** -->
+
+	<xsd:complexType name="image">
+		<xsd:attribute name="location" type="filename" use="required"/>
+		<xsd:attribute name="name" type="basicname" use="required"/>
+		<xsd:attribute name="cache" type="boolean" use="optional"/>
+		<xsd:attribute name="components" type="basicname" use="optional"/>
+		<xsd:attribute name="x" type="nonNegativeInteger" use="optional"/>
+		<xsd:attribute name="y" type="nonNegativeInteger" use="optional"/>
+	</xsd:complexType>
+
+<!-- ********************************** -->
+<!-- OBJECTS DEFINITION (FOR XML DOCS)  -->
+<!-- ********************************** -->
+
+    <xsd:element name="IMAGES">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+
+				<xsd:element name="imagedir" 
+						type="filename" minOccurs="1" maxOccurs="1"/>
+
+				<xsd:element name="image" 
+						type="image" minOccurs="0" maxOccurs="unbounded"/>
+
+			</xsd:sequence>
+		</xsd:complexType>
+    </xsd:element>
+  
+</xsd:schema>
+
+

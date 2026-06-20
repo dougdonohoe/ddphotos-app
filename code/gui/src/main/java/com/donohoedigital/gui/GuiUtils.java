@@ -1,0 +1,506 @@
+package com.donohoedigital.gui;
+
+import com.donohoedigital.base.ApplicationError;
+import com.donohoedigital.base.Utils;
+import com.donohoedigital.config.StylesConfig;
+import org.intellij.lang.annotations.MagicConstant;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.JTextComponent;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.List;
+
+@SuppressWarnings("unused")
+public class GuiUtils
+{
+    public static final Color COLOR_DISABLED_TEXT = StylesConfig.getColor("gui.text.disabled.fg");
+
+    static final JTextComponent.KeyBinding[] MAC_CUT_COPY_PASTE = {
+            new JTextComponent.KeyBinding(
+                    KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.META_DOWN_MASK),
+                    DefaultEditorKit.copyAction),
+            new JTextComponent.KeyBinding(
+                    KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.META_DOWN_MASK),
+                    DefaultEditorKit.pasteAction),
+            new JTextComponent.KeyBinding(
+                    KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.META_DOWN_MASK),
+                    DefaultEditorKit.cutAction),
+    };
+
+    /**
+     * Copy to clipboard
+     */
+    public static void copyToClipboard(String sText)
+    {
+        StringSelection value = new StringSelection(sText);
+        Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clip.setContents(value, null);
+    }
+
+    /**
+     * Return DDComponent from this object.
+     */
+    public static DDComponent getDDComponent(Object o)
+    {
+        if (o instanceof DDComponent) return (DDComponent) o;
+
+        if (o instanceof Component c)
+        {
+            c = c.getParent();
+            while (c != null)
+            {
+                if (c instanceof DDComponent) return (DDComponent) c;
+                c = c.getParent();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Return component (or its nearest ancestor) that is opaque and
+     * has a completely opaque background color
+     */
+    public static Component getSolidRepaintComponent(Component c)
+    {
+        Color color;
+        while (c != null)
+        {
+            if (c.isOpaque())
+            {
+                color = c.getBackground();
+                // if color is null, most likely repainting before everything 
+                // is initialized, so just return this component
+                if (color == null || color.getTransparency() == Transparency.OPAQUE)
+                {
+                    return c;
+                }
+            }
+
+            c = c.getParent();
+        }
+
+        return null;
+    }
+
+    public static boolean repaint(Component c)
+    {
+        return repaint(c, 0, 0, c.getWidth(), c.getHeight());
+    }
+
+    public static boolean repaint(Component c, int x, int y, int width, int height)
+    {
+        Component foo = getSolidRepaintComponent(c);
+        if (foo != null && foo != c)
+        {
+            Point pRepaint = SwingUtilities.convertPoint(c, x, y, foo);
+            foo.repaint(pRepaint.x, pRepaint.y, width, height);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Set preferred height of a component, keeping preferred width
+     */
+    public static void setPreferredHeight(JComponent c, int height)
+    {
+        c.setPreferredSize(new Dimension((int) c.getPreferredSize().getWidth(), height));
+    }
+
+    /**
+     * Set preferred width of a component, keeping preferred height
+     */
+    public static void setPreferredWidth(JComponent c, int width)
+    {
+        c.setPreferredSize(new Dimension(width, (int) c.getPreferredSize().getHeight()));
+    }
+
+    private static String indent(int nIndent)
+    {
+        return "    ".repeat(Math.max(0, nIndent));
+    }
+
+    /**
+     * Sets background of all children of container to color (container itself is
+     * not set to prevent infinite loops if called from setBackground itself)
+     */
+    public static void setBackgroundChildren(Container container, Color color)
+    {
+        Component[] children = container.getComponents();
+        for (Component aChildren : children)
+        {
+            aChildren.setBackground(color);
+            if (aChildren instanceof Container)
+            {
+                setBackgroundChildren((Container) aChildren, color);
+            }
+        }
+    }
+
+    /**
+     * Install a caret on the given text component that supports selection
+     * (e.g., for copy via setFocusable(true)) but never paints, so no
+     * blinking text cursor is shown.
+     */
+    public static void setDoNothingCaret(JTextComponent comp)
+    {
+        comp.setCaret(new DefaultCaret()
+        {
+            @Override
+            public void paint(Graphics g)
+            {
+                // no-op: hide caret but keep selection/click positioning
+            }
+        });
+    }
+
+    /**
+     * add mouse listener to all children components
+     */
+    public static void addMouseListenerChildren(Container container, MouseListener mouse)
+    {
+        Component[] children = container.getComponents();
+        for (Component aChildren : children)
+        {
+            aChildren.addMouseListener(mouse);
+            if (aChildren instanceof Container)
+            {
+                addMouseListenerChildren((Container) aChildren, mouse);
+            }
+        }
+    }
+
+    /**
+     * remove mouse listener from all children components
+     */
+    public static void removeMouseListenerChildren(Container container, MouseListener mouse)
+    {
+        Component[] children = container.getComponents();
+        for (Component aChildren : children)
+        {
+            aChildren.removeMouseListener(mouse);
+            if (aChildren instanceof Container)
+            {
+                removeMouseListenerChildren((Container) aChildren, mouse);
+            }
+        }
+    }
+
+    /**
+     * fill array with all DDOptions in the hierarchy
+     */
+    public static void getDDOptions(Container container, List<DDOption> options)
+    {
+        Component[] children = container.getComponents();
+        for (Component aChildren : children)
+        {
+            if (aChildren instanceof DDOption dd)
+            {
+                if (!dd.isIgnored())
+                {
+                    options.add(dd);
+                }
+            }
+            if (aChildren instanceof Container)
+            {
+                getDDOptions((Container) aChildren, options);
+            }
+        }
+    }
+
+    /**
+     * Collect all DDValidatable widgets in the component hierarchy.
+     */
+    public static void getValidatables(Container container, List<DDValidatable> result)
+    {
+        for (Component c : container.getComponents())
+        {
+            if (c instanceof DDValidatable v) result.add(v);
+            if (c instanceof Container cont) getValidatables(cont, result);
+        }
+    }
+
+    /**
+     * Set all DDOption labels under this container to the same width plus padding; returns that width.
+     */
+    public static int setDDOptionLabelWidths(Container container, int padding)
+    {
+        List<DDOption> options = new ArrayList<>();
+        getDDOptions(container, options);
+        int maxWidth = 0;
+        for (DDOption opt : options) {
+            JComponent lbl = opt.getLabelComponent();
+            if (lbl != null) maxWidth = Math.max(maxWidth, lbl.getPreferredSize().width);
+        }
+        maxWidth += padding;
+        for (DDOption opt : options) {
+            JComponent lbl = opt.getLabelComponent();
+            if (lbl == null) continue;
+            Dimension pref = lbl.getPreferredSize();
+            pref.width = maxWidth;
+            lbl.setPreferredSize(pref);
+        }
+        return maxWidth;
+    }
+
+    /**
+     * invoke SwingIt logic later (regardless if current thread is swing thread)
+     */
+    public static void invokeLater(Runnable it)
+    {
+        SwingUtilities.invokeLater(it);
+    }
+
+    /**
+     * Method to add a key action to a component using the ActionMap/InputMap
+     * way.
+     */
+    public static void addKeyAction(JComponent comp,
+                                    @MagicConstant(intValues = {JComponent.WHEN_IN_FOCUSED_WINDOW,
+                                            JComponent.WHEN_FOCUSED,
+                                            JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT})
+
+                                    int nWhen,
+                                    String sActionName, Action action,
+                                    int key,
+                                    @MagicConstant(flags = {InputEvent.CTRL_DOWN_MASK,
+                                            InputEvent.SHIFT_DOWN_MASK, InputEvent.ALT_DOWN_MASK, InputEvent.META_DOWN_MASK,
+                                            InputEvent.BUTTON1_DOWN_MASK, InputEvent.BUTTON2_DOWN_MASK, InputEvent.BUTTON3_DOWN_MASK})
+                                    int key_mods) {
+        comp.getActionMap().put(sActionName, action);
+        comp.getInputMap(nWhen).put(KeyStroke.getKeyStroke(key, key_mods), sActionName);
+    }
+
+    /**
+     * Remove a key action
+     */
+    public static void removeKeyAction(JComponent comp,
+                                       @MagicConstant(intValues = {JComponent.WHEN_IN_FOCUSED_WINDOW,
+                                               JComponent.WHEN_FOCUSED,
+                                               JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT})
+                                       int nWhen,
+                                       String sActionName,
+                                       int key,
+                                       @MagicConstant(flags = {InputEvent.CTRL_DOWN_MASK,
+                                               InputEvent.SHIFT_DOWN_MASK, InputEvent.ALT_DOWN_MASK, InputEvent.META_DOWN_MASK,
+                                               InputEvent.BUTTON1_DOWN_MASK, InputEvent.BUTTON2_DOWN_MASK, InputEvent.BUTTON3_DOWN_MASK})
+                                       int key_mods) {
+        comp.getActionMap().remove(sActionName);
+        comp.getInputMap(nWhen).remove(KeyStroke.getKeyStroke(key, key_mods));
+    }
+
+    /**
+     * Hyperlink handler
+     */
+    public static final HyperlinkListener HYPERLINK_HANDLER = new HyperLinkHandler();
+
+    /**
+     * hyperlink implementation
+     */
+    private static class HyperLinkHandler implements HyperlinkListener
+    {
+        public void hyperlinkUpdate(HyperlinkEvent e)
+        {
+            if (e.getEventType() != HyperlinkEvent.EventType.ACTIVATED) return;
+            String sURL = e.getDescription();
+            Utils.openURL(sURL);
+        }
+    }
+
+    /**
+     * Action for invoking a button
+     */
+    public static class InvokeButton extends AbstractAction
+    {
+        JButton button_;
+
+        public InvokeButton(JButton button)
+        {
+            button_ = button;
+        }
+
+        public void actionPerformed(ActionEvent e)
+        {
+            if (button_ != null && button_.isEnabled())
+            {
+                button_.doClick(120);
+            }
+        }
+    }
+
+    ////
+    //// Layout Helpers
+    ////
+
+    // debugging borders
+    public static final Border REDBORDER = BorderFactory.createLineBorder(Color.red);
+    public static final Border GREENBORDER = BorderFactory.createLineBorder(Color.green);
+    public static final Border CYANBORDER = BorderFactory.createLineBorder(Color.cyan);
+    public static final Border BLUEBORDER = BorderFactory.createLineBorder(Color.blue);
+    public static final Border BLACKBORDER = BorderFactory.createLineBorder(Color.black);
+    public static final Border GRAYBORDER = BorderFactory.createLineBorder(Color.darkGray);
+
+    public static JComponent CENTER(JComponent c)
+    {
+        DDPanel center = DDPanel.CENTER();
+        center.add(c);
+        return center;
+    }
+
+    public static JComponent NORTH(JComponent c)
+    {
+        DDPanel north = new DDPanel();
+        north.add(c, BorderLayout.NORTH);
+        return north;
+    }
+
+    public static JComponent SOUTH(JComponent c)
+    {
+        DDPanel south = new DDPanel();
+        south.add(c, BorderLayout.SOUTH);
+        return south;
+    }
+
+    public static JComponent WEST(JComponent c)
+    {
+        DDPanel west = new DDPanel();
+        west.add(c, BorderLayout.WEST);
+        return west;
+    }
+
+    public static JComponent WEST_SOUTH(JComponent west, JComponent south, int vgap)
+    {
+        DDPanel swest = new DDPanel();
+        swest.add(west, BorderLayout.WEST);
+        swest.add(south, BorderLayout.SOUTH);
+        BorderLayout layout = (BorderLayout) swest.getLayout();
+        layout.setVgap(vgap);
+        return swest;
+    }
+
+    public static JComponent EAST(JComponent c)
+    {
+        DDPanel east = new DDPanel();
+        east.add(c, BorderLayout.EAST);
+        return east;
+    }
+
+    /**
+     * return true if swing thread
+     */
+    public static boolean isSwingThread()
+    {
+        return (SwingUtilities.isEventDispatchThread() || Thread.currentThread() == BaseApp.mainThread_);
+    }
+
+    /**
+     * Throw exception if not swing thread
+     */
+    public static void requireSwingThread()
+    {
+        if (!isSwingThread())
+            throw new ApplicationError("Updating from non-swing thread: " + Thread.currentThread().getName());
+    }
+
+    /**
+     * get first DDWindow parent of this component
+     * (will find InternalWindow before the parent Frame)
+     */
+    public static DDWindow getHelpManager(Component c)
+    {
+        if (c == null) return null;
+
+        Container p = c.getParent();
+        while (p != null && !(p instanceof DDWindow))
+        {
+            p = p.getParent();
+        }
+        return (DDWindow) p;
+    }
+
+    /**
+     * get InternalDialog this component is in
+     */
+    public static InternalDialog getInternalDialog(Component c)
+    {
+        if (c == null) return null;
+
+        Container p = c.getParent();
+        while (p != null && !(p instanceof InternalDialog))
+        {
+            p = p.getParent();
+        }
+        return (InternalDialog) p;
+    }
+
+    /**
+     * Apply the DD flat icon style shared by DDCheckBox / DDRadioButton to the
+     * given component via a 'FlatLaf.style' client property: the box/circle is
+     * filled with the component's background (so the parent shows through) and the
+     * border + checkmark/dot are drawn in iconColor (the component foreground), so
+     * it reads like the surrounding text with no opaque white or accent fill.
+     *
+     * In display-only mode the icon is pinned to its resting colors so it does not
+     * react to hover/press; otherwise FlatLaf's normal hover highlight applies.  The
+     * selected indicator (radio dot / checkmark) is also dimmed toward the background
+     * so a read-only selection reads as slightly softened without looking disabled (the
+     * border stays full strength).  No-op under non-FlatLaf look and feels.
+     */
+    public static void applyFlatIconStyle(JComponent c, Color iconColor, boolean displayOnly)
+    {
+        Color iconC = iconColor != null ? iconColor : Color.black;
+        String fg = hexColor(iconC);
+        String bg = hexColor(c.getBackground());
+        // Dot/checkmark color: full strength normally, dimmed toward the background when display-only.
+        String mark = displayOnly ? hexColor(blend(iconC, c.getBackground(), 0.4f)) : fg;
+
+        List<String> style = new ArrayList<>(List.of(
+                "icon.background:" + bg,
+                "icon.borderColor: " + fg,
+                "icon.selectedBorderColor: " + fg,
+                "icon.checkmarkColor: " + mark,
+                "icon.disabledCheckmarkColor: " + mark));
+
+        if (displayOnly)
+        {
+            style.add("icon.hoverBackground:" + bg);
+            style.add("icon.hoverSelectedBackground:" + bg);
+            style.add("icon.pressedBackground:" + bg);
+            style.add("icon.pressedSelectedBackground:" + bg);
+            style.add("icon.selectedBackground:" + bg);
+            style.add("icon.hoverBorderColor: " + fg);
+            style.add("icon.hoverSelectedBorderColor: " + fg);
+        }
+
+        c.putClientProperty("FlatLaf.style", String.join(";", style));
+    }
+
+    /** format a color as a FlatLaf #rrggbb hex string */
+    public static String hexColor(Color color)
+    {
+        return String.format("#%06x", color.getRGB() & 0xFFFFFF);
+    }
+
+    /** Blend {@code from} toward {@code to} by {@code frac} (0 = from, 1 = to). */
+    public static Color blend(Color from, Color to, float frac)
+    {
+        float f = Math.max(0f, Math.min(1f, frac));
+        int r = Math.round(from.getRed()   + (to.getRed()   - from.getRed())   * f);
+        int g = Math.round(from.getGreen() + (to.getGreen() - from.getGreen()) * f);
+        int b = Math.round(from.getBlue()  + (to.getBlue()  - from.getBlue())  * f);
+        return new Color(r, g, b);
+    }
+}

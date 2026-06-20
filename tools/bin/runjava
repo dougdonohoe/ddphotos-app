@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# Script to run any java class
+
+# must have two params
+if [[ -z "$1" || -z "$2" ]]; then
+	echo "Usage: runjava [module] [class]"
+	exit 1
+fi
+
+# get module
+module=$1
+shift;
+
+# verify module dir
+#
+MODULE_DIR=${WORK}/ddphotos-admin-poc/code/$module
+
+if [ ! -d "$MODULE_DIR" ]; then
+	echo "Module dir not found: $MODULE_DIR"
+	exit 1
+fi
+
+# verify classes dir exists
+#
+MAIN_CLASSES=${MODULE_DIR}/target/classes
+if [ ! -d "$MAIN_CLASSES" ]; then
+	echo "Classes directory not found: $MAIN_CLASSES"
+	exit 1
+fi
+
+# verify jar file exists
+#
+#TODO: use this for production
+#MAIN_JAR=${MODULE_DIR}/target/$module-1.0-SNAPSHOT.jar
+#if [ ! -f $MODULE_JAR ]; then
+	#echo "Module jar not found: $MODULE_JAR"
+	#exit 1
+#fi
+
+# verify dependency files exist
+#
+DEP_LIST=${MODULE_DIR}/target/classpath.txt
+
+if [ ! -f "$DEP_LIST" ]; then
+	echo "Dependency list  not found: $DEP_LIST"
+	exit 1
+fi
+
+# build classpath (replace local jar files with class)
+if [ "${OSTYPE}" = "cygwin" ]; then
+	DEPENDENCIES=$(sed -e "s/target[^;]*/target\/classes/g" "$DEP_LIST")
+	CLASSPATH="${MAIN_CLASSES};${MAIN_JAR};${DEPENDENCIES};${EXTRA_CLASSPATH}"
+else
+	DEPENDENCIES=$(sed -e "s/target[^:]*/target\/classes/g" "$DEP_LIST")
+	CLASSPATH="${MAIN_CLASSES}:${MAIN_JAR}:${DEPENDENCIES}:${EXTRA_CLASSPATH}"
+fi
+#echo "CLASSPATH: $CLASSPATH"
+
+# run java
+OPTS="-Dfile.encoding=UTF-8 --enable-native-access=ALL-UNNAMED"
+JAVA=$JAVA_HOME/bin/java
+
+# echo if this env var set (by calling script)
+if [ "$ECHO_JAVA" = "true" ]; then
+	echo "$JAVA" $OPTS -cp "$CLASSPATH" "$@"
+	exit 0
+fi
+
+# exec it if this env var set (by calling script)
+if [ "$EXEC_JAVA" = "true" ]; then
+	echo "Exec'ing java from pid $$"
+	exec $JAVA $OPTS -cp "$CLASSPATH" "$@"
+else
+	$JAVA $OPTS -cp "$CLASSPATH" "$@"
+fi

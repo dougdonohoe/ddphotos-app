@@ -1,0 +1,220 @@
+<?xml version="1.0"?>
+<APPDEF xmlns="http://www.donohoedigital.com"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.donohoedigital.com ../../../../../../engine/src/main/resources/config/xml-schema/appdef.xsd">
+
+    <!--              -->
+    <!-- START PHASE  -->
+    <!--              -->
+
+    <startphase>StartMenu</startphase>
+
+    <!--         -->
+    <!-- PHASES  -->
+    <!--         -->
+
+    <phase name="StartMenu" class="com.donohoedigital.ddphotos.PhotosBasePhase" history="true"/>
+
+    <phase name="Help" class="com.donohoedigital.app.engine.Help" history="true" window="help" cache="true">
+        <param name="window-title" strvalue="msg.windowtitle.help"/>
+        <param name="window-width" intvalue="940"/>
+        <param name="window-height" intvalue="700"/>
+        <param name="window-multi" boolvalue="false"/>
+        <param name="window-resize" boolvalue="true"/>
+        <param name="style" strvalue="Help"/>
+        <param name="bevel-style" strvalue=""/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-style" strvalue="Help"/>
+        <param name="dialog-window-close-activates-button" strvalue="close"/>
+        <param name="default-button" strvalue="close"/>
+        <paramlist name="buttons">
+            <strvalue>close</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="Support" class="com.donohoedigital.app.engine.Support" history="true" window="support" cache="true">
+        <param name="window-title" strvalue="msg.windowtitle.support"/>
+        <param name="window-width" intvalue="1600"/>
+        <param name="window-height" intvalue="800"/>
+        <param name="window-multi" boolvalue="false"/>
+        <param name="window-resize" boolvalue="true"/>
+        <param name="style" strvalue="Support"/>
+        <param name="bevel-style" strvalue=""/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-style" strvalue="Support"/>
+        <param name="dialog-window-close-activates-button" strvalue="close"/>
+        <param name="default-button" strvalue="close"/>
+        <paramlist name="buttons">
+            <strvalue>close</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="SiteDialog" class="com.donohoedigital.ddphotos.SiteDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.SiteDialog"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <param name="default-button" strvalue="save"/>
+        <paramlist name="buttons">
+            <strvalue>cancel</strvalue>
+            <strvalue>save</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="AlbumDialog" class="com.donohoedigital.ddphotos.AlbumDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.AddAlbumDialog"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <param name="default-button" strvalue="save"/>
+        <paramlist name="buttons">
+            <strvalue>cancel</strvalue>
+            <strvalue>save</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="BaseDialog" class="com.donohoedigital.ddphotos.BaseDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.AddBaseDialog"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <param name="default-button" strvalue="save"/>
+        <paramlist name="buttons">
+            <strvalue>cancel</strvalue>
+            <strvalue>save</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="DisplayInfoMessage" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.displayInfoMessage"/>
+        <param name="dialog-minwidth" intvalue="350"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="okay"/>
+        <param name="default-button" strvalue="okay"/>
+        <paramlist name="buttons">
+            <strvalue>okay</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="DisplayWarning" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-type" strvalue="warn"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.displayWarning"/>
+        <param name="dialog-minwidth" intvalue="350"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="okay"/>
+        <param name="default-button" strvalue="okay"/>
+        <paramlist name="buttons">
+            <strvalue>okay</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="DisplayError" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-type" strvalue="error"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.displayError"/>
+        <param name="dialog-minwidth" intvalue="350"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="okay"/>
+        <param name="default-button" strvalue="okay"/>
+        <paramlist name="buttons">
+            <strvalue>okay</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="DisplayConfirmation" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.displayConfirmation"/>
+        <param name="dialog-minwidth" intvalue="350"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="no"/>
+        <param name="default-button" strvalue="yes"/>
+        <param name="dialog-no-show-checkbox-name" strvalue="noshowconfirmation"/>
+        <paramlist name="buttons">
+            <strvalue>yes</strvalue>
+            <strvalue>no</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="TourWelcome" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.tour"/>
+        <param name="dialog-minwidth" intvalue="750"/>
+        <param name="dialog-modal" boolvalue="false"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="tourskip"/>
+        <param name="default-button" strvalue="tourstart"/>
+        <param name="default-no-show-button" strvalue="tourskip"/>
+        <param name="dialog-no-show-option" boolvalue="true"/>
+        <param name="dialog-no-show-key" strvalue="show.tour"/>
+        <param name="dialog-no-show-checkbox-name" strvalue="noshowtour"/>
+        <paramlist name="buttons">
+            <strvalue>tourstart</strvalue>
+            <strvalue>tourskip</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="TourStep" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.tour"/>
+        <param name="dialog-minwidth" intvalue="750"/>
+        <param name="dialog-modal" boolvalue="false"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="tourcancel"/>
+        <param name="default-button" strvalue="tournext"/>
+        <paramlist name="buttons">
+            <strvalue>tournext</strvalue>
+            <strvalue>tourcancel</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="TourEnd" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.tour"/>
+        <param name="dialog-minwidth" intvalue="750"/>
+        <param name="dialog-modal" boolvalue="false"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="tourdone"/>
+        <param name="default-button" strvalue="tourdone"/>
+        <paramlist name="buttons">
+            <strvalue>tourdone</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="Exit" class="com.donohoedigital.app.engine.Exit" transient="true"/>
+
+</APPDEF>

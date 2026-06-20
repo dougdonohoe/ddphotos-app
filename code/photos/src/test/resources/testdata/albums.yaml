@@ -1,0 +1,43 @@
+# Test fixture for AlbumsFileTest
+settings:
+  id: sample
+  site_name: "DD Photos Test"
+  site_url: https://photos.example.com
+  site_description: "A test site."
+  copyright_owner: "Test User"
+  copyright_year: 2020
+  allow_crawling: true
+  descriptions: descriptions.txt
+  # HTML fields use >- to preserve whitespace
+  site_title_html: >-
+    <a href="https://example.com">Test</a>
+  site_subtitle_html: >-
+    A subtitle.
+  hero:
+    image: hero.jpg
+    base: t7
+    crop: center
+
+bases:
+  t7: /Volumes/T7/Photos
+  dropbox: /Users/example/Dropbox/Photos
+
+albums:
+  - slug: antarctica
+    name: Antarctica
+    description: Photos from the 2004 expedition.
+    base: t7
+    source: 2004-Antarctica
+    cover: IMG_001.jpg
+    manual_sort_order: true
+
+  - slug: nepal
+    name: Nepal 2018
+    base: t7
+    source: 2018-Nepal
+    recurse: true
+
+  # Album with no base - source used as-is
+  - slug: localtest
+    name: Local Test
+    source: /tmp/local-test

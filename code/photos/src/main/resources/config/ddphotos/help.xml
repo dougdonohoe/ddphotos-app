@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!--
+#*#*# Copyright 2003 Donohoe Digital LLC.  All rights reserved.
+#*# DONOHOE DIGITAL PROPRIETARY/CONFIDENTIAL. Use is subject to license terms. 
+#*#
+#*# MODIFICATION OF THIS FILE IS PROHIBITED AND COULD
+#*# RESULT IN SOFTWARE MALFUNCTION.
+#*#
+-->
+<HELPS xmlns="http://www.donohoedigital.com"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.donohoedigital.com ../../../../../../common/src/main/resources/config/xml-schema/help.xsd">
+
+		<helpdir>help</helpdir>
+
+		<help name="intro"  display="Introduction" location="intro.html"/>
+		<help name="deployment"  display="Deploying Your Site" location="deployment.html"/>
+		<help name="wizard"  display="Wizard Instructions" location="wizard.html"/>
+		<help name="whatsnew" display="What's New?" location="whatsnew.html"/>
+
+		<help name="general"  display="General Info" location="general.html"/>
+			<help name="ddigital"  display="Donohoe Digital" location="ddigital.html" indent="1"/>                	
+			<help name="credits"  display="Credits &amp; Legal" location="credits.html" indent="1"/>
+			<help name="license"  display="License" location="license.html" indent="1"/>
+
+</HELPS>

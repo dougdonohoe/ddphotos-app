@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<IMAGES xmlns="http://www.donohoedigital.com"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.donohoedigital.com ../../../../../../common/src/main/resources/config/xml-schema/images.xsd">
+
+		<imagedir>images</imagedir>
+
+        <image name="splash" location="splashscreen.jpg"/>
+
+</IMAGES>

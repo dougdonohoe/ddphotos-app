@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<IMAGES xmlns="http://www.donohoedigital.com"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.donohoedigital.com ../../../../../../common/src/main/resources/config/xml-schema/images.xsd">
+
+  <imagedir>images</imagedir>
+
+  <!-- window/taskbar icons (Windows + Linux); BaseFrame loads all sizes via setIconImages() -->
+  <image name="gui.icon.16" location="logo_16x16.png"/>
+  <image name="gui.icon.32" location="logo_32x32.png"/>
+  <image name="gui.icon.48" location="logo_48x48.png"/>
+  <image name="gui.icon.64" location="logo_64x64.png"/>
+  <image name="gui.icon.128" location="logo_128x128.png"/>
+  <image name="gui.icon.256" location="logo_256x256.png"/>
+
+  <image name="splash" location="splash.png" cache="false"/>
+  <image name="splash-empty" location="splash.png" cache="false"/>
+  <image name="window-title-icon" location="icon_20x20.png"/>
+  <image name="dialog-background" location="dialog-background.png"/>
+
+  <!-- main screen icon -->
+  <image name="button.icon48.up" location="logo_48x48.png"/>
+  <image name="button.icon48.over" location="logo_48x48.png"/>
+  <image name="button.icon48.down" location="logo_48x48.png"/>
+  <image name="button.icon48.disable" location="logo_48x48.png"/>
+
+  <!-- help images -->
+  <image name="ddlogo" location="donohoe-digital-logo.png"/>
+  <image name="ddphotos-logo" location="logo_128x128.png"/>
+
+</IMAGES>

@@ -1,0 +1,96 @@
+<html lang="en">
+<head>
+    <title>Welcome to DD Photos</title>
+</head>
+<body>
+
+<table cellpadding="0" cellspacing="0">
+    <tr>
+        <td valign="top"><img src="../images/logo_128x128.png" alt="DD Photos"></td>
+        <td valign="top" width="20"></td>
+        <td valign="middle">
+            <h2>Welcome to the DD Photos</h2>
+            <p>
+                DD Photos helps you quickly create, manage, and publish photo self-hosted
+                photo galleries.  It uses the open-source <a href="https://github.com/dougdonohoe/ddphotos"><tt>ddphotos</tt></a>
+                project under the hood, which itself uses <a href="https://www.docker.com/get-started/">Docker</a>.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<p>
+    Here is the typical workflow from first setup to a published site:
+</p>
+<br>
+<ol>
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Pick a home for your DD Photos site.</b>
+        Choose a folder where all DD Photos files will live - a good default
+        is <tt>~/my-ddphotos</tt> in your home folder.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Create a starter site.</b>
+        Run <tt>ddphotos init</tt> to create the DD Photos folders with a sample
+        configuration so you can explore commands right away.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Edit Site Details.</b>
+        Set your site name, description, public URL, and other settings on the
+        <i>Config</i> tab.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Organize Your Photos.</b>
+        The key to working with DD Photos is understanding than an <B>album</B>
+        is essentially all photos in a given folder. Organize your photos into
+        specific folders like <tt>Patagonia Hiking</tt>, <tt>Hannah's Graduation</tt>, or
+        <tt>Mom's Birthday</tt>. Many users put these in their <tt>Pictures</tt> folder.  Other
+        users might use a <tt>Dropbox</tt> or <tt>Google Drive</tt> folder.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Define Albums.</b>
+        Add album entries that point to the folders containing your photos.
+        Albums support nested folders, cover images, and custom descriptions.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Run <tt>photogen</tt>.</b>
+        Resizes photos for fast downloading and builds the data index files that the
+        site needs. Run this whenever you add or change photos or edit site or album details.
+        Resized photos are saved in the <tt>albums</tt> folder under your DD Photos site folder.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Run <tt>run</tt>.</b>
+        Starts a live-reload development server at <a href="http://localhost:5173"><tt>http://localhost:5173</tt></a>
+        so you can preview the site in a browser.  After editing your site or album
+        details, you need to re-run <tt>photogen</tt>, and the development server
+        automatically picks up the changes.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Run <tt>build</tt>.</b>
+        Generates the final static site output in the <tt>build</tt> folder of your DD Photos site folder.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Run <tt>serve</tt>.</b>
+        Serves the static output locally via Apache at <a href="http://localhost:8000"><tt>http://localhost:8000</tt></a>
+        for a final check before publishing.
+    </p></li>
+
+    <li><p style="margin: 0 0 12px 0;">
+        <b>Deploy.</b>
+        Publish your site. Quick options include exporting and uploading to
+        <b>Cloudflare Pages</b> (free, unlimited bandwidth) via <tt>wrangler</tt>,
+        or <b>Surge.sh</b> (free) via <tt>surge</tt>. Advanced options include
+        deploying via <tt>rsync</tt> or S3 as configured in a <tt>config/site.env</tt> file.
+    </p></li>
+</ol>
+
+</body>
+</html>

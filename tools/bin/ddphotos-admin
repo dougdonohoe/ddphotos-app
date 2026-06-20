@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# Script to run DD Photos
+
+echo
+echo "     **** Running DD Photos ****"
+echo
+
+SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPTDIR"
+DDHOME="$(git rev-parse --show-toplevel)"
+
+JAVAOPTS=""
+
+# Mac only options
+if [[ "${OSTYPE:0:6}" == "darwin" ]]; then
+  JAVAOPTS="-Xdock:icon="$DDHOME/logo/icons/ddphotos-logo/ddphotos-logo.icns""
+fi
+
+runjava photos \
+  $JAVAOPTS \
+  -Dsun.java2d.noddraw=true -Dverbose:gc \
+  -Dlog4j.rootLogger="DEBUG, Console" \
+  -Xms32m -Xmx256m com.donohoedigital.ddphotos.PhotosMain "$@"
+echo

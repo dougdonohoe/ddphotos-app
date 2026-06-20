@@ -1,0 +1,319 @@
+<?xml version="1.0"?>
+<STYLES xmlns="http://www.donohoedigital.com"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.donohoedigital.com ../../../../../../common/src/main/resources/config/xml-schema/styles.xsd">
+
+	<!--        -->
+	<!-- COLORS -->
+	<!--        -->
+
+	<!-- SHARED COLORS -->
+	<color name="ignored" r="0" g="0" b="0"/>
+	<color name="lightgrey" r="225" g="225" b="225"/>
+	<color name="grey" r="128" g="128" b="128"/>
+	<color name="black" r="0" g="0" b="0"/>
+	<color name="blue" r="0" g="0" b="255"/>
+	<color name="green" r="6" g="125" b="23"/>
+	<color name="white" r="255" g="255" b="255"/>
+	<color name="yellow" r="255" g="255" b="0"/>
+	<color name="red" r="255" g="0" b="0"/>
+	<color name="primarywidget.bg" copy="white"/>
+	<color name="primarywidget.fg" copy="black"/>
+	<color name="primarywidget.error" r="233" g="186" b="186"/>
+	<color name="primarylabelborder.fg" r="0" g="0" b="244"/>
+	<color name="primaryfont" copy="black"/>
+	<color name="text" r="255" g="255" b="255"/>
+	<!-- SHARED COLORS -->
+
+	<!-- APP COLORS -->
+	<color name="app.panel.bg" r="242" g="242" b="242"/>
+	<color name="app.accent" copy="blue"/>
+	<!-- APP COLORS -->
+
+	<!-- GUI COLORS -->
+	<color name="gui.text.disabled.fg" r="88" g="88" b="88"/>
+	<color name="gui.scroll" copy="grey"/>
+	<!-- GUI COLORS -->
+
+	<!-- ENGINE FONTS/COLORS -->
+	<color name="engine.basepanel" copy="white"/>
+	<color name="version.label.fg" copy="primaryfont"/>
+	<color name="version.label.bg" default="true"/>
+	 <font name="version.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="11"/>
+
+	<!-- internal-frame modal title bars -->
+	<color name="modal.title.info.bg" r="140" g="140" b="200"/>
+	<color name="modal.title.info.fg" copy="white"/>
+	<color name="modal.title.warn.bg" r="210" g="140" b="40"/>
+	<color name="modal.title.warn.fg" copy="white"/>
+	<color name="modal.title.error.bg" r="180" g="50" b="50"/>
+	<color name="modal.title.error.fg" copy="white"/>
+
+	<!-- internal-frame non-modal title bars (was Metal OceanTheme getControl/getPrimaryControl) -->
+	<color name="window.title.bg" r="238" g="238" b="238"/>        <!-- unselected -->
+	<color name="window.title.active.bg" r="184" g="207" b="229"/> <!-- selected, non-modal -->
+	<color name="window.title.fg" copy="black"/>
+
+	<color name="SplashWrong.label.fg" copy="black"/>
+	<color name="SplashWrong.label.bg"  r="204" g="204" b="204" a="245"/>
+	 <font name="SplashWrong.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="24"/>
+
+	<color name="Splash.label.fg"  copy="black"/>
+	<color name="Splash.label.bg" default="true"/>
+	 <font name="Splash.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="12"/>
+	<color name="Splash.button.fg" default="true"/>
+	<color name="Splash.button.bg" default="true"/>
+	 <font name="Splash.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="12"/>
+
+	<!-- ENGINE FONTS/COLORS -->
+	<color name="Console.error"  r="180" g="50"  b="50"/>
+	<color name="Console.system" copy="green"/>
+	<color name="Console.link"   r="30"  g="100" b="220"/>
+	<color name="Console.searchMatch"   r="255" g="235" b="120"/>
+	<color name="Console.searchCurrent" r="255" g="160" b="40"/>
+	<color name="Console.searchBorder"  r="80"  g="80"  b="80"/>
+
+	 <font name="ConsoleBig.label" fontname="Monospaced" pointsize="18" bold="true"/>
+	<color name="ConsoleBig.label.fg" copy="primaryfont"/>
+	<color name="ConsoleBig.label.bg" default="true"/>
+
+	 <font name="Console.jtextpane" fontname="Monospaced" pointsize="16"/>
+
+	<color name="ConsoleGreen.label.fg" copy="green"/>
+	<color name="ConsoleGreen.label.bg" default="true"/>
+	 <font name="ConsoleGreen.label" fontname="Monospaced" pointsize="16"/>
+	<color name="ConsoleGreen.button.fg" copy="green"/>
+	<color name="ConsoleGreen.button.bg" default="true"/>
+	 <font name="ConsoleGreen.button" fontname="Monospaced" pointsize="16"/>
+	<color name="ConsoleGreen.checkbox.fg" copy="green"/>
+	<color name="ConsoleGreen.checkbox.check" copy="green"/>
+	<color name="ConsoleGreen.checkbox.bg" default="true"/>
+	 <font name="ConsoleGreen.checkbox" fontname="Monospaced" pointsize="16"/>
+	<color name="ConsoleGreen.textfield.fg" copy="green"/>
+	<color name="ConsoleGreen.textfield.bg" default="true"/>
+	<color name="ConsoleGreen.textfield.error.bg" copy="primarywidget.error"/>
+	 <font name="ConsoleGreen.textfield" fontname="Monospaced" pointsize="16"/>
+	<color name="ConsoleGreen.combobox.fg" copy="green"/>
+	<color name="ConsoleGreen.combobox.bg" copy="white"/>
+	<color name="ConsoleGreen.combobox.mouseover.fg" default="true"/>
+	<color name="ConsoleGreen.combobox.selection.bg" copy="green"/>
+	<color name="ConsoleGreen.combobox.selection.fg" copy="white"/>
+	 <font name="ConsoleGreen.combobox" fontname="Monospaced" pointsize="16"/>
+
+	<color name="ConsoleBlue.label.fg" copy="blue"/>
+	<color name="ConsoleBlue.label.bg" default="true"/>
+	 <font name="ConsoleBlue.label" fontname="Monospaced" pointsize="16"/>
+	<color name="ConsoleBlue.button.fg" copy="blue"/>
+	<color name="ConsoleBlue.button.bg" default="true"/>
+	 <font name="ConsoleBlue.button" fontname="Monospaced" pointsize="16"/>
+	<color name="ConsoleBlue.checkbox.fg" copy="blue"/>
+	<color name="ConsoleBlue.checkbox.check" copy="blue"/>
+	<color name="ConsoleBlue.checkbox.bg" default="true"/>
+	 <font name="ConsoleBlue.checkbox" fontname="Monospaced" pointsize="16"/>
+	<color name="ConsoleBlue.textfield.fg" copy="blue"/>
+	<color name="ConsoleBlue.textfield.bg" default="true"/>
+	<color name="ConsoleBlue.textfield.error.bg" copy="primarywidget.error"/>
+	 <font name="ConsoleBlue.textfield" fontname="Monospaced" pointsize="16"/>
+	<color name="ConsoleBlue.combobox.fg" copy="blue"/>
+	<color name="ConsoleBlue.combobox.bg" copy="white"/>
+	<color name="ConsoleBlue.combobox.mouseover.fg" default="true"/>
+	<color name="ConsoleBlue.combobox.selection.bg" copy="blue"/>
+	<color name="ConsoleBlue.combobox.selection.fg" copy="white"/>
+	 <font name="ConsoleBlue.combobox" fontname="Monospaced" pointsize="16"/>
+
+	<!-- PHOTOS TABS -->
+	<color name="PhotosTabs.tab.fg" r="0" g="0" b="0"/>
+	<color name="PhotosTabs.tab.bg" r="204" g="204" b="204" a="150"/>
+	 <font name="PhotosTabs.tab" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="20"/>
+	<color name="PhotosTabs.panel.fg" default="true"/>
+	<color name="PhotosTabs.panel.bg" default="true"/>
+	<!-- PHOTOS TABS -->
+
+	<!-- PhotosMain -->
+	<color name="PhotosMain.htmlarea.fg" default="true"/>
+	<color name="PhotosMain.htmlarea.bg" copy="lightgrey"/>
+	 <font name="PhotosMain.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<!-- PhotosMain -->
+
+	<!-- Help -->
+	<color name="Help.htmlarea.fg" default="true"/>
+	<color name="Help.htmlarea.bg" copy="white"/>
+	 <font name="Help.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<color name="Help.label.fg" copy="primaryfont"/>
+	<color name="Help.label.bg" default="true"/>
+	 <font name="Help.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="24"/>
+	<color name="Help.button.fg" default="true"/>
+	<color name="Help.button.bg" default="true"/>
+	 <font name="Help.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	<color name="Help.scrollbar.bg" r="128" g="128" b="128"/>
+	<color name="Help.scrollbar.fg" r="64" g="64" b="64"/>
+	<color name="Help.scrollbar.focus" r="0" g="0" b="255" a="50"/>
+	<color name="Help.scrollpane.bg" r="204" g="204" b="204"/>
+	<color name="Help.list.fg" default="true"/>
+	<color name="Help.list.bg" default="true"/>
+	<color name="Help.list.selection.bg" default="true"/>
+	<color name="Help.list.selection.fg" default="true"/>
+	 <font name="Help.list" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<!-- Help -->
+
+	<!-- Support -->
+	<color name="Support.panel.fg" copy="white"/>
+	<color name="Support.panel.bg" default="true"/>
+	<color name="Support.label.fg" copy="primaryfont"/>
+	<color name="Support.label.bg" default="true"/>
+	 <font name="Support.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="24"/>	<color name="Support.htmlarea.fg" default="true"/>
+	<color name="Support.htmlarea.bg" copy="white"/>
+	 <font name="Support.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+	<color name="Support.textarea.fg" copy="black"/>
+	<color name="Support.textarea.bg" copy="white"/>
+	<color name="Support.textarea.error.bg" copy="primarywidget.error"/>
+	 <font name="Support.textarea" fontname="Monospaced" pointsize="18"/>
+	<color name="Support.button.fg" default="true"/>
+	<color name="Support.button.bg" default="true"/>
+	 <font name="Support.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	<color name="Support.scrollbar.bg" r="128" g="128" b="128"/>
+	<color name="Support.scrollbar.fg" r="64" g="64" b="64"/>
+	<color name="Support.scrollbar.focus" r="0" g="0" b="255" a="50"/>
+	<color name="Support.scrollpane.bg" r="204" g="204" b="204"/>
+	<!-- Support -->
+
+	<!-- Options -->
+	<color name="Options.labelborder.fg" copy="primarylabelborder.fg"/>
+	<color name="Options.labelborder.bg" copy="white"/>
+	 <font name="Options.labelborder" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="19"/>
+	<color name="Options.checkbox.fg" copy="primaryfont"/>
+	<color name="Options.checkbox.check" copy="black"/>
+	<color name="Options.checkbox.bg" default="true"/>
+	 <font name="Options.checkbox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<color name="Options.radio.bg" default="true"/>
+	<color name="Options.radio.fg" default="true"/>
+	<color name="Options.radio.dot" copy="black"/>
+	 <font name="Options.radio" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<color name="Options.label.fg" copy="primaryfont"/>
+	<color name="Options.label.bg" default="true"/>
+	 <font name="Options.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<color name="Options.spinner.fg" copy="primarywidget.fg"/>
+	<color name="Options.spinner.bg" copy="primarywidget.bg"/>
+	 <font name="Options.spinner" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<color name="Options.panel.fg" copy="white"/>
+	<color name="Options.panel.bg" default="true"/>
+	<color name="Options.split.bg" copy="app.panel.bg"/>
+	<color name="Options.split.focus" default="true"/>
+	<color name="Options.htmlarea.fg" copy="primaryfont"/>
+	<color name="Options.htmlarea.bg" copy="primarywidget.bg"/>
+	 <font name="Options.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="12"/>
+	<color name="Options.button.fg" default="true"/>
+	<color name="Options.button.bg" default="true"/>
+	 <font name="Options.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	<color name="Options.combobox.fg" copy="black"/>
+	<color name="Options.combobox.bg" copy="white"/>
+	<color name="Options.combobox.mouseover.fg" default="true"/>
+	<color name="Options.combobox.selection.bg" copy="black"/>
+	<color name="Options.combobox.selection.fg" copy="white"/>
+     <font name="Options.combobox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	<color name="Options.list.fg" default="true"/>
+	<color name="Options.list.bg" default="true"/>
+	<color name="Options.list.selection.bg" default="true"/>
+	<color name="Options.list.selection.fg" default="true"/>
+	 <font name="Options.list" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<color name="Options.scrollbar.bg" r="128" g="128" b="128"/>
+	<color name="Options.scrollbar.fg" r="64" g="64" b="64"/>
+	<color name="Options.scrollbar.focus" r="0" g="0" b="255" a="50"/>
+	<color name="Options.scrollpane.bg" r="204" g="204" b="204"/>
+	<color name="Options.textfield.fg" copy="primarywidget.fg"/>
+	<color name="Options.textfield.bg" copy="primarywidget.bg"/>
+	<color name="Options.textfield.error.bg" copy="primarywidget.error"/>
+	 <font name="Options.textfield" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="15"/>
+	<color name="Options.textarea.fg" copy="primarywidget.fg"/>
+	<color name="Options.textarea.bg" copy="primarywidget.bg"/>
+	<color name="Options.textarea.error.bg" copy="primarywidget.error"/>
+	 <font name="Options.textarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="15"/>
+	<!-- Options -->
+
+	<!-- OptionsError -->
+	<color name="OptionsError.htmlarea.fg" copy="red"/>
+	<color name="OptionsError.htmlarea.bg" default="true"/>
+	 <font name="OptionsError.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	<!-- OptionsError -->
+
+	<!-- OptionsDialog -->
+	<color name="OptionsDialog.checkbox.fg" copy="black"/>
+	<color name="OptionsDialog.checkbox.check" copy="black"/>
+	<color name="OptionsDialog.checkbox.bg" default="true"/>
+	 <font name="OptionsDialog.checkbox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	<color name="OptionsDialog.label.fg" copy="black"/>
+	<color name="OptionsDialog.label.bg" copy="black"/>
+	 <font name="OptionsDialog.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18" bold="true"/>
+    <color name="OptionsDialog.textfield.fg" copy="black"/>
+	<color name="OptionsDialog.textfield.bg" copy="text"/>
+	<color name="OptionsDialog.textfield.error.bg" copy="primarywidget.error"/>
+	 <font name="OptionsDialog.textfield" fontname="Monospaced" pointsize="16"/>
+	<color name="OptionsDialog.textarea.fg" copy="black"/>
+	<color name="OptionsDialog.textarea.bg" copy="text"/>
+	<color name="OptionsDialog.textarea.error.bg" copy="primarywidget.error"/>
+	 <font name="OptionsDialog.textarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+    <color name="OptionsDialog.htmlarea.fg" copy="black"/>
+	<color name="OptionsDialog.htmlarea.bg" copy="text"/>
+	 <font name="OptionsDialog.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+	<color name="OptionsDialog.button.fg" default="true"/>
+	<color name="OptionsDialog.button.bg" default="true"/>
+	 <font name="OptionsDialog.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<!-- OptionsDialog -->
+
+	<!-- DisplayMessage -->
+	<color name="DisplayMessage.label.fg" r="0" g="0" b="0"/>
+	<color name="DisplayMessage.label.bg" r="0" g="0" b="0"/>
+	 <font name="DisplayMessage.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+	<color name="DisplayMessage.panel.fg" default="true"/>
+	<color name="DisplayMessage.panel.bg" default="true"/>
+	<color name="DisplayMessage.checkbox.fg" r="0" g="0" b="0"/>
+	<color name="DisplayMessage.checkbox.check" copy="black"/>
+	<color name="DisplayMessage.checkbox.bg" default="true"/>
+	 <font name="DisplayMessage.checkbox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	<color name="DisplayMessage.htmlarea.fg" r="0" g="0" b="0"/>
+	<color name="DisplayMessage.htmlarea.bg" r="0" g="0" b="0"/>
+	 <font name="DisplayMessage.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+	<color name="DisplayMessage.button.fg" default="true"/>
+	<color name="DisplayMessage.button.bg" default="true"/>
+	 <font name="DisplayMessage.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<!-- DisplayMessage -->
+
+	<!-- SITE BAR -->
+	<color name="SiteBar.label.fg" copy="primaryfont"/>
+	<color name="SiteBar.label.bg" default="true"/>
+	 <font name="SiteBar.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16" bold="true"/>
+	<color name="SiteBar.button.fg" default="true"/>
+	<color name="SiteBar.button.bg" default="true"/>
+	 <font name="SiteBar.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	<color name="SiteBar.combobox.fg" copy="black"/>
+	<color name="SiteBar.combobox.bg" copy="white"/>
+	<color name="SiteBar.combobox.mouseover.fg" default="true"/>
+	<color name="SiteBar.combobox.selection.fg" copy="white"/>
+	<color name="SiteBar.combobox.selection.bg" copy="black"/>
+	 <font name="SiteBar.combobox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<!-- SITE BAR -->
+
+	<!-- Wizard -->
+	<color name="WizardBig.label.fg" copy="primaryfont"/>
+	<color name="WizardBig.label.bg" default="true"/>
+	 <font name="WizardBig.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="20" bold="true"/>
+
+	<color name="Wizard.label.fg" copy="primaryfont"/>
+	<color name="Wizard.label.bg" default="true"/>
+	 <font name="Wizard.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	<color name="Wizard.panel.fg" copy="white"/>
+	<color name="Wizard.panel.bg" default="true"/>
+	<color name="Wizard.htmlarea.fg" copy="primaryfont"/>
+	<color name="Wizard.htmlarea.bg" copy="white"/>
+	 <font name="Wizard.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="20"/>
+	<color name="Wizard.button.fg" default="true"/>
+	<color name="Wizard.button.bg" default="true"/>
+	 <font name="Wizard.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+
+	<color name="Wizard.textfield.fg" copy="primarywidget.fg"/>
+	<color name="Wizard.textfield.bg" copy="primarywidget.bg"/>
+	<color name="Wizard.textfield.error.bg" copy="primarywidget.error"/>
+	 <font name="Wizard.textfield" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="15"/>
+	<!-- Wizard -->
+
+</STYLES>
