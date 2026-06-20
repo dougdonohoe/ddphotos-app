@@ -11,6 +11,9 @@ import com.donohoedigital.ddphotos.runner.InitRunner;
 import com.donohoedigital.ddphotos.runner.InstallScriptRunner;
 import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.app.engine.AppContext;
+import com.donohoedigital.app.engine.DisplayMessage;
+import com.donohoedigital.app.engine.Phase;
+import com.donohoedigital.app.config.AppButton;
 import com.donohoedigital.gui.*;
 
 import javax.swing.*;
@@ -19,6 +22,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.prefs.Preferences;
 import java.util.stream.Stream;
 
 public class WizardPanel extends DDPanel implements DockerStatus.Listener {
@@ -28,6 +32,9 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
     private static final String STYLE       = "Wizard";
     private static final String STYLE_BIG       = "WizardBig";
     private static final String PREFS_NODE  = PhotosConstants.PREFS_NODE_APP;
+
+    /** Set once the user accepts the beta/license terms on the Welcome step. */
+    private static final String PREF_WELCOME_ACCEPTED = "welcome.license.accepted";
 
     // ── Step IDs ──────────────────────────────────────────────────────────────
 
@@ -692,6 +699,12 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
     }
 
     private void onNext() {
+        // First time Next is clicked on the Welcome step, require the user to accept the
+        // beta warning and license terms before proceeding.
+        if (currentStep() == Step.WELCOME && !confirmWelcomeTerms()) {
+            return;
+        }
+
         boolean isLast = stepIndex_ == ALL_STEPS.length - 1;
         if (isLast) {
             doAddSite();
@@ -701,6 +714,31 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         } else {
             showStep(nextStepIndex(stepIndex_));
         }
+    }
+
+    /**
+     * Shows the beta/license confirmation the first time the user advances past the Welcome step.
+     * Returns true if it is OK to proceed (already accepted, or the user clicked OK now). If the
+     * user clicks Cancel, the app is quit and false is returned.
+     */
+    private boolean confirmWelcomeTerms() {
+        Preferences prefs = PhotosConstants.getAppPreferences();
+        if (prefs.getBoolean(PREF_WELCOME_ACCEPTED, false)) {
+            return true;
+        }
+
+        TypedHashMap params = new TypedHashMap();
+        params.setString(DisplayMessage.PARAM_MESSAGE_KEY, "msg.wizard.welcome.confirm");
+        Phase confirm = context_.processPhaseNow("WizardWelcomeConfirm", params);
+        AppButton pressed = (AppButton) confirm.getResult();
+
+        if (pressed != null && pressed.getName().equals("okay")) {
+            prefs.putBoolean(PREF_WELCOME_ACCEPTED, true);
+            return true;
+        }
+
+        PhotosMain.getBaseApp().quit();
+        return false;
     }
 
     // ── Add site (final action) ───────────────────────────────────────────────

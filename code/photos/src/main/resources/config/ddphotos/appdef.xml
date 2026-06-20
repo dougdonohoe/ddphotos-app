@@ -161,6 +161,23 @@
         </paramlist>
     </phase>
 
+    <phase name="WizardWelcomeConfirm" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.wizardWelcomeConfirm"/>
+        <param name="dialog-minwidth" intvalue="500"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <param name="default-button" strvalue="okay"/>
+        <paramlist name="buttons">
+            <strvalue>okay</strvalue>
+            <strvalue>cancel</strvalue>
+        </paramlist>
+    </phase>
+
     <phase name="TourWelcome" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
         <param name="style" strvalue="DisplayMessage"/>
         <param name="dialog-style" strvalue="DisplayMessage"/>
