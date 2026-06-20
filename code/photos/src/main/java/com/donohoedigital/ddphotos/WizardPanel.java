@@ -737,7 +737,7 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
             return true;
         }
 
-        PhotosMain.getBaseApp().quit();
+        PhotosMain.getBaseApp().exit(0);
         return false;
     }
 
