@@ -28,7 +28,7 @@
     <xerces.version>2.12.2</xerces.version>
     <commons-io.version>2.22.0</commons-io.version>
     <annotations.version>26.1.0</annotations.version>
-    <install4j.version>12.0.5</install4j.version>
+    <install4j.version>13.0</install4j.version>
     <snakeyaml-engine.version>3.0.1</snakeyaml-engine.version>
     <dependency.classpath.outputFile>target/classpath.txt</dependency.classpath.outputFile>
   </properties>
