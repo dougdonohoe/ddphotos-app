@@ -36,7 +36,7 @@ reading all the [developer documentation](README-DEV.md), follow these steps:
 ```shell
 source ddphotos.rc
 mvn-package-notests
-ddphotos-admin
+ddphotos-app
 ```
 
 ## Developer Notes

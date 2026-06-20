@@ -63,7 +63,7 @@ After you have run this, any of the scripts discussed below should just work.
 To run the desktop tool, either run `PhotosMain` in IntelliJ or use the script:
 
 ```shell
-ddphotos-admin
+ddphotos-app
 ```
 
 ## Development
@@ -276,7 +276,7 @@ xhost + localhost
 # Build docker image
 docker build -f Dockerfile.ubuntu.docker -t ddphotosubuntu .
 
-# Run it, mapping ddphotos-admin dir and maven .m2-ubuntu dir to the image
+# Run it, mapping ddphotos-app dir and maven .m2-ubuntu dir to the image
 docker run -it --rm -v $(pwd):$(pwd) -v $HOME/.m2-ubuntu:/root/.m2 \
   -w $(pwd) -e DISPLAY=host.docker.internal:0 ddphotosubuntu
   
@@ -289,12 +289,12 @@ You can test X is working by running `xeyes`.  It should display the iconic X ap
 follows your cursor with big oval eyes.  If you encounter problems, the gist mentioned above
 has good troubleshooting tips.
 
-Next, you should be able to build and run `ddphotos-admin` from the Ubuntu container:
+Next, you should be able to build and run `ddphotos-app` from the Ubuntu container:
 
 ```shell
 source ddphotos.rc
 mvn-package-notests
-ddphotos-admin
+ddphotos-app
 ```
 
 ## Appendix B: Running GitHub Actions Locally
@@ -307,7 +307,7 @@ To install `act`:
 brew install act
 ```
 
-The `act-ddphotos-admin` alias uses a custom Docker image you need to build once:
+The `act-ddphotos-app` alias uses a custom Docker image you need to build once:
 
 ```shell
 docker build -t ddphotos-act-runner -f Dockerfile.act .
@@ -316,5 +316,5 @@ docker build -t ddphotos-act-runner -f Dockerfile.act .
 To run the GitHub testing action locally, just use the alias:
 
 ```shell
-act-ddphotos-admin
+act-ddphotos-app
 ```

@@ -14,7 +14,7 @@ shift;
 
 # verify module dir
 #
-MODULE_DIR=${WORK}/ddphotos-admin-poc/code/$module
+MODULE_DIR=${WORK}/ddphotos-app/code/$module
 
 if [ ! -d "$MODULE_DIR" ]; then
 	echo "Module dir not found: $MODULE_DIR"

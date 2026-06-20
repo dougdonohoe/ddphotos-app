@@ -21,7 +21,7 @@ alias mvn-test='(cd $CODE;mvn test -Dskip.unit.tests=false)'
 alias mvn-tree='mvn dependency:tree -q -Dscope=runtime -Ddependency.classpath.outputFile=/tmp/t && cat /tmp/t && rm -f /tmp/t'
 
 # act shortcut
-alias act-ddphotos-admin='mkdir -p $HOME/.m2-act && act --platform ubuntu-latest=ddphotos-act-runner --pull=false  \
+alias act-ddphotos-app='mkdir -p $HOME/.m2-act && act --platform ubuntu-latest=ddphotos-act-runner --pull=false  \
   --container-options "-v $HOME/.m2-act:/home/runner/.m2" \
   --job test pull_request'
 

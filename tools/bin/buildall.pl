@@ -37,7 +37,7 @@ $MAIN_MVN_MODULE="photos";
 $MVN_VERSION="1.0"; # current version (should match photos maven module version)
 $BUILDDIR="photos1.x";
 $BASEDIR="builds/$BUILDDIR";
-$GITREPO="ddphotos-admin-poc";
+$GITREPO="ddphotos-app";
 
 # base dir
 if ($MAC)

@@ -1,0 +1,32 @@
+name: DD Photos POC CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: maven
+
+      - name: Run tests
+        shell: bash
+        run: |
+          set -o errexit
+          source ddphotos.rc
+          cd code
+          mvn package -Dskip.unit.tests=false

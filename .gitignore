@@ -1,0 +1,20 @@
+# Misc
+target
+*.sparseimage
+Thumbs.db
+
+# /runtime/
+/runtime/data
+/runtime/log
+
+# installer
+build
+release
+installer/builds
+
+# Claude Code local config/memory
+.claude
+CLAUDE.md
+
+# IDE
+.idea
