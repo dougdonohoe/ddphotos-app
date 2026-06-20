@@ -8,8 +8,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* `ddphotos-app` repo - gitrepo path in support and in install scripts needs updating
-  * Setup branch protection, etc.
 * Wizard step for Docker file permissions?
 * Windows - WSL and PowerShell docs
 * Put command runner text in `client.properties`
@@ -30,38 +28,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Undo support?  Backup files somewhere in config?
 
-## Background
-
-This repo started out as a copy of DD Poker (original code in ~/work/ddpoker).  It's been
-vastly changed since the start of the project.
-
-The current project is to make an admin tool for DD Photos - see these ~/work/ddphotos files:
-
-* CLAUDE.md
-* README.md
-* docs/*.md
-
-This is an MVP right now focused on editing DD Photos config files:
-
-* `albums.yaml`
-* `descriptions.txt`
-* `passwords.yaml`
-* `photogen.txt`
-* `site.env`
-* `custom.css`
-
-Good examples of these files can be found in
-
-* `~/work/ddphotos/sample` - sample site (`passwords-all.yaml` and `passwords-uganda.yaml` are variants of `passwords.yaml`)
-* `~/work/ddphotos/docker/init` - site created by `init` command to `ddphotos` Docker wrapper
-* `~/work/infra/photos/manly-man` - My Manly Man ski/snowboard trip photos
-* `~/work/infra/photos/donohoe` - My personal photos
-
-The Go code in ddphotos has code which loads these files and is a good reference.  We'll
-probably need to add Java equivalents.
-
-* `type AlbumsFile struct` is the struct for `albums.yaml` in `~/work/ddphotos/pkg/photogen/albums_config.go`
-
 ## Future Surge support for login via PTY (full interactive terminal, handles `surge login`)
 
 If we need to support the initial `surge login` flow (or any other interactive command),
@@ -78,7 +44,6 @@ terminal.  Wiring it up is moderate effort (~a few days):
   (optional — a basic pass-through is enough for surge).
 
 This would allow any interactive command to work, not just surge.
-
 
 ## IntelliJ: Associate XML config files with XSD schemas
 
