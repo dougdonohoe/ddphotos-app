@@ -69,14 +69,14 @@ public class WizardRunnerPanel extends AbstractRunnerPanel {
         List<String> cmd = activeRunner_.buildCommand(site, userValues);
 
         RunnerConsole.clearForRun(console_);
-        console_.appendSystem("Running: " + String.join(" ", activeRunner_.finalCommand(cmd)));
+        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.running", String.join(" ", activeRunner_.finalCommand(cmd))));
         try {
             process_ = activeRunner_.launch(site, userValues);
             updateButtonState();
             startReaders(process_, this::handleCompletion);
         } catch (IOException e) {
             process_ = null;
-            console_.appendSystemError("Failed to start: " + e.getMessage());
+            console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", activeRunner_.getDisplayName(), e.getMessage()));
             updateButtonState();
             showFailureDialog();
         }

@@ -1,6 +1,7 @@
 package com.donohoedigital.ddphotos.runner;
 
 import com.donohoedigital.base.Utils;
+import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.BashSupport;
 import com.donohoedigital.ddphotos.DockerStatus;
 import com.donohoedigital.ddphotos.config.Site;
@@ -189,7 +190,7 @@ public abstract class CommandRunner {
         String docker = DockerStatus.dockerPath();
         String verb = force ? "kill" : "stop";
         try {
-            if (sink != null) sink.system("Running: " + docker + " " + verb + " " + name);
+            if (sink != null) sink.system(PropertyConfig.getMessage("msg.cmd.running", docker + " " + verb + " " + name));
             Process p = DockerStatus.dockerProcessBuilder(verb, name)
                     .redirectErrorStream(true)
                     .start();
@@ -200,7 +201,7 @@ public abstract class CommandRunner {
             if (sink != null && !out.isBlank()) sink.output(out);
         } catch (Exception e) {
             logger.info("{}: docker error for {}: {}", verb, name, e.getMessage());
-            if (sink != null) sink.error("Error stopping container " + name + ": " + e.getMessage());
+            if (sink != null) sink.error(PropertyConfig.getMessage("msg.cmd.containerStopError", name, e.getMessage()));
         }
     }
 

@@ -1,5 +1,7 @@
 package com.donohoedigital.ddphotos.runner;
 
+import com.donohoedigital.config.PropertyConfig;
+
 import java.util.List;
 
 /**
@@ -27,7 +29,7 @@ public abstract class Prerequisite {
     public abstract String checkingMessage();
 
     /** Shown in the output pane when the check fails (before RunCommand remediation). */
-    public String failedMessage() { return "Prerequisite check failed."; }
+    public String failedMessage() { return PropertyConfig.getMessage("msg.cmd.prereqFailed"); }
 
     /** Returns the next prerequisite to run after this one passes, or null if this is the last. */
     public Prerequisite next() { return null; }

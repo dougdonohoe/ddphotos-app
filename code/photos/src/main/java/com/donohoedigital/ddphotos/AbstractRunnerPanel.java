@@ -407,7 +407,8 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                     // After a user stop/kill the exit code is an artifact of how we terminated the
                     // process (e.g. 1 on Windows), not a real result - don't present it as one.
                     console_.appendSystem(wasUserStop(code)
-                            ? "Stopped." : "Process exited with code " + code + ".");
+                            ? PropertyConfig.getMessage("msg.cmd.stopped")
+                            : PropertyConfig.getMessage("msg.cmd.exited", code));
                     updateButtonState();
                     onComplete.accept(code);
                 });

@@ -104,7 +104,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
         RunnerConsole.clearForRun(console_);
 
         if (currentSite_ == null) {
-            console_.appendSystem("No site selected.");
+            console_.appendSystem(PropertyConfig.getMessage("msg.cmd.noSiteSelected"));
             fireTour(false);
             return;
         }
@@ -129,14 +129,14 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
     private void runWithPrerequisite(Prerequisite prereq, Map<String, String> userValues) {
         console_.appendSystem(prereq.checkingMessage());
         List<String> checkCmd = runner_.finalCommand(prereq.checkCommand());
-        console_.appendSystem("Running: " + String.join(" ", checkCmd));
+        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.running", String.join(" ", checkCmd)));
         try {
             process_ = runner_.launchCommand(checkCmd);
             updateButtonState();
             startCheckReaders(process_, prereq, userValues);
         } catch (IOException e) {
             process_ = null;
-            console_.appendSystemError("Failed to run prerequisite check: " + e.getMessage());
+            console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "prerequisite check", e.getMessage()));
             updateButtonState();
         }
     }
@@ -202,7 +202,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                 String html = PropertyConfig.getMessage(msgKey, msgArgs);
                 boolean confirmed = EngineUtils.displayConfirmationDialog(context_, html, titleKey, null);
                 if (!confirmed) {
-                    console_.appendSystem("Aborted.");
+                    console_.appendSystem(PropertyConfig.getMessage("msg.cmd.aborted"));
                     return;
                 }
                 runNext(userValues, next, cmd);
@@ -212,14 +212,14 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
 
     private void runNext(Map<String, String> userValues, Prerequisite next, List<String> cmd) {
         cmd = runner_.finalCommand(cmd);
-        console_.appendSystem("Running: " + String.join(" ", cmd));
+        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.running", String.join(" ", cmd)));
         try {
             process_ = runner_.launchCommand(cmd);
             updateButtonState();
             startRemediationReaders(process_, next, userValues);
         } catch (IOException e) {
             process_ = null;
-            console_.appendSystemError("Failed to start remediation: " + e.getMessage());
+            console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "remediation", e.getMessage()));
             updateButtonState();
         }
     }
@@ -240,7 +240,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                             launchMainCommand(userValues);
                         }
                     } else {
-                        console_.appendSystem("Command failed (exit code " + code + ").");
+                        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.failedExit", code));
                         updateButtonState();
                     }
                 });
@@ -258,7 +258,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
 
     private void launchMainCommand(Map<String, String> userValues) {
         List<String> cmd = runner_.buildCommand(currentSite_, userValues);
-        console_.appendSystem("Running: " + String.join(" ", runner_.finalCommand(cmd)));
+        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.running", String.join(" ", runner_.finalCommand(cmd))));
         try {
             process_ = runner_.launch(currentSite_, userValues);
             updateButtonState();
@@ -271,7 +271,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             });
         } catch (IOException e) {
             process_ = null;
-            console_.appendSystemError("Failed to start process: " + e.getMessage());
+            console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "process", e.getMessage()));
             updateButtonState();
             fireTour(false);
             if (runner_.showsFailureFeedback()) {
