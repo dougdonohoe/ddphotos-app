@@ -1,4 +1,4 @@
-name: DD Photos POC CI
+name: DD Photos CI
 
 on:
   push:
