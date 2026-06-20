@@ -1,5 +1,9 @@
 # DD Photos Desktop Application
 
+[![Demo](https://img.shields.io/badge/Demo-ddphotos.donohoe.info-blue)](https://ddphotos.donohoe.info)
+[![CI](https://github.com/dougdonohoe/ddphotos-app/actions/workflows/ci.yml/badge.svg)](https://github.com/dougdonohoe/ddphotos-app/actions)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 ## About This Repo
 
 ![logo_256x256.png](logo/icons/ddphotos-logo/logo_256x256.png)
