@@ -4,9 +4,11 @@ import com.donohoedigital.base.ApplicationError;
 import com.donohoedigital.base.ErrorCodes;
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.base.Utils;
+import com.donohoedigital.config.DebugConfig;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.app.config.*;
 import com.donohoedigital.gui.DDWindow;
+import com.donohoedigital.gui.GuiUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,6 +18,9 @@ import javax.swing.event.InternalFrameEvent;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -170,9 +175,23 @@ public class AppContext
         {
             dialog_.setCenterComponent(comp, cFocus);
         }
-
-        // TODO: option to resize window to component (timing might not work due to fact window displayed b4 this is called)
     }
+
+    /**
+     * Get the highest component
+     */
+    public JComponent getRootComponent()
+    {
+        if (dialog_ == null)
+        {
+            return (JComponent) frame_.getContentPane();
+        }
+        else
+        {
+            return (JComponent) dialog_.getContentPane();
+        }
+    }
+
 
     /**
      * calls processPhase(sPhaseName, null)
@@ -595,5 +614,16 @@ public class AppContext
         {
             context.close();
         }
+    }
+
+    public void screenshot(String name) {
+        if (!DebugConfig.TESTING("settings.debug.screenshots")) return;
+
+        BufferedImage image = GuiUtils.printToImage(getRootComponent(), 1200, 800);
+
+        String path = PropertyConfig.getRequiredStringProperty("settings.debug.screenshots.path");
+        File file = Path.of(path, name + ".png").toFile();
+        GuiUtils.printImageToFile(image, file);
+        logger.info("Captured screenshot {}", file.getAbsolutePath());
     }
 }

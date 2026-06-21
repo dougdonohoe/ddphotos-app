@@ -3,8 +3,11 @@ package com.donohoedigital.gui;
 import com.donohoedigital.base.ApplicationError;
 import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.StylesConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.intellij.lang.annotations.MagicConstant;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.HyperlinkEvent;
@@ -19,13 +22,23 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseListener;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("unused")
 public class GuiUtils
 {
+    private static final Logger logger = LogManager.getLogger(GuiUtils.class);
+
     public static final Color COLOR_DISABLED_TEXT = StylesConfig.getColor("gui.text.disabled.fg");
+
+    /** Thin border drawn around screenshots (see {@link #printToImage}). */
+    private static final Color SCREENSHOT_BORDER = new Color(0xB0, 0xB0, 0xB0);
 
     static final JTextComponent.KeyBinding[] MAC_CUT_COPY_PASTE = {
             new JTextComponent.KeyBinding(
@@ -497,10 +510,102 @@ public class GuiUtils
     /** Blend {@code from} toward {@code to} by {@code frac} (0 = from, 1 = to). */
     public static Color blend(Color from, Color to, float frac)
     {
-        float f = Math.max(0f, Math.min(1f, frac));
+        float f = Math.clamp(frac, 0f, 1f);
         int r = Math.round(from.getRed()   + (to.getRed()   - from.getRed())   * f);
         int g = Math.round(from.getGreen() + (to.getGreen() - from.getGreen()) * f);
         int b = Math.round(from.getBlue()  + (to.getBlue()  - from.getBlue())  * f);
         return new Color(r, g, b);
+    }
+
+    /**
+     * Render a Swing component to an image, scaled down (never up) to fit within width x height
+     * while preserving aspect ratio. Uses {@link JComponent#print} rather than {@code paint} so the
+     * component renders as it would for printing (no caret blink, correct double-buffer handling),
+     * and applies the scale to the Graphics transform so painting happens directly at the target
+     * size - text and lines stay crisp instead of being downsampled from a full-size raster.
+     */
+    public static BufferedImage printToImage(JComponent c, int width, int height)
+    {
+        double w = (double) width / Math.max((double) c.getWidth(), width);
+        double h = (double) height / Math.max((double) c.getHeight(), height);
+        double dScale = Math.min(w, h);
+
+        BufferedImage image = new BufferedImage(Math.max(1, (int) (c.getWidth() * dScale)),
+                Math.max(1, (int) (c.getHeight() * dScale)), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = image.createGraphics();
+        try
+        {
+            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+            g.scale(dScale, dScale);
+            c.print(g);
+
+            // Thin gray border around the edge. Reset the transform first so the line is exactly
+            // one device pixel wide and flush to the image bounds regardless of the scale above.
+            g.setTransform(new AffineTransform());
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            g.setColor(SCREENSHOT_BORDER);
+            g.drawRect(0, 0, image.getWidth() - 1, image.getHeight() - 1);
+        }
+        finally
+        {
+            g.dispose();
+        }
+        return image;
+    }
+
+    /**
+     * Write a BufferedImage to a file, picking the format from the file extension (defaults to png).
+     * png is preferred for UI screenshots: it is lossless, so text and thin lines stay sharp, where
+     * jpg leaves ringing artifacts around them; jpg is still honored (at high quality) if requested.
+     */
+    public static void printImageToFile(BufferedImage image, File file)
+    {
+        String format = formatFor(file);
+        try (FileOutputStream out = new FileOutputStream(file))
+        {
+            if ("jpg".equals(format) || "jpeg".equals(format))
+            {
+                writeJpeg(image, out, 0.95f);
+            }
+            else if (!ImageIO.write(image, format, out))
+            {
+                logger.error("No image writer found for format '{}' ({})", format, file);
+            }
+        }
+        catch (IOException ioe)
+        {
+            logger.error(Utils.formatExceptionText(ioe));
+        }
+    }
+
+    /** Lower-case extension of the file, or "png" if it has none. */
+    private static String formatFor(File file)
+    {
+        String name = file.getName();
+        int dot = name.lastIndexOf('.');
+        return dot >= 0 && dot < name.length() - 1 ? name.substring(dot + 1).toLowerCase() : "png";
+    }
+
+    /** Write a JPEG at an explicit quality (0..1); JPEG can't store alpha, so callers pass RGB images. */
+    private static void writeJpeg(BufferedImage image, FileOutputStream out, float quality) throws IOException
+    {
+        javax.imageio.ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+        javax.imageio.ImageWriteParam param = writer.getDefaultWriteParam();
+        param.setCompressionMode(javax.imageio.ImageWriteParam.MODE_EXPLICIT);
+        param.setCompressionQuality(quality);
+        try (javax.imageio.stream.ImageOutputStream ios = ImageIO.createImageOutputStream(out))
+        {
+            writer.setOutput(ios);
+            writer.write(null, new javax.imageio.IIOImage(image, null, null), param);
+        }
+        finally
+        {
+            writer.dispose();
+        }
     }
 }

@@ -580,6 +580,11 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         return ALL_STEPS[stepIndex_];
     }
 
+    /** Lower-case id of the step currently showing (e.g. "welcome", "docker"), for screenshot names. */
+    public String currentStepName() {
+        return currentStep().name().toLowerCase();
+    }
+
     /** The BASH step only applies on Windows; everywhere else it is skipped during navigation. */
     private boolean isStepEnabled(Step step) {
         return step != Step.BASH || Utils.ISWINDOWS;

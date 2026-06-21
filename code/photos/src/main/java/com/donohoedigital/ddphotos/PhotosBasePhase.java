@@ -47,6 +47,10 @@ public class PhotosBasePhase extends BasePhase {
     protected DDHtmlArea helptext_;
     private TourController tourController_;
 
+    // Held so the screenshot menu item can name the file after whatever is currently showing.
+    private OptionTabbedPane tabs_;
+    private WizardPanel wizardPanel_;
+
     public PhotosBasePhase() {
         Path sitesFilePath = AppConfigUtils.getSaveDir().toPath().resolve("sites.yaml");
         sitesFile_ = new SitesFile(sitesFilePath).load();
@@ -94,7 +98,8 @@ public class PhotosBasePhase extends BasePhase {
         wrapper.setLayout(new GridBagLayout());
         wrapper.setOpaque(true);
         wrapper.setBackground(StylesConfig.getColor("app.panel.bg"));
-        wrapper.add(new WizardPanel(context_, sitesFile_, rerun));
+        wizardPanel_ = new WizardPanel(context_, sitesFile_, rerun);
+        wrapper.add(wizardPanel_);
 
         centerPanel_.add(wrapper, BorderLayout.CENTER);
     }
@@ -109,6 +114,7 @@ public class PhotosBasePhase extends BasePhase {
         centerPanel_.add(northStrip, BorderLayout.NORTH);
 
         OptionTabbedPane tabs = new OptionTabbedPane(TAB_STYLE, TOP, PhotosConstants.PREFS_NODE_APP, "maintabs");
+        tabs_ = tabs;
         tabs.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_AREA_INSETS, new Insets(0, 10, 0, 0));
 
         // Held for the tour, which selects these tabs and runs their commands (see TourController).
@@ -229,9 +235,37 @@ public class PhotosBasePhase extends BasePhase {
             JMenuItem boom = new JMenuItem("BOOM!");
             boom.addActionListener(_ ->  { throw new RuntimeException("BOOM!"); });
             menu.add(boom);
+
+            JMenuItem ss = new JMenuItem("Take screenshot...");
+            ss.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+            ss.addActionListener(_ ->  {
+                context_.screenshot(screenshotName());
+            });
+            menu.add(ss);
         }
 
         return menu;
+    }
+
+    /**
+     * Name for a screenshot of whatever is currently showing: the running wizard step
+     * (e.g. "wizard-docker") when the wizard panel is up, otherwise the selected tab's
+     * title slugified (e.g. "config", "photogen"). Falls back to "screenshot".
+     */
+    private String screenshotName() {
+        if (wizardPanel_ != null && wizardPanel_.isShowing()) {
+            return "wizard-" + wizardPanel_.currentStepName();
+        }
+        if (tabs_ != null && tabs_.getSelectedIndex() >= 0) {
+            return slug(tabs_.getTitleAt(tabs_.getSelectedIndex()));
+        }
+        return "screenshot";
+    }
+
+    /** Lower-case, filename-safe form of a tab title (e.g. "Photo Gen" -> "photo-gen"). */
+    private static String slug(String title) {
+        if (title == null || title.isBlank()) return "screenshot";
+        return title.trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
     }
 
     private void doRerunWizard() {
