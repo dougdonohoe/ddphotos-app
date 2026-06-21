@@ -9,6 +9,7 @@ import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.app.config.*;
 import com.donohoedigital.gui.DDWindow;
 import com.donohoedigital.gui.GuiUtils;
+import com.donohoedigital.gui.HelpTextManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -619,11 +620,13 @@ public class AppContext
     public void screenshot(String name) {
         if (!DebugConfig.TESTING("settings.debug.screenshots")) return;
 
-        BufferedImage image = GuiUtils.printToImage(getRootComponent(), 1200, 800);
+        boolean shadow = PropertyConfig.getBooleanProperty("settings.debug.screenshots.shadow", true);
+        BufferedImage image = GuiUtils.printToImage(getRootComponent(), 1200, 800, shadow);
 
         String path = PropertyConfig.getRequiredStringProperty("settings.debug.screenshots.path");
         File file = Path.of(path, name + ".png").toFile();
         GuiUtils.printImageToFile(image, file);
         logger.info("Captured screenshot {}", file.getAbsolutePath());
+        HelpTextManager.getGlobalHelpTextWidget().setText("Captured screenshot: " + file.getAbsolutePath());
     }
 }

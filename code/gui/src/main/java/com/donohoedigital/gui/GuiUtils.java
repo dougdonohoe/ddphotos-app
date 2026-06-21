@@ -24,6 +24,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
+import java.util.Arrays;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -517,14 +520,24 @@ public class GuiUtils
         return new Color(r, g, b);
     }
 
+    /** Same as {@link #printToImage(JComponent, int, int, boolean)} with no drop shadow. */
+    public static BufferedImage printToImage(JComponent c, int width, int height)
+    {
+        return printToImage(c, width, height, false);
+    }
+
     /**
      * Render a Swing component to an image, scaled down (never up) to fit within width x height
      * while preserving aspect ratio. Uses {@link JComponent#print} rather than {@code paint} so the
      * component renders as it would for printing (no caret blink, correct double-buffer handling),
      * and applies the scale to the Graphics transform so painting happens directly at the target
      * size - text and lines stay crisp instead of being downsampled from a full-size raster.
+     *
+     * <p>When {@code withShadow} is true the shot is matted on a white background with a soft drop
+     * shadow (see {@link #withDropShadow}); the returned image is then larger than width x height by
+     * the shadow margin, though the shot itself still fits within width x height.
      */
-    public static BufferedImage printToImage(JComponent c, int width, int height)
+    public static BufferedImage printToImage(JComponent c, int width, int height, boolean withShadow)
     {
         double w = (double) width / Math.max((double) c.getWidth(), width);
         double h = (double) height / Math.max((double) c.getHeight(), height);
@@ -555,7 +568,62 @@ public class GuiUtils
         {
             g.dispose();
         }
-        return image;
+        return withShadow ? withDropShadow(image) : image;
+    }
+
+    // Drop-shadow tuning (device pixels). MARGIN must exceed BLUR + OFFSET so the blurred
+    // shadow fades out fully inside the matted canvas.
+    private static final int SHADOW_MARGIN   = 24;
+    private static final int SHADOW_BLUR     = 10;
+    private static final int SHADOW_OFFSET_X = 0;
+    private static final int SHADOW_OFFSET_Y = 6;
+    private static final int SHADOW_ALPHA    = 90;
+
+    /**
+     * Matte {@code content} on a white background with a soft drop shadow. The shadow is a
+     * translucent black rectangle the size of the shot, offset down/right and box-blurred to soften
+     * its edges, drawn under the shot. White is needed so the semi-transparent shadow has something
+     * to blend against (a transparent canvas would just leave the shadow as faint stray pixels).
+     */
+    private static BufferedImage withDropShadow(BufferedImage content)
+    {
+        int cw = content.getWidth();
+        int ch = content.getHeight();
+        int w = cw + SHADOW_MARGIN * 2;
+        int h = ch + SHADOW_MARGIN * 2;
+
+        BufferedImage shadow = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D sg = shadow.createGraphics();
+        sg.setColor(new Color(0, 0, 0, SHADOW_ALPHA));
+        sg.fillRect(SHADOW_MARGIN + SHADOW_OFFSET_X, SHADOW_MARGIN + SHADOW_OFFSET_Y, cw, ch);
+        sg.dispose();
+        shadow = boxBlur(shadow, SHADOW_BLUR);
+
+        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = out.createGraphics();
+        try
+        {
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, w, h);
+            g.drawImage(shadow, 0, 0, null);
+            g.drawImage(content, SHADOW_MARGIN, SHADOW_MARGIN, null);
+        }
+        finally
+        {
+            g.dispose();
+        }
+        return out;
+    }
+
+    /** Box-blur an ARGB image with a (2*radius+1) square kernel; EDGE_NO_OP leaves the clear margin alone. */
+    private static BufferedImage boxBlur(BufferedImage src, int radius)
+    {
+        if (radius < 1) return src;
+        int size = radius * 2 + 1;
+        float[] kernel = new float[size * size];
+        Arrays.fill(kernel, 1f / (size * size));
+        ConvolveOp op = new ConvolveOp(new Kernel(size, size, kernel), ConvolveOp.EDGE_NO_OP, null);
+        return op.filter(src, null);
     }
 
     /**
