@@ -8,7 +8,7 @@
 
 ![logo_256x256.png](logo/icons/ddphotos-logo/logo_256x256.png)
 
-DD Photos is a desktop GUI for managing the configuration of a
+DD Photos is a desktop app for managing the configuration of a
 [DD Photos](https://github.com/dougdonohoe/ddphotos) site - the static photo
 album site generator. Rather than hand-editing YAML, text, and environment
 files, DD Photos provides a friendly interface for managing your sites
@@ -16,6 +16,8 @@ and editing configuration files such as `albums.yaml` (support for `passwords.ya
 `descriptions.txt`, and `custom.css` coming soon).
 You can also run all the major `ddphotos` commands to
 generate, test and deploy your site.
+
+![screenshots.gif](images/screenshots.gif)
 
 ## Installers
 
