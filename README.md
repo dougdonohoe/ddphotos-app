@@ -19,6 +19,8 @@ generate, test and deploy your site.
 
 ![screenshots.gif](images/screenshots.gif)
 
+See [Screenshots](docs/SCREENSHOTS.md) for full-size screenshots of each screen.
+
 ## Installers
 
 See [Releases](https://github.com/dougdonohoe/ddphotos-app/releases) for the latest Mac, Linux and Windows installers.
