@@ -11,7 +11,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
 * Wizard step for Docker file permissions?
 * Windows - WSL and PowerShell docs
-* Put command runner text in `client.properties`
 * Metal bumps look odd on Windows
 * `xboxl` hack in username
 * If wrangler errors - treated as success (probably surge too)
