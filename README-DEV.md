@@ -1,4 +1,4 @@
-# DD Photos Desktop Application Developer Notes
+# DD Photos Desktop App Developer Notes
 
 ## Introduction
 
@@ -11,9 +11,9 @@ These instructions are admittedly Mac-centric, largely because that is what I ha
 for the last 15 years.  I've done cursory testing on Linux (see Appendix A for testing tips
 on Ubuntu from Docker/Mac).
 
-I haven't used Windows for development in a very long time, so apologies to Windows developers 
-for the lack of instructions. Cygwin worked back in the day, and I imagine that the Windows Subsystem for Linux (WSL)
-should be helpful here, too.
+I just started using Windows for development again after a very long time, so apologies to 
+Windows developers for the lack of instructions.  I have managed to get things working with
+both IntelliJ and using WSL, and plan on updating these docs soon.
 
 Feel free to submit a PR with any changes to these docs that would help Linux or Windows users.
 
@@ -24,6 +24,7 @@ Required software:
 * Java 25 - [See Adoptium](https://adoptium.net/temurin/releases/?os=any&package=jdk&version=25)
 * Maven 3 - [See Apache Maven](https://maven.apache.org/install.html)
 * Docker - [See Docker](https://docs.docker.com/engine/install/)
+* Git for Windows - [See Git for Windows](https://git-scm.com/download/win) (Windows only)
 
 Both `java` and `mvn` must be on your `PATH`.
 
@@ -96,7 +97,7 @@ bits of knowledge and advice.
 Here is a brief overview of the modules in this repo, in the order maven builds them, which
 means the later modules are dependent on one or more of the earlier modules.
 
-* `common` - core functionality including configuration, logging, xml, properties, various utils
+* `common` - core functionality including configuration, logging, XML, properties, various utils
 * `gui` - GUI infrastructure extending Java Swing
 * `engine` - core app engine and utilities
 * `photos` - DD Photos application
@@ -207,7 +208,7 @@ Default values for items are set in
 set by the user are stored in the `.plist` file.
 
 You can clear all preferences via the `File -> Reset Preferences` menu item.
-If you want to completely all preferences, on a Mac, you need to delete the `.plist` file
+If you want to completely remove all preferences, on a Mac, you need to delete the `.plist` file
 **AND** restart the `cfprefsd` service, which can keep preferences values in
 memory.
 

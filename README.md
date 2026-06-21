@@ -1,4 +1,4 @@
-# DD Photos Desktop Application
+# DD Photos Desktop App
 
 [![Demo](https://img.shields.io/badge/Demo-ddphotos.donohoe.info-blue)](https://ddphotos.donohoe.info)
 [![CI](https://github.com/dougdonohoe/ddphotos-app/actions/workflows/ci.yml/badge.svg)](https://github.com/dougdonohoe/ddphotos-app/actions)
@@ -29,6 +29,61 @@ courtesy of a license to ej-technologies'
 [excellent multi-platform installer builder, install4j](https://www.ej-technologies.com/install4j).
 We are grateful that they provided us an open source license.
 
+## Required Software
+
+DD Photos drives the [`ddphotos`](https://github.com/dougdonohoe/ddphotos) command-line
+tool to generate, test, and deploy your site. That tool runs inside Docker, so you
+need a couple of things installed before DD Photos can do its work. The built-in
+Setup Wizard checks for these on first launch and links you to them, but you can
+install them ahead of time:
+
+- **[Docker](https://www.docker.com/get-started/)** (all platforms) — DD Photos runs
+  every `ddphotos` command (`photogen`, `run`, `build`, `serve`, etc.) inside a Docker
+  container, so Docker must be installed and running. On Mac and Windows, install
+  **Docker Desktop**; on Linux, the Docker Engine. Docker must be started before you
+  run any commands.
+
+- **[Git for Windows](https://git-scm.com/download/win)** (Windows only) — the
+  `ddphotos` script is a Bash script, so on Windows it runs under **Git Bash**
+  (`bash.exe`), which ships with Git for Windows. It is not needed on Mac or Linux,
+  which already have Bash. When installing, it is fine to accept all the default
+  options.
+
+## Overview
+
+A DD Photos site has a home page, with all of your albums and their description.
+You can easily switch between dark and light themes.  Click/touch an album and
+you see a grid of all photos.  Click/touch a photo to see the full size version and
+a caption, if it has one. You can easily swipe between photos (or use
+arrow keys on a laptop).  It works great on mobile, tablet, and desktop.
+
+Here's what it looks like on a big display:
+
+![screenshots.png](images/ddphotos/screenshots.png)
+
+## How it Works
+
+The idea is that you already use _something else_ to curate and filter your photos. Maybe it
+is Adobe Lightroom Classic (my tool).  Or maybe it is Apple Photos or Google Photos.
+It doesn't matter, but once you get a selection of photos that comprise an album,
+you export the photos into a folder.  All the photos in a folder make up an album.
+It's that simple.
+
+With DD Photos, you define where your albums live in the **Config** tab, and
+can specify a name, description and choose your cover photo.  Here, you also define
+details about your site, like name, description, optional HTML text and the
+hero image.
+
+Once you have defined where your photos live, you use the **Photogen** tab to
+run the `photogen` tool, which resizes the photos for web viewing and generates index files that
+the web app uses.
+
+That's it.  You can now view your personal photo albums site on your machine using the dev server
+started in the **Run** tab.
+
+There are multiple publishing options, from free and easy CloudFlare and Surge, to
+total control via `rsync` or AWS S3.
+
 ## TL;DR Running DD Photos From Source
 
 If you are impatient and just want to run the DD Photos app without
@@ -47,7 +102,7 @@ ddphotos-app
 
 ## Developer Notes
 
-For details on how to build and run DD Photos, please see [README-DEV.md](README-DEV.md).
+For details on how to build and run DD Photos from source, please see [README-DEV.md](README-DEV.md).
 
 ## Copyright and Licenses
 
