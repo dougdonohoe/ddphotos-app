@@ -50,7 +50,8 @@ run the `photogen` tool, which resizes the photos for web viewing and generates 
 the web app uses.
 
 That's it.  You can now view your personal photo albums site on your machine using the dev server
-started in the **Run** tab.
+started in the **Run** tab.  You typically will repeat the `edit` - `photogen` - `run` loop multiple times
+as you refine your site, adding albums, choosing covers, setting descriptions, etc.
 
 Once you are satisfied with you site, you generate the full static site on the **Build** tab,
 and verify it via the **Serve** tab.
