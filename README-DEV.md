@@ -29,7 +29,7 @@ Required software:
 Both `java` and `mvn` must be on your `PATH`.
 
 We provide the `ddphotos.rc` file, which sets some environment variables required by the scripts in
-`tools/bin` and `tools/db`, adds these script directories to the `PATH`, creates some useful
+`tools/bin` and adds these script directories to the `PATH`, creates some useful
 `mvn` aliases (used below) and performs some sanity checks.
 
 **NOTE**: all commands below assume you have sourced `ddphotos.rc`, have `mvn` and `java` installed and that
