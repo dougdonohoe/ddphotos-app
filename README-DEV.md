@@ -21,10 +21,10 @@ Feel free to submit a PR with any changes to these docs that would help Linux or
 
 Required software:
 
-* Java 25 - [See Adoptium](https://adoptium.net/temurin/releases/?os=any&package=jdk&version=25)
-* Maven 3 - [See Apache Maven](https://maven.apache.org/install.html)
-* Docker - [See Docker](https://docs.docker.com/engine/install/)
-* Git for Windows - [See Git for Windows](https://git-scm.com/download/win) (Windows only)
+* Java 25 - [See Adoptium↗](https://adoptium.net/temurin/releases/?os=any&package=jdk&version=25)
+* Maven 3 - [See Apache Maven↗](https://maven.apache.org/install.html)
+* Docker - [See Docker↗](https://docs.docker.com/engine/install/)
+* Git for Windows - [See Git for Windows↗](https://git-scm.com/download/win) (Windows only)
 
 Both `java` and `mvn` must be on your `PATH`.
 
@@ -41,7 +41,7 @@ source ddphotos.rc
 
 ## Mac Installs
 
-[Brew](https://brew.sh/) is useful to install Java and Maven:
+[Brew↗](https://brew.sh/) is useful to install Java and Maven:
 
 ```shell
 brew install temurin@25 maven
@@ -248,9 +248,9 @@ mvn-tree
 
 It is possible to run DD Photos in Ubuntu in Docker and display it on your Mac, but
 it can be a little finicky.  Here's what I got to work with help from
-[this helpful gist](https://gist.github.com/cschiewek/246a244ba23da8b9f0e7b11a68bf3285).
+[this helpful gist↗](https://gist.github.com/cschiewek/246a244ba23da8b9f0e7b11a68bf3285).
 
-First Install XQuartz from [www.xquartz.org](https://www.xquartz.org/) and then launch it from `Applications` or
+First Install XQuartz from [www.xquartz.org↗](https://www.xquartz.org/) and then launch it from `Applications` or
 from the command line:
 
 ```shell
@@ -300,7 +300,7 @@ ddphotos-app
 
 ## Appendix B: Running GitHub Actions Locally
 
-You can run GitHub actions locally using the [`act`](https://nektosact.com/) tool (which requires Docker).
+You can run GitHub actions locally using the [act↗](https://nektosact.com/) tool (which requires Docker).
 
 To install `act`:
 

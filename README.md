@@ -13,7 +13,7 @@ mobile friendly, and distraction free.
 Publish for free via [Cloudflare Pages↗](https://pages.cloudflare.com) or [Surge↗](https://surge.sh).  More technical users can self-publish 
 via AWS S3 or `rsync`.
 
-The DD Photos app is a front end to the [ddphotos](https://github.com/dougdonohoe/ddphotos)
+The DD Photos app is a front end to the [ddphotos↗](https://github.com/dougdonohoe/ddphotos)
 open-source static photo album site generator. Rather than hand-editing complex configuration
 files, DD Photos provides a friendly interface for managing your site and album data.
 You can also run all the major `ddphotos` commands to generate, test and deploy your site.
