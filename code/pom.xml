@@ -23,7 +23,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j2.version>2.26.1</log4j2.version>
     <junit.version>4.13.2</junit.version>
-    <flatlaf.version>3.7.1</flatlaf.version>
+    <flatlaf.version>3.7.2</flatlaf.version>
     <jdom2.version>2.0.6.1</jdom2.version>
     <xerces.version>2.12.2</xerces.version>
     <commons-io.version>2.22.0</commons-io.version>
