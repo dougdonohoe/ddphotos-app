@@ -55,7 +55,7 @@ public class PhotogenEditorPhase extends BasePhase {
     private static final Logger logger = LogManager.getLogger(PhotogenEditorPhase.class);
     private static final String STYLE = "Options";
     private static final int THUMB_MIN_H = 72;
-    private static final int NAME_COL_WIDTH = 180;
+    private static final int NAME_COL_WIDTH = 240;
 
     // Thumbnail cell size — computed in buildUI to fill the row: height matches the caption box,
     // width is landscape (3:2) so typical photos use the available space.
