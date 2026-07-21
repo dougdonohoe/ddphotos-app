@@ -456,7 +456,13 @@ public class PhotogenEditorPhase extends BasePhase {
             public void changedUpdate(DocumentEvent e) { changed(); }
         });
         caption.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent e) { selectRow(row); }
+            public void focusGained(java.awt.event.FocusEvent e) {
+                selectRow(row);
+                // When tabbing (or clicking) into a caption, make sure its row is fully on screen.
+                if (row.comp != null) {
+                    row.comp.scrollRectToVisible(new Rectangle(0, 0, row.comp.getWidth(), row.comp.getHeight()));
+                }
+            }
         });
         return captionArea;
     }
