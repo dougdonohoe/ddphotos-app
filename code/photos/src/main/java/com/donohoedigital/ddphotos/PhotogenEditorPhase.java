@@ -55,7 +55,7 @@ public class PhotogenEditorPhase extends BasePhase {
     private static final Logger logger = LogManager.getLogger(PhotogenEditorPhase.class);
     private static final String STYLE = "Options";
     private static final int THUMB_MIN_H = 72;
-    private static final int NAME_COL_WIDTH = 150;
+    private static final int NAME_COL_WIDTH = 180;
 
     // Thumbnail cell size — computed in buildUI to fill the row: height matches the caption box,
     // width is landscape (3:2) so typical photos use the available space.
@@ -391,8 +391,9 @@ public class PhotogenEditorPhase extends BasePhase {
         p.setBorder(rowBorder(false));
 
         // Column 0 — filename / subfolder name (fixed width so every row's thumb lines up).
+        // Wrap long names rather than truncating them; the taller rows give room for 2–3 lines.
         DDLabel name = new DDLabel("photogenrowname", STYLE);
-        name.setText(row.displayName);
+        setWrappedName(name, row.displayName);
         name.setToolTipText(row.displayName);
         name.setVerticalAlignment(SwingConstants.CENTER);
         fixSize(name, NAME_COL_WIDTH, thumbH_);
@@ -487,6 +488,42 @@ public class PhotogenEditorPhase extends BasePhase {
         return captionArea;
     }
 
+    /**
+     * Sets a filename/subfolder label, wrapping it to the name column via {@code <br>}.  Swing's
+     * JLabel HTML only wraps at spaces (not hyphens/dots), and filenames have none — so we break
+     * the text ourselves at separators sized to the column, keeping the full name visible.
+     */
+    private void setWrappedName(DDLabel label, String text) {
+        FontMetrics fm = label.getFontMetrics(label.getFont());
+        List<String> lines = wrapToWidth(text, fm, NAME_COL_WIDTH - 8);
+        StringBuilder sb = new StringBuilder("<html>");
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0) sb.append("<br>");
+            sb.append(PhotosUtils.escapeHtml(lines.get(i)));
+        }
+        label.setText(sb.append("</html>").toString());
+    }
+
+    /** Greedily splits {@code s} into lines no wider than {@code max}px, preferring to break after
+     *  a separator ({@code - _ . space}) and hard-breaking only when a single run overflows. */
+    private static List<String> wrapToWidth(String s, FontMetrics fm, int max) {
+        List<String> lines = new ArrayList<>();
+        int start = 0, n = s.length();
+        while (start < n) {
+            int end = start, lastBreak = -1;
+            while (end < n) {
+                if (fm.stringWidth(s.substring(start, end + 1)) > max && end > start) break;
+                char c = s.charAt(end);
+                if (c == '-' || c == '_' || c == '.' || c == ' ') lastBreak = end + 1;
+                end++;
+            }
+            int cut = (end >= n) ? n : (lastBreak > start ? lastBreak : end);
+            lines.add(s.substring(start, cut));
+            start = cut;
+        }
+        return lines;
+    }
+
     private static void fixSize(JComponent c, int w, int h) {
         Dimension d = new Dimension(w, h);
         c.setMinimumSize(d);
@@ -501,15 +538,23 @@ public class PhotogenEditorPhase extends BasePhase {
         new SwingWorker<BufferedImage, Void>() {
             protected BufferedImage doInBackground() { return Thumbs.load(path, thumbW_, thumbH_, null); }
             protected void done() {
+                BufferedImage img = null;
                 try {
-                    BufferedImage img = get();
-                    if (img != null) label.setIcon(new ImageIcon(img));
+                    img = get();
                 } catch (Exception e) {
                     logger.warn("thumbnail load failed: {}", path);
                 }
+                // Decoded image, or the "no preview" camera-off placeholder when it can't be read
+                // (e.g. HEIC, which ImageIO can't decode) — mirrors PhotoPreviewPanel.
+                label.setIcon(img != null ? new ImageIcon(img) : placeholderIcon());
             }
         }.execute();
         return label;
+    }
+
+    /** Camera-off icon shown in a row's thumbnail cell when the image can't be decoded. */
+    private static Icon placeholderIcon() {
+        return DDIconButtons.svgIcon(DDIconButtons.CAMERA_OFF, 48, "Label.disabledForeground");
     }
 
     // -------------------------------------------------------------------------
