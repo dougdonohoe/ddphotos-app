@@ -26,4 +26,10 @@ public class EngineConstants
     public static final String PREF_Y = "y";
     public static final String PREF_W = "w";
     public static final String PREF_H = "h";
+
+    // per-invocation window identity overrides (passed via processPhase params); when present they
+    // override a window phase's static window name / title, so multiple instances (e.g. one editor
+    // per album) get distinct titles and their own remembered size/position.
+    public static final String PARAM_WINDOW_NAME  = "window-name";
+    public static final String PARAM_WINDOW_TITLE = "window-title-override";
 }

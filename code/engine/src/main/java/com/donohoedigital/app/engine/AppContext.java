@@ -344,6 +344,9 @@ public class AppContext
         {
             // name, get title and starting width/height
             String sWindowName = phase.getWindowName();
+            // Optional per-invocation override so multiple instances of one window phase can have
+            // distinct identities (distinct title + their own remembered size/position).
+            if (params != null) sWindowName = params.getString(EngineConstants.PARAM_WINDOW_NAME, sWindowName);
             boolean bMulti = phase.getBoolean("window-multi", false);
 
             // look for existing context if not multi-instance window
@@ -360,6 +363,7 @@ public class AppContext
             if (context == null)
             {
                 String sTitle = PropertyConfig.getStringProperty(phase.getString("window-title"), "msg.application.name");
+                if (params != null) sTitle = params.getString(EngineConstants.PARAM_WINDOW_TITLE, sTitle);
                 int nHeight = phase.getInteger("window-height", 400);
                 int nWidth = phase.getInteger("window-width", 400);
                 int nMinHeight = phase.getInteger("window-height-min", 25);

@@ -53,7 +53,7 @@
 
     <phase name="PhotogenEditor" class="com.donohoedigital.ddphotos.PhotogenEditorPhase" history="false" window="photogen-editor" cache="false">
         <param name="window-title" strvalue="msg.windowtitle.PhotogenEditor"/>
-        <param name="window-width" intvalue="900"/>
+        <param name="window-width" intvalue="1200"/>
         <param name="window-height" intvalue="650"/>
         <param name="window-multi" boolvalue="true"/>
         <param name="window-resize" boolvalue="true"/>

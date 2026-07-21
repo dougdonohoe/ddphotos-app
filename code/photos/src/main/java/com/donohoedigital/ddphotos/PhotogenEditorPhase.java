@@ -1,5 +1,6 @@
 package com.donohoedigital.ddphotos;
 
+import com.donohoedigital.app.config.EngineConstants;
 import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.app.engine.BasePhase;
 import com.donohoedigital.app.engine.EngineUtils;
@@ -106,6 +107,13 @@ public class PhotogenEditorPhase extends BasePhase {
         params.setObject(PARAM_SITE, site);
         params.setObject(PARAM_ALBUM, album);
         params.setString(PARAM_KEY, key);
+        // Give each album its own window identity: a distinct title and its own remembered
+        // size/position (the engine keys both off the window name).
+        params.setString(EngineConstants.PARAM_WINDOW_NAME, "photogen-editor-" + site.getIdOrDefault() + "-" + album.getSlug());
+        params.setString(EngineConstants.PARAM_WINDOW_TITLE, PropertyConfig.getMessage(
+                "msg.windowtitle.PhotogenEditor.full",
+                site.getDisplayName() != null ? site.getDisplayName() : site.getIdOrDefault(),
+                album.getName() != null ? album.getName() : album.getSlug()));
         context.processPhase("PhotogenEditor", params);
     }
 
