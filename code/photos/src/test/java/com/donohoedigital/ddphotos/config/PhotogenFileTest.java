@@ -140,6 +140,34 @@ public class PhotogenFileTest {
         assertFalse("save() must not create an absent photogen.txt", Files.exists(pf.getPath()));
     }
 
+    // ── saveOrCreate tests ──────────────────────────────────────────────────
+
+    @Test
+    public void saveOrCreate_createsFileWhenAbsentWithContent() throws Exception {
+        Path dir = tmp.newFolder("new").toPath();
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertFalse(pf.existsOnDisk());
+        pf.setCaption("img_1", "One");
+        pf.saveOrCreate();
+        assertTrue(Files.exists(pf.getPath()));
+        assertEquals("img_1 One\n", read(dir));
+    }
+
+    @Test
+    public void saveOrCreate_doesNothingWhenAbsentAndEmpty() throws Exception {
+        Path dir = tmp.newFolder("empty").toPath();
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        pf.saveOrCreate();
+        assertFalse("empty absent folder must not gain a photogen.txt", Files.exists(pf.getPath()));
+    }
+
+    @Test
+    public void saveOrCreate_isByteExactForUnchangedExistingFile() throws Exception {
+        Path dir = write(SAMPLE);
+        new PhotogenFile(dir).load().saveOrCreate();
+        assertEquals(SAMPLE, read(dir));
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private Path write(String content) throws Exception {

@@ -84,6 +84,27 @@ public class PhotogenFile {
         if (!existed_) {
             return;
         }
+        write();
+    }
+
+    /**
+     * Like {@link #save()}, but creates the file when it was absent — as long as there is content
+     * to write.  Used by the editor, which legitimately needs to create a {@code photogen.txt} for
+     * a folder that had none once the user adds captions or a manual order.  Writing nothing to a
+     * folder that had no file (empty model) remains a no-op, so an untouched folder is never created.
+     */
+    public void saveOrCreate() throws PhotogenFileException {
+        if (!existed_ && lines_.isEmpty()) {
+            return;
+        }
+        // A freshly created file should end with a trailing newline like the samples do.
+        if (!existed_) {
+            endsWithNewline_ = true;
+        }
+        write();
+    }
+
+    private void write() throws PhotogenFileException {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < lines_.size(); i++) {
             if (i > 0) sb.append('\n');
@@ -195,7 +216,7 @@ public class PhotogenFile {
      * an entry's leading token case-insensitively and strips a known image extension.  Reuses
      * {@link PathValidation#isImageFile(String)} for the recognized-extension set.
      */
-    static String normalizeKey(String name) {
+    public static String normalizeKey(String name) {
         if (name == null) return "";
         String s = name.trim().toLowerCase(Locale.ROOT);
         if (PathValidation.isImageFile(s)) {

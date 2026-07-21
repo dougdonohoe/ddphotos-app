@@ -17,6 +17,29 @@ public class PhotosUtils {
         return AppConfigUtils.getBinDir().toPath().resolve("ddphotos");
     }
 
+    /**
+     * Builds the shared HTML description of a site: bold display name, muted {@code (id)}, and
+     * muted config path.  Used by the site combo renderer and the caption editor's top bar.
+     * The fragment is <em>not</em> wrapped in {@code <html>} tags, so callers can append more and
+     * wrap it themselves.
+     */
+    public static String siteLabelHtml(Site site) {
+        String name = escapeHtml(site.getDisplayName() != null ? site.getDisplayName() : "");
+        String id = escapeHtml(site.getIdOrDefault());
+        StringBuilder html = new StringBuilder("<b>").append(name)
+                .append("</b> <span style='color:#808080'>(").append(id).append(")</span>");
+        String cfg = site.getActualConfigPath();
+        if (cfg != null && !cfg.isBlank()) {
+            html.append(" <span style='color:#5B7C99'>").append(escapeHtml(cfg)).append("</span>");
+        }
+        return html.toString();
+    }
+
+    /** Escapes the HTML metacharacters {@code & < >} for safe inclusion in an HTML label. */
+    public static String escapeHtml(String s) {
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
     public static Site openAddSiteDialog(AppContext context, SitesFile sitesFile) {
         return openAddSiteDialog(context, sitesFile, null);
     }

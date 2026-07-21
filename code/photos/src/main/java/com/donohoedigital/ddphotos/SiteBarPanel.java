@@ -230,24 +230,9 @@ public class SiteBarPanel extends DDPanel
         {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             if (value instanceof Site site) {
-                String name = escape(site.getDisplayName() != null ? site.getDisplayName() : "");
-                String id = escape(site.getIdOrDefault());
-                StringBuilder html = new StringBuilder("<html><b>")
-                        .append(name)
-                        .append("</b> <span style='color:#808080'>(").append(id).append(")</span>");
-                String configPath = site.getActualConfigPath();
-                if (configPath != null && !configPath.isBlank()) {
-                    html.append(" <span style='color:#5B7C99'>").append(escape(configPath)).append("</span>");
-                }
-                html.append("</html>");
-                setText(html.toString());
+                setText("<html>" + PhotosUtils.siteLabelHtml(site) + "</html>");
             }
             return this;
-        }
-
-        private static String escape(String s)
-        {
-            return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
         }
     }
 }
