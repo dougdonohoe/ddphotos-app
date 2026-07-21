@@ -260,8 +260,8 @@ public class PhotogenEditorPhase extends BasePhase {
 
     private String siteLabelHtml() {
         String albumName = album_.getName() != null ? album_.getName() : album_.getSlug();
-        return "<html>" + PhotosUtils.siteLabelHtml(site_)
-                + " &nbsp;&mdash;&nbsp; " + PhotosUtils.escapeHtml(albumName) + "</html>";
+        return "<html><b>" + PhotosUtils.escapeHtml(albumName) + "</b> &nbsp;|&nbsp; " +
+                PhotosUtils.siteLabelHtml(site_) + "</html>";
     }
 
     // -------------------------------------------------------------------------
