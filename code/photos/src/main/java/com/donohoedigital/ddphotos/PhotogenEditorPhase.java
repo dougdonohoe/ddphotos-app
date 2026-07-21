@@ -54,8 +54,13 @@ public class PhotogenEditorPhase extends BasePhase {
 
     private static final Logger logger = LogManager.getLogger(PhotogenEditorPhase.class);
     private static final String STYLE = "Options";
-    private static final int THUMB = 72;
+    private static final int THUMB_MIN_H = 72;
     private static final int NAME_COL_WIDTH = 150;
+
+    // Thumbnail cell size — computed in buildUI to fill the row: height matches the caption box,
+    // width is landscape (3:2) so typical photos use the available space.
+    private int thumbW_ = 108;
+    private int thumbH_ = THUMB_MIN_H;
 
     static final String PARAM_SITE = "site";
     static final String PARAM_ALBUM = "album";
@@ -156,6 +161,12 @@ public class PhotogenEditorPhase extends BasePhase {
 
     private void buildUI() {
         loadPhotogenFiles();
+
+        // Size thumbnails to fill a row: match the caption box height, landscape (3:2) width.
+        int captionHeight = new OptionTextArea(null, "photogencaption", STYLE, null,
+                new TypedHashMap(), 2000, null, 2, 500).getPreferredSize().height;
+        thumbH_ = Math.max(THUMB_MIN_H, captionHeight);
+        thumbW_ = Math.round(thumbH_ * 1.5f);
 
         base_ = new DDPanel();
 
@@ -384,7 +395,7 @@ public class PhotogenEditorPhase extends BasePhase {
         name.setText(row.displayName);
         name.setToolTipText(row.displayName);
         name.setVerticalAlignment(SwingConstants.CENTER);
-        fixSize(name, NAME_COL_WIDTH, THUMB);
+        fixSize(name, NAME_COL_WIDTH, thumbH_);
         GridBagConstraints nc = new GridBagConstraints();
         nc.gridx = 0; nc.gridy = 0; nc.weightx = 0;
         nc.anchor = GridBagConstraints.WEST;
@@ -403,7 +414,7 @@ public class PhotogenEditorPhase extends BasePhase {
             wrap.add(edit);
             middle = wrap;
         }
-        fixSize(middle, THUMB, THUMB);
+        fixSize(middle, thumbW_, thumbH_);
         GridBagConstraints mc = new GridBagConstraints();
         mc.gridx = 1; mc.gridy = 0; mc.weightx = 0;
         mc.anchor = GridBagConstraints.CENTER;
@@ -485,10 +496,10 @@ public class PhotogenEditorPhase extends BasePhase {
 
     private JLabel makeThumbLabel(Path path) {
         JLabel label = new JLabel();
-        label.setPreferredSize(new Dimension(THUMB, THUMB));
+        label.setPreferredSize(new Dimension(thumbW_, thumbH_));
         label.setHorizontalAlignment(SwingConstants.CENTER);
         new SwingWorker<BufferedImage, Void>() {
-            protected BufferedImage doInBackground() { return Thumbs.load(path, THUMB, THUMB, null); }
+            protected BufferedImage doInBackground() { return Thumbs.load(path, thumbW_, thumbH_, null); }
             protected void done() {
                 try {
                     BufferedImage img = get();
