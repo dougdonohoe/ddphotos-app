@@ -30,6 +30,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -463,6 +464,14 @@ public class PhotogenEditorPhase extends BasePhase {
                     row.comp.scrollRectToVisible(new Rectangle(0, 0, row.comp.getWidth(), row.comp.getHeight()));
                 }
             }
+        });
+        // Captions rarely need to scroll internally; forward wheel events to the outer list so the
+        // pointer being over a caption doesn't swallow the scroll.
+        caption.addMouseWheelListener(e -> {
+            Point p = SwingUtilities.convertPoint(caption, e.getPoint(), scroll_);
+            scroll_.dispatchEvent(new MouseWheelEvent(scroll_, e.getID(), e.getWhen(), e.getModifiersEx(),
+                    p.x, p.y, e.getClickCount(), e.isPopupTrigger(), e.getScrollType(),
+                    e.getScrollAmount(), e.getWheelRotation()));
         });
         return captionArea;
     }
