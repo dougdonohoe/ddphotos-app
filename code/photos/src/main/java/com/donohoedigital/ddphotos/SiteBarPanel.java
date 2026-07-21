@@ -47,7 +47,6 @@ public class SiteBarPanel extends DDPanel
 
         setBorder(BorderFactory.createEmptyBorder(4, 11, 0, 8));
 
-        logoButton_ = new DDImageButton("icon48");
         siteOption_ = new OptionCombo<>(
                 new DataElement<>("sitecombo", sitesFile_.getSites(), null),
                 PhotosConstants.PREFS_NODE_APP, "sitecombo", STYLE,
@@ -76,6 +75,7 @@ public class SiteBarPanel extends DDPanel
 
         DDPanel bar = new DDPanel();
         bar.setLayout(new BoxLayout(bar, BoxLayout.X_AXIS));
+        logoButton_ = new DDImageButton("icon48");
         bar.add(logoButton_);
         bar.add(GuiUtils.NORTH(widgets));
 

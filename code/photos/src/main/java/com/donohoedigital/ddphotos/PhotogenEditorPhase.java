@@ -151,7 +151,7 @@ public class PhotogenEditorPhase extends BasePhase {
         base_ = new DDPanel();
 
         JComponent topBar = buildTopBar();
-        topBar.setBorder(BorderFactory.createEmptyBorder(6, 10, 0, 10));
+        topBar.setBorder(BorderFactory.createEmptyBorder(4, 10, 0, 10));
         base_.add(topBar, BorderLayout.NORTH);
 
         DDPanel center = new DDPanel();
@@ -183,29 +183,30 @@ public class PhotogenEditorPhase extends BasePhase {
     }
 
     private JComponent buildTopBar() {
-        DDPanel bar = new DDPanel();
-        bar.setLayout(new BoxLayout(bar, BoxLayout.X_AXIS));
-        bar.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-
-        bar.add(new DDImageButton("icon48"));
-        bar.add(Box.createHorizontalStrut(12));
-
+        DDPanel widgets = new DDPanel();
+        widgets.setLayout(new BoxLayout(widgets, BoxLayout.X_AXIS));
+        widgets.setBorder(BorderFactory.createEmptyBorder(11, 20, 0, 0));
         siteLabel_ = new DDLabel("photogensite", STYLE);
         siteLabel_.setText(siteLabelHtml());
-        bar.add(siteLabel_);
-        bar.add(Box.createHorizontalGlue());
+        widgets.add(siteLabel_);
+        widgets.add(Box.createHorizontalGlue());
 
-        bar.add(new DDLabel("photogenfolder", STYLE));
-        bar.add(Box.createHorizontalStrut(6));
+        widgets.add(new DDLabel("photogenfolder", STYLE));
+        widgets.add(Box.createHorizontalStrut(6));
 
         folderCombo_ = new DDComboBox<>(buildFolderElement(), STYLE);
         folderCombo_.setRequired(false);
         folderCombo_.addActionListener(_ -> onFolderChanged());
         Dimension size = folderCombo_.getPreferredSize();
         folderCombo_.setMaximumSize(new Dimension(Math.max(240, size.width), size.height));
-        bar.add(folderCombo_);
+        widgets.add(folderCombo_);
 
-        return GuiUtils.NORTH(bar);
+        DDPanel bar = new DDPanel();
+        bar.setLayout(new BoxLayout(bar, BoxLayout.X_AXIS));
+        bar.add(new DDImageButton("icon48"));
+        bar.add(GuiUtils.NORTH(widgets));
+
+        return bar;
     }
 
     private JComponent buildBottomBar() {
