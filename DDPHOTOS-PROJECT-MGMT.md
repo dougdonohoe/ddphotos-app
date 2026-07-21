@@ -45,7 +45,7 @@ Go code which reads `photogen.txt` is in /Users/donohoe/work/ddphotos/pkg/photog
 loadPhotoDescriptions().  Example photogen.txt in /Users/donohoe/work/ddphotos/sample/source/uganda -
 note that this album has subfolders as seen in /Users/donohoe/work/ddphotos/sample/source/uganda/photogen.txt.
 
-Step #1 - I'd like a `PhotogenFile` class which is similar to `SitesFile` in that it takes
+Step #1 (**DONE**) - I'd like a `PhotogenFile` class which is similar to `SitesFile` in that it takes
 a path to a photos directory (which may or may not contain a `photogen.txt` file), has a save() method 
 and has methods to add/edit entries
 for a photo (uses basename of photo without extension or subfolder name).  Create this file
@@ -53,7 +53,7 @@ and a test file to verify roundtrip editing keeps the file exactly as is, includ
 lines and comment ('#').  Note that save() should not write a photogen.txt file if it wasn't
 there in the first place.
 
-Step #2 - Need to enhance `SitesFile` to return a list of PhotogenFile for the album.
+Step #2 (**DONE**) - Need to enhance `SitesFile` to return a list of PhotogenFile for the album.
 This is one for the main album source and its one for all its subfolders (if `recurse` is true).
 
 Step #3 - Editor (details TBD, but we'll be adding an editor for PhotogenFile which will
