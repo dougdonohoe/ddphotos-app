@@ -53,12 +53,47 @@ and a test file to verify roundtrip editing keeps the file exactly as is, includ
 lines and comment ('#').  Note that save() should not write a photogen.txt file if it wasn't
 there in the first place.
 
-Step #2 (**DONE**) - Need to enhance `SitesFile` to return a list of PhotogenFile for the album.
+Step #2 (**DONE**) - Need to enhance `AlbumsFile` to return a list of PhotogenFile for the album.
 This is one for the main album source and its one for all its subfolders (if `recurse` is true).
 
-Step #3 - Editor (details TBD, but we'll be adding an editor for PhotogenFile which will
+Step #3 - Editor 
+
+We'll be adding an editor for PhotogenFile which will
 show a list of photos in the folder and allow user to edit caption and re-order similar
 to how albums themselves are re-orderable in the UI).
+
+* In src/main/java/com/donohoedigital/ddphotos/AlbumDetailPanel.java, add a Photos DDLabelBorder
+  section that has an "Edit Captions" button (Might change this name in the future)
+* This button opens a new standalone window, like Help or Support, but each album can have a 
+  single window open and only one per album (need to detect duplicates - will need to review
+  what capabilities AppEngine code has)
+* This window is the @photogen-txt-editor.jpg
+
+See @photogen-txt-editor.jpg (I can clarify my handwriting if you need me too).  Some notes:
+
+* The top part should match the src/main/java/com/donohoedigital/ddphotos/SiteBarPanel.java
+  setup of the logoButton and spacing.  Next to it is a label that matches the
+  way the site chooser entry looks like "**Site Name** (site id) /Path to config". Next
+  to that is a chooser which chooser the photos folder, defaulting to "Main",
+  which is the root source folder, and also listing any subfolders as choices.  This
+  should store chosen folder on per-album basis so need to set prefsName to include
+  site id in OptionCombo constructor.
+* The rest of the UI is a list modeled after src/main/java/com/donohoedigital/ddphotos/AlbumsListPanel.java,
+  with up/down arrows to change ordering.
+* Each entry in the list is an image file or subfolder name.  We should use the full
+  filename with extension even though `photogen.txt` can store the name without it.
+* If the row has an image, show the thumbnail of the photos - reuse
+  src/main/java/com/donohoedigital/ddphotos/PhotoPreviewPanel.java loadThumbnail,
+  move this code into PhotosUtils class.
+* If the row has a subfolder, show a button with "Edit" that changes the subfolder chooser
+* Need to track changes, and only enable "Save" if changes have been made.  My diagram
+  has just "Cancel" and "Save", but maybe we have a "Save" and "Save & Close" button? Thoughts?
+
+
+
+---
+
+# Parking Lot
 
 ## Future Surge support for login via PTY (full interactive terminal, handles `surge login`)
 
