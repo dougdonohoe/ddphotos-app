@@ -85,7 +85,7 @@ public class PhotogenEditorPhase extends BasePhase {
     private boolean switching_;
 
     private DDPanel base_;
-    private DDComboBox<String> folderCombo_;
+    private OptionCombo<String> folderCombo_;
     private JScrollPane scroll_;
     private JPanel rowsPanel_;
     private DDButton upBtn_, downBtn_;
@@ -196,7 +196,7 @@ public class PhotogenEditorPhase extends BasePhase {
 
         Path initial = initialFolderDir();
         switching_ = true;
-        folderCombo_.setSelectedItem(valueForDir(initial));
+        folderCombo_.getComboBox().setSelectedItem(valueForDir(initial));
         switching_ = false;
         showFolder(initial);
         onDirtyChanged();
@@ -211,12 +211,10 @@ public class PhotogenEditorPhase extends BasePhase {
         widgets.add(siteLabel_);
         widgets.add(Box.createHorizontalGlue());
 
-        widgets.add(new DDLabel("photogenfolder", STYLE));
-        widgets.add(Box.createHorizontalStrut(6));
-
-        folderCombo_ = new DDComboBox<>(buildFolderElement(), STYLE);
+        folderCombo_ = new OptionCombo<>(buildFolderElement(), null,
+                "photogenfolder", STYLE, new TypedHashMap(), 240, true);
         folderCombo_.setRequired(false);
-        folderCombo_.addActionListener(_ -> onFolderChanged());
+        folderCombo_.getComboBox().addActionListener(_ -> onFolderChanged());
         Dimension size = folderCombo_.getPreferredSize();
         folderCombo_.setMaximumSize(new Dimension(Math.max(240, size.width), size.height));
         widgets.add(folderCombo_);
@@ -409,7 +407,7 @@ public class PhotogenEditorPhase extends BasePhase {
             middle = makeThumbLabel(row.path);
         } else {
             DDButton edit = new DDButton("photogenfolderedit", STYLE);
-            edit.addActionListener(_ -> folderCombo_.setSelectedItem(valueForDir(row.path)));
+            edit.addActionListener(_ -> folderCombo_.getComboBox().setSelectedItem(valueForDir(row.path)));
             JPanel wrap = new JPanel(new GridBagLayout());  // centers the button vertically + horizontally
             wrap.setOpaque(false);
             wrap.add(edit);
