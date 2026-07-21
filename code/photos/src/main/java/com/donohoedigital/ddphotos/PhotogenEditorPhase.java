@@ -7,19 +7,13 @@ import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
+import com.donohoedigital.config.StylesConfig;
 import com.donohoedigital.ddphotos.config.AlbumEntry;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.PhotogenFile;
 import com.donohoedigital.ddphotos.config.PhotogenFileException;
 import com.donohoedigital.ddphotos.config.Site;
-import com.donohoedigital.gui.DDButton;
-import com.donohoedigital.gui.DDComboBox;
-import com.donohoedigital.gui.DDIconButtons;
-import com.donohoedigital.gui.DDImageButton;
-import com.donohoedigital.gui.DDLabel;
-import com.donohoedigital.gui.DDPanel;
-import com.donohoedigital.gui.DDTextArea;
-import com.donohoedigital.gui.GuiUtils;
+import com.donohoedigital.gui.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -89,6 +83,8 @@ public class PhotogenEditorPhase extends BasePhase {
     private JPanel rowsPanel_;
     private DDButton upBtn_, downBtn_;
     private DDButton saveBtn_, saveCloseBtn_;
+    private DDHtmlArea helptext_;
+    private DDLabel siteLabel_;
 
     private FolderEditor currentFolder_;
     private Row selectedRow_;
@@ -133,6 +129,8 @@ public class PhotogenEditorPhase extends BasePhase {
             built_ = true;
         }
         context_.setMainUIComponent(this, base_, true, folderCombo_);
+        context_.getWindow().setHelpTextWidget(helptext_);
+        context_.getWindow().showHelp(siteLabel_); // init help
     }
 
     @Override
@@ -151,22 +149,30 @@ public class PhotogenEditorPhase extends BasePhase {
         loadPhotogenFiles();
 
         base_ = new DDPanel();
-        base_.setLayout(new BorderLayout());
-        base_.setBorder(BorderFactory.createEmptyBorder(6, 10, 8, 10));
 
-        base_.add(buildTopBar(), BorderLayout.NORTH);
+        JComponent topBar = buildTopBar();
+        topBar.setBorder(BorderFactory.createEmptyBorder(6, 10, 0, 10));
+        base_.add(topBar, BorderLayout.NORTH);
 
+        DDPanel center = new DDPanel();
+        center.setOpaque(true);
+        Color panelBg = StylesConfig.getColor("app.panel.bg");
+        center.setBackground(panelBg);
+        center.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10));
+        base_.add(center, BorderLayout.CENTER);
         rowsPanel_ = new ScrollingRows();
         rowsPanel_.setLayout(new BoxLayout(rowsPanel_, BoxLayout.Y_AXIS));
-        Color contentBg = rowsPanel_.getBackground();  // DDPanel gray, matches the rest of the window
         scroll_ = new JScrollPane(rowsPanel_);
         scroll_.setBorder(BorderFactory.createEtchedBorder());
-        scroll_.setBackground(contentBg);
-        scroll_.getViewport().setBackground(contentBg);
+        scroll_.setBackground(panelBg);
+        scroll_.getViewport().setBackground(panelBg);
         scroll_.getVerticalScrollBar().setUnitIncrement(16);
-        base_.add(scroll_, BorderLayout.CENTER);
+        center.add(scroll_, BorderLayout.CENTER);
+        center.add(buildBottomBar(), BorderLayout.SOUTH);
 
-        base_.add(buildBottomBar(), BorderLayout.SOUTH);
+        // SOUTH: help text
+        helptext_ = PhotosUtils.createHelpText(PhotosBasePhase.STYLE);
+        base_.add(helptext_, BorderLayout.SOUTH);
 
         Path initial = initialFolderDir();
         switching_ = true;
@@ -179,14 +185,14 @@ public class PhotogenEditorPhase extends BasePhase {
     private JComponent buildTopBar() {
         DDPanel bar = new DDPanel();
         bar.setLayout(new BoxLayout(bar, BoxLayout.X_AXIS));
-        bar.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
+        bar.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
         bar.add(new DDImageButton("icon48"));
         bar.add(Box.createHorizontalStrut(12));
 
-        DDLabel siteLabel = new DDLabel("photogensite", STYLE);
-        siteLabel.setText(siteLabelHtml());
-        bar.add(siteLabel);
+        siteLabel_ = new DDLabel("photogensite", STYLE);
+        siteLabel_.setText(siteLabelHtml());
+        bar.add(siteLabel_);
         bar.add(Box.createHorizontalGlue());
 
         bar.add(new DDLabel("photogenfolder", STYLE));
@@ -416,11 +422,12 @@ public class PhotogenEditorPhase extends BasePhase {
      * A wrapping caption editor: word-wrap is on, but carriage returns are disallowed (Enter does
      * nothing and pasted newlines collapse to spaces) so a caption stays a single logical line.
      */
-    private DDTextArea makeCaptionArea(Row row) {
-        DDTextArea caption = new DDTextArea("photogencaption", STYLE);
+    private OptionTextArea  makeCaptionArea(Row row) {
+        OptionTextArea captionArea = new OptionTextArea(null, "photogencaption", STYLE,
+                null, new TypedHashMap(), 2000, null, 2, 500);
+        DDTextArea caption = captionArea.getTextArea();
         caption.setText(row.caption);
         caption.setTabChangesFocus(true);
-        caption.setRows(2);
         // Disallow carriage returns: Enter is a no-op; pasted newlines become spaces.
         caption.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "none");
         caption.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.SHIFT_DOWN_MASK), "none");
@@ -442,7 +449,7 @@ public class PhotogenEditorPhase extends BasePhase {
         caption.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent e) { selectRow(row); }
         });
-        return caption;
+        return captionArea;
     }
 
     private static void fixSize(JComponent c, int w, int h) {

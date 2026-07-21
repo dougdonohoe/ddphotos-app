@@ -31,14 +31,12 @@ import java.nio.file.Path;
 
 import static javax.swing.JTabbedPane.TOP;
 
-import static com.donohoedigital.app.engine.EngineUtils.STANDARD_BORDER_GAP;
-
 public class PhotosBasePhase extends BasePhase {
 
     public static final String PARAM_RERUN_WIZARD = "rerun-wizard";
     public static final String PARAM_SELECT_SITE  = "select-site";
 
-    private static final String STYLE = "PhotosMain";
+    public static final String STYLE = "PhotosMain";
 
     private final SitesFile sitesFile_;
 
@@ -64,11 +62,7 @@ public class PhotosBasePhase extends BasePhase {
         centerPanel_ = new DDPanel();
         centerPanel_.setLayout(new BorderLayout());
 
-        helptext_ = new DDHtmlArea(GuiManager.DEFAULT, STYLE);
-        helptext_.setDisplayOnly(true);
-        helptext_.setOpaque(true);
-        helptext_.setBorder(BorderFactory.createEmptyBorder(STANDARD_BORDER_GAP, STANDARD_BORDER_GAP, STANDARD_BORDER_GAP, STANDARD_BORDER_GAP));
-        helptext_.setPreferredSize(new Dimension(10000, 40)); // fix height as diff fonts can make it twitchy
+        helptext_ = PhotosUtils.createHelpText(STYLE);
         centerPanel_.add(helptext_, BorderLayout.SOUTH);
 
         context_.setMainUIComponent(this, centerPanel_, true, null);

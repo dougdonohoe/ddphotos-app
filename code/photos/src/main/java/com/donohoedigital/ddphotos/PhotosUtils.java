@@ -2,10 +2,15 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.config.AppConfigUtils;
 import com.donohoedigital.app.engine.AppContext;
+import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
+import com.donohoedigital.gui.DDHtmlArea;
+import com.donohoedigital.gui.GuiManager;
 
+import javax.swing.BorderFactory;
+import java.awt.Dimension;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,6 +20,22 @@ public class PhotosUtils {
     /** Path to the private ddphotos wrapper script installed by the New User wizard. */
     public static Path scriptPath() {
         return AppConfigUtils.getBinDir().toPath().resolve("ddphotos");
+    }
+
+    /**
+     * Creates the standard bottom hover-help widget used by DD Photos windows: a display-only,
+     * fixed-height {@link DDHtmlArea}.  Add the returned widget to the SOUTH of the window's content
+     * and register it with the window via {@code context.getWindow().setHelpTextWidget(...)} so the
+     * window's component hover-help renders here.
+     */
+    public static DDHtmlArea createHelpText(String style) {
+        DDHtmlArea help = new DDHtmlArea(GuiManager.DEFAULT, style);
+        help.setDisplayOnly(true);
+        help.setOpaque(true);
+        help.setBorder(BorderFactory.createEmptyBorder(EngineUtils.STANDARD_BORDER_GAP, EngineUtils.STANDARD_BORDER_GAP,
+                EngineUtils.STANDARD_BORDER_GAP, EngineUtils.STANDARD_BORDER_GAP));
+        help.setPreferredSize(new Dimension(10000, 40)); // fix height as diff fonts can make it twitchy
+        return help;
     }
 
     /**

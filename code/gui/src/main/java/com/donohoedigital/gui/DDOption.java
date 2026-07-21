@@ -8,6 +8,8 @@ package com.donohoedigital.gui;
 
 import com.donohoedigital.base.*;
 import com.donohoedigital.config.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -21,7 +23,7 @@ import java.util.prefs.*;
  */
 public abstract class DDOption extends DDPanel implements MouseListener
 {
-    //static Logger logger = LogManager.getLogger(DDOption.class);
+    static Logger logger = LogManager.getLogger(DDOption.class);
     
     protected String sName_;
     protected String sOrigName_;
@@ -211,7 +213,11 @@ public abstract class DDOption extends DDPanel implements MouseListener
         sbHelp.append(".help");
         String sHelp = PropertyConfig.getStringProperty(sbHelp.toString(), 
                                                             null, false);
-        GuiUtils.getHelpManager(this).setHelpMessage(sHelp);
+        DDWindow helpManager = GuiUtils.getHelpManager(this);
+        if (helpManager != null) {
+            helpManager.setHelpMessage(sHelp);
+        }
+        else logger.warn("No help manager for {}", this);
     }
 
     /**
