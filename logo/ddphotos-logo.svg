@@ -5,7 +5,7 @@
    height="230"
    version="1.1"
    id="svg10"
-   sodipodi:docname="ddphotos-logo-v2.svg"
+   sodipodi:docname="ddphotos-logo.svg"
    inkscape:version="1.4.3 (0d15f750, 2025-12-25)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -35,7 +35,7 @@
      id="title1">DD Photos</title>
   <desc
      id="desc1">DD Photos logo — SLR camera with DD lens monogram and PHOTOS wordmark</desc>
-  <!-- Camera body: y=22, height=162, bottom=184 -->
+  <!-- Camera body: y=22, height=162, bottom=184, center y=103 -->
   <rect
      x="0"
      y="22"
@@ -79,174 +79,79 @@
      opacity="0.5"
      id="circle3" />
   <!--
-    Lens centered in full camera body height:
-    body top=22, bottom=184, center=103
-    R=71: top=32 (10px gap), bottom=174 (10px gap)
+    Lens, concentric on the camera body centre (135,103).
+    Barrel R=71 + 1.5 half-stroke = 72.5, so the outer edge sits at y=30.5
+    and y=175.5 - an even 8.5px gap to the body top (22) and bottom (184).
   -->
   <circle
+     cx="135"
+     cy="103"
+     r="71"
      fill="#1a186b"
      stroke="#6d68d8"
      stroke-width="3"
-     id="circle4"
-     r="71"
-     cy="105"
-     cx="135" />
+     id="circle4" />
   <circle
+     cx="135"
+     cy="103"
+     r="61"
      fill="none"
      stroke="#4f4ab5"
      stroke-width="1.5"
-     id="circle5"
-     r="61"
-     cy="105"
-     cx="135" />
+     id="circle5" />
+  <!-- Glass: same radius as the DD, which sits flush on top of it -->
   <circle
      cx="135"
-     cy="105"
-     r="52"
+     cy="103"
+     r="55"
      fill="#0f0e55"
      id="circle6" />
-  <!-- Aperture lines -->
-  <line
-     x1="135"
-     y1="53"
-     x2="135"
-     y2="157"
-     stroke="#4f4ab5"
-     stroke-width="0.4"
-     opacity="0.15"
-     id="line6" />
-  <line
-     x1="84"
-     y1="105"
-     x2="186"
-     y2="105"
-     stroke="#4f4ab5"
-     stroke-width="0.4"
-     opacity="0.15"
-     id="line7" />
-  <!-- Lens glint -->
   <!--
-    DD monogram: outer R=55, inner R=36, centered at 135,103
-    top=48, bottom=158, inner top=67, inner bottom=139
-    flat bar=5px, gap=2px (1px each side of x=135)
+    DD monogram, concentric on the lens at (135,103).
+
+    Each D is one circular segment: the outer disc cut by a vertical chord at
+    the gap. The stem is then the band between the counter chord and the gap
+    chord, and it terminates ON the outer arc - so the silhouette curves all
+    the way round instead of ending in a flat cap. Union of the two segments
+    is a true R=55 circle split by the 2px gap.
+
+      outer R=55, gap chords at x=134 / x=136  -> y = 103 +/- sqrt(55^2-1^2)
+      counter R=36, stem 5px, chords at x=129 / x=141
+                                              -> y = 103 +/- sqrt(36^2-6^2)
+    Both sweeps are under 180 degrees, so large-arc-flag is 0 throughout.
   -->
   <!-- LEFT reversed D -->
   <path
-     d="m 134,50 a 55,55 0 0 0 0,110 z"
+     d="M 134,48.00909 A 55,55 0 0 0 134,157.99091 Z"
      fill="#a5b4fc"
      id="path7" />
   <path
-     d="m 134,69 a 36,36 0 0 0 0,72 z"
+     d="M 129,67.50352 A 36,36 0 0 0 129,138.49648 Z"
      fill="#0f0e55"
      id="path8" />
-  <rect
-     x="129"
-     y="50"
-     width="5"
-     height="110"
-     fill="#a5b4fc"
-     id="rect8" />
   <!-- RIGHT normal D -->
   <path
-     d="m 136,50 a 55,55 0 0 1 0,110 z"
+     d="M 136,48.00909 A 55,55 0 0 1 136,157.99091 Z"
      fill="#c7d2fe"
      id="path9" />
   <path
-     d="m 136,69 a 36,36 0 0 1 0,72 z"
+     d="M 141,67.50352 A 36,36 0 0 1 141,138.49648 Z"
      fill="#0f0e55"
      id="path10" />
-  <rect
-     x="136"
-     y="50"
-     width="5"
-     height="110"
-     fill="#c7d2fe"
-     id="rect10" />
   <!--
-    PHOTOS wordmark
-    Camera bottom = 184. Gap = 20px. Baseline at 184 + 20 + ~18 (cap height) = 222.
-    viewBox height = 230 gives 8px below baseline.
+    PHOTOS wordmark, outlined from Helvetica Neue Medium 26px so that rendering
+    does not depend on the installed fonts or on a renderer honouring
+    textLength. Ink box: x 26.417..243.583 (centred on 135), baseline y=216.44.
+    Do not edit by hand - see logo/icon.md to regenerate.
+
+    DO NOT trim the viewBox height to the ink. The 230 height is deliberate:
+    it puts equal whitespace above and below the wordmark.
+      camera bottom 184 -> ink top    197.434  = 13.434
+      ink bottom 216.882 -> viewBox   230      = 13.118
+    The apparently empty band under the wordmark IS the bottom margin.
   -->
-  <text
-     x="135"
-     y="218"
-     text-anchor="middle"
-     textLength="220"
-     lengthAdjust="spacing"
-     font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
-     font-size="26px"
-     font-weight="500"
+  <path
+     id="wordmark"
      fill="#7c72f0"
-     id="text10"
-     transform="translate(10.651007,-1.5637938)">PHOTOS</text>
-  <circle
-     fill="#1a186b"
-     stroke="#6d68d8"
-     stroke-width="3"
-     id="circle11"
-     r="71"
-     cy="105"
-     cx="135" />
-  <circle
-     fill="none"
-     stroke="#4f4ab5"
-     stroke-width="1.5"
-     id="circle12"
-     r="61"
-     cy="105"
-     cx="135" />
-  <circle
-     cx="135"
-     cy="105"
-     r="52"
-     fill="#0f0e55"
-     id="circle13" />
-  <line
-     x1="135"
-     y1="53"
-     x2="135"
-     y2="157"
-     stroke="#4f4ab5"
-     stroke-width="0.4"
-     opacity="0.15"
-     id="line13" />
-  <line
-     x1="84"
-     y1="105"
-     x2="186"
-     y2="105"
-     stroke="#4f4ab5"
-     stroke-width="0.4"
-     opacity="0.15"
-     id="line14" />
-  <path
-     d="m 134,50 a 55,55 0 0 0 0,110 z"
-     fill="#a5b4fc"
-     id="path14" />
-  <path
-     d="m 134,69 a 36,36 0 0 0 0,72 z"
-     fill="#0f0e55"
-     id="path15" />
-  <rect
-     x="129"
-     y="50"
-     width="5"
-     height="110"
-     fill="#a5b4fc"
-     id="rect15" />
-  <path
-     d="m 136,50 a 55,55 0 0 1 0,110 z"
-     fill="#c7d2fe"
-     id="path16" />
-  <path
-     d="m 136,69 a 36,36 0 0 1 0,72 z"
-     fill="#0f0e55"
-     id="path17" />
-  <rect
-     x="136"
-     y="50"
-     width="5"
-     height="110"
-     fill="#c7d2fe"
-     id="rect17" />
+     d="m 26.417004,197.876 h 8.19 q 1.976,0 3.224,0.572 1.248,0.572 1.924,1.43 0.676,0.858 0.91,1.872 0.26,1.014 0.26,1.872 0,0.858 -0.26,1.872 -0.234,0.988 -0.91,1.846 -0.676,0.858 -1.924,1.43 -1.248,0.546 -3.224,0.546 h -4.94 v 7.124 h -3.25 z m 3.25,8.788 h 4.758 q 0.546,0 1.118,-0.156 0.572,-0.156 1.04,-0.494 0.494,-0.364 0.78,-0.936 0.312,-0.598 0.312,-1.482 0,-0.91 -0.26,-1.508 -0.26,-0.598 -0.702,-0.936 -0.442,-0.364 -1.014,-0.494 -0.572,-0.13 -1.222,-0.13 h -4.81 z m 36.433986,-8.788 h 3.25 v 7.384 h 8.45 v -7.384 h 3.25 v 18.564 h -3.25 v -8.372 h -8.45 v 8.372 h -3.25 z m 49.17399,2.21 q -1.482,0 -2.574,0.598 -1.066,0.598 -1.742,1.612 -0.675997,0.988 -1.013997,2.262 -0.312,1.274 -0.312,2.6 0,1.326 0.312,2.6 0.338,1.274 1.013997,2.288 0.676,0.988 1.742,1.586 1.092,0.598 2.574,0.598 1.482,0 2.548,-0.598 1.092,-0.598 1.768,-1.586 0.676,-1.014 0.988,-2.288 0.338,-1.274 0.338,-2.6 0,-1.326 -0.338,-2.6 -0.312,-1.274 -0.988,-2.262 -0.676,-1.014 -1.768,-1.612 -1.066,-0.598 -2.548,-0.598 z m 0,-2.652 q 2.08,0 3.718,0.78 1.664,0.78 2.808,2.106 1.144,1.326 1.742,3.094 0.624,1.768 0.624,3.744 0,2.002 -0.624,3.77 -0.598,1.768 -1.742,3.094 -1.144,1.326 -2.808,2.106 -1.638,0.754 -3.718,0.754 -2.08,0 -3.744,-0.754 -1.637997,-0.78 -2.781997,-2.106 -1.144,-1.326 -1.768,-3.094 -0.598,-1.768 -0.598,-3.77 0,-1.976 0.598,-3.744 0.624,-1.768 1.768,-3.094 1.144,-1.326 2.781997,-2.106 1.664,-0.78 3.744,-0.78 z m 32.508,0.442 h 15.028 v 2.808 h -5.902 v 15.756 h -3.25 v -15.756 h -5.876 z m 47.51001,2.21 q -1.482,0 -2.574,0.598 -1.066,0.598 -1.742,1.612 -0.676,0.988 -1.014,2.262 -0.312,1.274 -0.312,2.6 0,1.326 0.312,2.6 0.338,1.274 1.014,2.288 0.676,0.988 1.742,1.586 1.092,0.598 2.574,0.598 1.482,0 2.548,-0.598 1.092,-0.598 1.768,-1.586 0.676,-1.014 0.988,-2.288 0.338,-1.274 0.338,-2.6 0,-1.326 -0.338,-2.6 -0.312,-1.274 -0.988,-2.262 -0.676,-1.014 -1.768,-1.612 -1.066,-0.598 -2.548,-0.598 z m 0,-2.652 q 2.08,0 3.718,0.78 1.664,0.78 2.808,2.106 1.144,1.326 1.742,3.094 0.624,1.768 0.624,3.744 0,2.002 -0.624,3.77 -0.598,1.768 -1.742,3.094 -1.144,1.326 -2.808,2.106 -1.638,0.754 -3.718,0.754 -2.08,0 -3.744,-0.754 -1.638,-0.78 -2.782,-2.106 -1.144,-1.326 -1.768,-3.094 -0.598,-1.768 -0.598,-3.77 0,-1.976 0.598,-3.744 0.624,-1.768 1.768,-3.094 1.144,-1.326 2.782,-2.106 1.664,-0.78 3.744,-0.78 z m 36.40799,12.818 q 0,1.066 0.364,1.82 0.364,0.754 1.014,1.248 0.65,0.468 1.482,0.702 0.858,0.208 1.846,0.208 1.066,0 1.82,-0.234 0.754,-0.26 1.222,-0.65 0.468,-0.39 0.676,-0.884 0.208,-0.52 0.208,-1.04 0,-1.066 -0.494,-1.56 -0.468,-0.52 -1.04,-0.728 -0.988,-0.364 -2.314,-0.676 -1.3,-0.338 -3.224,-0.858 -1.196,-0.312 -2.002,-0.806 -0.78,-0.52 -1.248,-1.144 -0.468,-0.624 -0.676,-1.326 -0.182,-0.702 -0.182,-1.43 0,-1.404 0.572,-2.418 0.598,-1.04 1.56,-1.716 0.962,-0.676 2.184,-0.988 1.222,-0.338 2.47,-0.338 1.456,0 2.73,0.39 1.3,0.364 2.262,1.118 0.988,0.754 1.56,1.872 0.572,1.092 0.572,2.548 h -3.25 q -0.13,-1.794 -1.222,-2.522 -1.092,-0.754 -2.782,-0.754 -0.572,0 -1.17,0.13 -0.598,0.104 -1.092,0.39 -0.494,0.26 -0.832,0.728 -0.312,0.468 -0.312,1.17 0,0.988 0.598,1.56 0.624,0.546 1.612,0.832 0.104,0.026 0.806,0.234 0.728,0.182 1.612,0.416 0.884,0.234 1.716,0.468 0.858,0.208 1.222,0.312 0.91,0.286 1.586,0.78 0.676,0.494 1.118,1.144 0.468,0.624 0.676,1.352 0.234,0.728 0.234,1.456 0,1.56 -0.65,2.678 -0.624,1.092 -1.664,1.794 -1.04,0.702 -2.366,1.014 -1.326,0.338 -2.704,0.338 -1.586,0 -2.99,-0.39 -1.404,-0.39 -2.444,-1.196 -1.04,-0.806 -1.664,-2.054 -0.624,-1.274 -0.65,-2.99 z" />
 </svg>

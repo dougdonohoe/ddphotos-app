@@ -1,8 +1,57 @@
 # DD Photos Logo — Export Instructions
 
 ## Files
-- `ddphotos-logo.svg` — full logo (camera + PHOTOS wordmark), viewBox 270×210
+- `ddphotos-logo.svg` — full logo (camera + PHOTOS wordmark), viewBox 270×230
 - `ddphotos-icon.svg` — lens monogram only, viewBox 142×142 (use for small sizes)
+
+Both files are self-contained: no fonts, no external references, no transforms.
+The PHOTOS wordmark is stored as outlines, so every renderer produces identical
+output (verified with both Inkscape and librsvg).
+
+## Geometry
+
+Everything in the lens is concentric — logo on (135,103), icon on (71,71):
+
+| Ring          | logo R | icon R |
+|---------------|--------|--------|
+| Outer barrel  | 71 (+1.5 half-stroke) | 68 (+1.5) |
+| Inner ring    | 61     | 58     |
+| Glass         | 55     | 52     |
+| DD outer      | 55     | 52     |
+| DD counter    | 36     | 34     |
+
+The glass shares the DD's radius, so the monogram sits flush on it and the
+counters read as glass showing through.
+
+Each D is a **single circular segment** — the outer disc cut by a vertical chord
+at the centre gap — not a semicircle plus a rectangular stem. The stem falls out
+as the band between the counter chord and the gap chord, and terminates on the
+outer arc, so the silhouette curves continuously at the top and bottom instead
+of ending in a flat cap. Arc endpoints are `cy ± sqrt(R² − dx²)` where `dx` is
+the chord's offset from the centre; all four sweeps are under 180°, so
+`large-arc-flag` is 0 throughout.
+
+## Regenerating the PHOTOS wordmark
+
+The wordmark is Helvetica Neue Medium 26px, `textLength=220` (wide tracking),
+baseline y=216.44, ink box x 26.417..243.583 centred on x=135.
+
+The logo viewBox is 270×**230** even though the ink stops at y≈216.9. That band
+is not slack — it is the bottom margin, sized to match the gap between the
+camera body and the wordmark (13.43 above, 13.12 below). Do not trim it.
+
+To rebuild the outlines:
+
+1. Put the original `<text>` element alone in a scratch SVG (do *not* run
+   `object-to-path` over the whole logo — it would convert the readable
+   `<rect>`/`<circle>` primitives too).
+2. `inkscape --export-plain-svg --export-filename=out.svg \
+      --actions="select-all;object-to-path;export-do" scratch.svg`
+3. Inkscape's `text-anchor` + `textLength` handling leaves the result off-centre,
+   so re-centre it explicitly: query the bbox with
+   `inkscape --query-id=… --query-x --query-width out.svg`, then add
+   `135 − (x + width/2)` to the path's first (and only absolute) coordinate —
+   every following command is relative, so that translates the whole glyph set.
 
 ## How SVG scaling works
 

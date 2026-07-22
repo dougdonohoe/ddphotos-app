@@ -37,12 +37,10 @@
      id="desc1">DD Photos icon — lens monogram only, for small sizes and app icons</desc>
   <!--
     Lens-only icon: circle with DD inside, no camera body, no wordmark.
-    Centered at 71,71. Outer R=71 (fills viewBox), stroke inset so it shows.
-    Outer barrel R=68 (leaves 3px margin)
-    Inner ring R=58
-    Glass R=50
-    DD outer R=52, inner R=34
-    arc band=18, flat bar=4px, gap=2px
+    Everything is concentric on (71,71).
+      Outer barrel R=68 + 1.5 half-stroke = 69.5, leaving a 1.5px margin
+      Inner ring    R=58
+      Glass         R=52 - same radius as the DD, which sits flush on top
   -->
   <!-- Outer barrel -->
   <circle
@@ -64,74 +62,41 @@
      id="circle2" />
   <!-- Glass -->
   <circle
-     cx="71.399994"
+     cx="71"
      cy="71"
-     r="50"
+     r="52"
      fill="#0f0e55"
      id="circle3" />
-  <!-- Aperture lines -->
-  <line
-     x1="71.399994"
-     y1="21"
-     x2="71.399994"
-     y2="121"
-     stroke="#4f4ab5"
-     stroke-width="0.4"
-     opacity="0.15"
-     id="line3" />
-  <line
-     x1="21.400002"
-     y1="71"
-     x2="121.4"
-     y2="71"
-     stroke="#4f4ab5"
-     stroke-width="0.4"
-     opacity="0.15"
-     id="line4" />
-  <!-- Glint -->
-  <circle
-     cx="54.399994"
-     cy="54"
-     r="8"
-     fill="#ffffff"
-     opacity="0.06"
-     id="circle4" />
   <!--
-    DD: outer R=52, inner R=34
-    top = 71-52 = 19, bottom = 71+52 = 123
-    inner top = 71-34 = 37, inner bottom = 71+34 = 105
-    flat bar = 4px each side, gap = 2px
+    DD monogram, concentric on the lens at (71,71).
+
+    Each D is one circular segment: the outer disc cut by a vertical chord at
+    the gap. The stem is then the band between the counter chord and the gap
+    chord, and it terminates ON the outer arc - so the silhouette curves all
+    the way round instead of ending in a flat cap. Union of the two segments
+    is a true R=52 circle split by the 2px gap.
+
+      outer R=52, gap chords at x=70 / x=72  -> y = 71 +/- sqrt(52^2-1^2)
+      counter R=34, stem 4px, chords at x=66 / x=76
+                                             -> y = 71 +/- sqrt(34^2-5^2)
+    Both sweeps are under 180 degrees, so large-arc-flag is 0 throughout.
   -->
   <!-- LEFT reversed D -->
   <path
-     d="m 70.4,19 a 52,52 0 0 0 0,104 z"
+     d="M 70,19.00962 A 52,52 0 0 0 70,122.99038 Z"
      fill="#a5b4fc"
      id="path4" />
   <path
-     d="m 70.4,37 a 34,34 0 0 0 0,68 z"
+     d="M 66,37.36966 A 34,34 0 0 0 66,104.63034 Z"
      fill="#0f0e55"
      id="path5" />
-  <rect
-     x="66.399994"
-     y="19"
-     width="4"
-     height="104"
-     fill="#a5b4fc"
-     id="rect5" />
   <!-- RIGHT normal D -->
   <path
-     d="m 72.4,19 a 52,52 0 0 1 0,104 z"
+     d="M 72,19.00962 A 52,52 0 0 1 72,122.99038 Z"
      fill="#c7d2fe"
      id="path6" />
   <path
-     d="m 72.4,37 a 34,34 0 0 1 0,68 z"
+     d="M 76,37.36966 A 34,34 0 0 1 76,104.63034 Z"
      fill="#0f0e55"
      id="path7" />
-  <rect
-     x="72.399994"
-     y="19"
-     width="4"
-     height="104"
-     fill="#c7d2fe"
-     id="rect7" />
 </svg>
