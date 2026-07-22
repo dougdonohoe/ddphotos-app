@@ -47,7 +47,6 @@ public class SiteBarPanel extends DDPanel
 
         setBorder(BorderFactory.createEmptyBorder(4, 11, 0, 8));
 
-        logoButton_ = new DDImageButton("icon48");
         siteOption_ = new OptionCombo<>(
                 new DataElement<>("sitecombo", sitesFile_.getSites(), null),
                 PhotosConstants.PREFS_NODE_APP, "sitecombo", STYLE,
@@ -76,6 +75,7 @@ public class SiteBarPanel extends DDPanel
 
         DDPanel bar = new DDPanel();
         bar.setLayout(new BoxLayout(bar, BoxLayout.X_AXIS));
+        logoButton_ = new DDImageButton("icon48");
         bar.add(logoButton_);
         bar.add(GuiUtils.NORTH(widgets));
 
@@ -230,24 +230,9 @@ public class SiteBarPanel extends DDPanel
         {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             if (value instanceof Site site) {
-                String name = escape(site.getDisplayName() != null ? site.getDisplayName() : "");
-                String id = escape(site.getIdOrDefault());
-                StringBuilder html = new StringBuilder("<html><b>")
-                        .append(name)
-                        .append("</b> <span style='color:#808080'>(").append(id).append(")</span>");
-                String configPath = site.getActualConfigPath();
-                if (configPath != null && !configPath.isBlank()) {
-                    html.append(" <span style='color:#5B7C99'>").append(escape(configPath)).append("</span>");
-                }
-                html.append("</html>");
-                setText(html.toString());
+                setText("<html>" + PhotosUtils.siteLabelHtml(site) + "</html>");
             }
             return this;
-        }
-
-        private static String escape(String s)
-        {
-            return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
         }
     }
 }

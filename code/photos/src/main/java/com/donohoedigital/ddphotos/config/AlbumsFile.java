@@ -17,6 +17,7 @@ import org.snakeyaml.engine.v2.nodes.*;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -174,6 +175,47 @@ public class AlbumsFile {
     }
 
     /**
+     * Returns the {@link PhotogenFile}s for an album: one for the album's source directory,
+     * plus one for each subdirectory (recursively) when the album has {@code recurse: true}.
+     * Subdirectories are visited depth-first in case-insensitive alphabetical order, matching
+     * photogen's default subfolder collection order.
+     *
+     * <p>Every returned file is loaded.  A directory without a {@code photogen.txt} yields a
+     * loaded-but-absent {@link PhotogenFile} (whose {@code save()} is a no-op), so the editor can
+     * still list every folder.  Returns an empty list when the source cannot be resolved
+     * (e.g. a Docker path or an unresolvable relative source).
+     */
+    public List<PhotogenFile> getPhotogenFiles(AlbumEntry album) {
+        Path source = resolveSourcePath(album);
+        if (source == null || !Files.isDirectory(source)) {
+            return new ArrayList<>();
+        }
+        List<PhotogenFile> result = new ArrayList<>();
+        result.add(new PhotogenFile(source).load());
+        if (album.isRecurse()) {
+            collectSubfolderPhotogenFiles(source, result);
+        }
+        return result;
+    }
+
+    private void collectSubfolderPhotogenFiles(Path dir, List<PhotogenFile> result) {
+        List<Path> subdirs = new ArrayList<>();
+        try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
+            for (Path p : ds) {
+                if (Files.isDirectory(p)) subdirs.add(p);
+            }
+        } catch (IOException e) {
+            logger.warn("Failed to list subfolders of {}: {}", dir, e.getMessage());
+            return;
+        }
+        subdirs.sort(Comparator.comparing(p -> p.getFileName().toString(), String.CASE_INSENSITIVE_ORDER));
+        for (Path sub : subdirs) {
+            result.add(new PhotogenFile(sub).load());
+            collectSubfolderPhotogenFiles(sub, result);
+        }
+    }
+
+    /**
      * If the given absolute path falls within the site dir, returns the relative path.
      * Otherwise, returns the original string unchanged.
      */
@@ -322,7 +364,7 @@ public class AlbumsFile {
         List<CommentLine> comments = keyNode.getBlockComments();
         comments = (comments == null) ? new ArrayList<>() : new ArrayList<>(comments);
         if (comments.isEmpty() || comments.getFirst().getCommentType() != CommentType.BLANK_LINE) {
-            comments.add(0, new CommentLine(Optional.empty(), Optional.empty(), "", CommentType.BLANK_LINE));
+            comments.addFirst(new CommentLine(Optional.empty(), Optional.empty(), "", CommentType.BLANK_LINE));
             keyNode.setBlockComments(comments);
         }
     }
@@ -603,7 +645,7 @@ public class AlbumsFile {
      */
     private static void setBoolean(MappingNode node, String key, boolean value) {
         int idx = findTupleIndex(node, key);
-        ScalarNode boolNode = new ScalarNode(Tag.BOOL, value ? "true" : "false", ScalarStyle.PLAIN);
+        ScalarNode boolNode = new ScalarNode(Tag.BOOL, Boolean.toString(value), ScalarStyle.PLAIN);
         if (idx >= 0) {
             node.getValue().set(idx, new NodeTuple(node.getValue().get(idx).getKeyNode(), boolNode));
         } else {

@@ -13,8 +13,8 @@ package com.donohoedigital.app.config;
 public class EngineConstants
 {
     // used when TESTING_CHANGE_STARTING_SIZE is on
-    public static final int TESTING_CHANGE_SIZE_WIDTH = 800;
-    public static final int TESTING_CHANGE_SIZE_HEIGHT = 600;
+    public static final int TESTING_CHANGE_SIZE_WIDTH = 1500;
+    public static final int TESTING_CHANGE_SIZE_HEIGHT = 981;
 
     // debug settings configured in common.properties file
     public static final String TESTING_PERFORMANCE = "settings.debug.performance";
@@ -26,4 +26,10 @@ public class EngineConstants
     public static final String PREF_Y = "y";
     public static final String PREF_W = "w";
     public static final String PREF_H = "h";
+
+    // per-invocation window identity overrides (passed via processPhase params); when present they
+    // override a window phase's static window name / title, so multiple instances (e.g. one editor
+    // per album) get distinct titles and their own remembered size/position.
+    public static final String PARAM_WINDOW_NAME  = "window-name";
+    public static final String PARAM_WINDOW_TITLE = "window-title-override";
 }

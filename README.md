@@ -93,7 +93,7 @@ install them ahead of time:
 
 The current version of the DD Photos app is beta software and supports the majority of `ddphotos` features.
 However, some features aren't available yet.  For example, in the app, you can't currently edit 
-passwords, captions, certain deploy settings, or custom CSS.  There may also be bugs.
+passwords, certain deploy settings, or custom CSS.  There may also be bugs.
 
 Support for these features is coming soon. You can still hand-edit the related files as documented in 
 the [ddphotos↗](https://github.com/dougdonohoe/ddphotos#documentation) repo, and they will

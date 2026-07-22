@@ -813,6 +813,52 @@ public class AlbumsFileTest {
         assertEquals(outside, af.toRelativeBasePath(outside));
     }
 
+    // ── getPhotogenFiles tests ──────────────────────────────────────────────
+
+    @Test
+    public void getPhotogenFiles_nonRecursive_rootOnly() throws Exception {
+        Path site = tmp.newFolder("site").toPath();
+        Path source = Files.createDirectories(site.resolve("src/album"));
+        Files.writeString(source.resolve("photogen.txt"), "img_1 One\n", StandardCharsets.UTF_8);
+        Files.createDirectories(source.resolve("sub")); // ignored when not recursing
+
+        AlbumsFile af = new AlbumsFile();
+        af.setSiteDir(site);
+        af.getBases().put("b", "src");
+
+        List<PhotogenFile> files = af.getPhotogenFiles(albumWith("a", "b", "album"));
+        assertEquals(1, files.size());
+        assertEquals(source, files.getFirst().getDir());
+        assertTrue(files.getFirst().existsOnDisk());
+    }
+
+    @Test
+    public void getPhotogenFiles_recursive_rootAndSubfoldersAlphabetical() throws Exception {
+        Path site = tmp.newFolder("site").toPath();
+        Path source = Files.createDirectories(site.resolve("src/album"));
+        Files.createDirectories(source.resolve("Bravo"));
+        Files.createDirectories(source.resolve("alpha")); // sorts before Bravo case-insensitively
+        Files.writeString(source.resolve("alpha/photogen.txt"), "x One\n", StandardCharsets.UTF_8);
+
+        AlbumsFile af = new AlbumsFile();
+        af.setSiteDir(site);
+        af.getBases().put("b", "src");
+        AlbumEntry a = albumWith("a", "b", "album");
+        a.setRecurse(true);
+
+        List<PhotogenFile> files = af.getPhotogenFiles(a);
+        List<String> names = files.stream().map(f -> f.getDir().getFileName().toString()).toList();
+        assertEquals(List.of("album", "alpha", "Bravo"), names);
+        // a subfolder without photogen.txt is still returned, loaded-but-absent
+        assertFalse(files.get(2).existsOnDisk());
+    }
+
+    @Test
+    public void getPhotogenFiles_unresolvableSource_empty() {
+        // relative source with no base → resolveSourcePath returns null
+        assertTrue(new AlbumsFile().getPhotogenFiles(albumWith("a", null, "relative")).isEmpty());
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private AlbumsFile loadFixture(String resourcePath) throws Exception {

@@ -54,6 +54,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private PhotoPreviewPanel coverPreview_;
     private OptionBoolean recurse_;
     private OptionBoolean manualSort_;
+    private DDButton editCaptionsBtn_;
 
     private Runnable onSavedCallback_;
 
@@ -82,8 +83,10 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
         DDLabelBorder basicSection = buildBasicSection();
         DDLabelBorder sourceSection = buildSourceSection();
+        DDLabelBorder photosSection = buildPhotosSection();
         form.add(basicSection);
         form.add(sourceSection);
+        form.add(photosSection);
 
         int labelColWidth = GuiUtils.setDDOptionLabelWidths(basicSection, 16);
         recurse_.setBorder(new EmptyBorder(0, labelColWidth + 8, 0, 0));
@@ -231,6 +234,31 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         return panel;
     }
 
+    private DDLabelBorder buildPhotosSection() {
+        DDLabelBorder panel = section("albumphotos");
+        editCaptionsBtn_ = new DDButton("editcaptions", STYLE);
+        editCaptionsBtn_.addActionListener(_ -> openCaptionEditor());
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        row.setOpaque(false);
+        row.add(editCaptionsBtn_);
+        panel.add(row);
+        return panel;
+    }
+
+    private void openCaptionEditor() {
+        Site site = albumsList_.getCurrentSite();
+        if (site != null && currentEntry_ != null) {
+            PhotogenEditorPhase.open(albumsList_.getContext(), site, currentEntry_);
+        }
+    }
+
+    /** Caption editing is available on a saved album whose source directory resolves. */
+    private void updateEditCaptionsButton() {
+        if (editCaptionsBtn_ != null) {
+            editCaptionsBtn_.setEnabled(!editing_ && currentEntry_ != null && resolveSourcePath() != null);
+        }
+    }
+
     private static DDLabelBorder section(String name) {
         DDLabelBorder panel = new DDLabelBorder(name, STYLE);
         panel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP, 0, 4, VerticalFlowLayout.FILL));
@@ -313,6 +341,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         PathValidation.PathStatus cov = evalCover();
         coverPreview_.setImageFile(cov.resolved());
         applyStatuses(warningArea_, List.of(src, cov), PREFERRED_TEXT_WIDTH);
+        updateEditCaptionsButton();
     }
 
     /** Evaluates the source path against the selected base (folder, no image requirement). */
