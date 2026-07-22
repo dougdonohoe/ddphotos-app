@@ -16,7 +16,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Windows - WSL and PowerShell docs
 * Metal bumps look odd on Windows
 * `xboxl` hack in username
-* If wrangler errors - treated as success (probably surge too)
+* If `wrangler` errors - treated as success (probably surge too)
 * Linux testing
   * centering splash?
   * xdg_open avail?
@@ -32,6 +32,11 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Undo support?  Backup files somewhere in config?
 * Unify help/icon window layout (Support/Help/Photogen.txt/Main)
+
+
+---
+
+# Parking Lot
 
 ## Feature Design - photogen.txt files
 
@@ -57,7 +62,7 @@ there in the first place.
 Step #2 (**DONE**) - Need to enhance `AlbumsFile` to return a list of PhotogenFile for the album.
 This is one for the main album source and its one for all its subfolders (if `recurse` is true).
 
-Step #3 - Editor 
+Step #3 (**DONE**) - Editor 
 
 We'll be adding an editor for PhotogenFile which will
 show a list of photos in the folder and allow user to edit caption and re-order similar
@@ -91,10 +96,6 @@ See @photogen-txt-editor.jpg (I can clarify my handwriting if you need me too). 
   has just "Cancel" and "Save", but maybe we have a "Save" and "Save & Close" button? Thoughts?
 
 
-
----
-
-# Parking Lot
 
 ## Future Surge support for login via PTY (full interactive terminal, handles `surge login`)
 
