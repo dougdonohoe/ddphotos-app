@@ -22,7 +22,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * `passwords.yaml` editor
 * `custom.css` editor
   * Custom `css` file (should exist, but is not required) 
-* DD Photos logo (cleanup/refine)
 * Test what happens if site goes away after adding it to tool
 * Detect running container error? Port already in use (nice to have)
 * Switching site while something is running (e.g., `run` / `serve`) - problematic?
