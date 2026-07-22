@@ -31,7 +31,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.awt.image.BufferedImage;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,6 +40,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.prefs.Preferences;
 
 /**
@@ -70,6 +70,10 @@ public class PhotogenEditorPhase extends BasePhase {
     private static final Map<String, PhotogenEditorPhase> OPEN = new HashMap<>();
 
     private final Preferences prefs_ = PhotosConstants.getAppPreferences();
+
+    // Handles to outstanding thumbnail decodes (on Thumbs' shared pool) so finish() can cancel any
+    // still queued/running when the window closes.
+    private final List<Future<?>> thumbJobs_ = new ArrayList<>();
 
     private Site site_;
     private AlbumEntry album_;
@@ -152,6 +156,9 @@ public class PhotogenEditorPhase extends BasePhase {
         if (key_ != null && OPEN.get(key_) == this) {
             OPEN.remove(key_);
         }
+        // Cancel any in-flight / queued thumbnail decodes so they don't run after the window closes.
+        for (Future<?> job : thumbJobs_) job.cancel(true);
+        thumbJobs_.clear();
         super.finish();
     }
 
@@ -533,20 +540,10 @@ public class PhotogenEditorPhase extends BasePhase {
         JLabel label = new JLabel();
         label.setPreferredSize(new Dimension(thumbW_, thumbH_));
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        new SwingWorker<BufferedImage, Void>() {
-            protected BufferedImage doInBackground() { return Thumbs.load(path, thumbW_, thumbH_, null); }
-            protected void done() {
-                BufferedImage img = null;
-                try {
-                    img = get();
-                } catch (Exception e) {
-                    logger.warn("thumbnail load failed: {}", path);
-                }
-                // Decoded image, or the "no preview" camera-off placeholder when it can't be read
-                // (e.g. HEIC, which ImageIO can't decode) — mirrors PhotoPreviewPanel.
-                label.setIcon(img != null ? new ImageIcon(img) : placeholderIcon());
-            }
-        }.execute();
+        // Decoded image, or the "no preview" camera-off placeholder when it can't be read (e.g. HEIC,
+        // which ImageIO can't decode) — mirrors PhotoPreviewPanel.  Runs on Thumbs' shared pool.
+        thumbJobs_.add(Thumbs.loadAsync(path, thumbW_, thumbH_, null,
+                img -> label.setIcon(img != null ? new ImageIcon(img) : placeholderIcon())));
         return label;
     }
 

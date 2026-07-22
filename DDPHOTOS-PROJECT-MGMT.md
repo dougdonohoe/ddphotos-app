@@ -31,6 +31,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Switching site while something is running (e.g., `run` / `serve`) - problematic?
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Undo support?  Backup files somewhere in config?
+* Unify help/icon window layout (Support/Help/Photogen.txt/Main)
 
 ## Feature Design - photogen.txt files
 

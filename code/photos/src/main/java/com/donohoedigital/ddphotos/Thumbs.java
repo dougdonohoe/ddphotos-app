@@ -7,12 +7,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
+import javax.swing.SwingWorker;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Disk-cached thumbnail loading and scaling, shared by all thumbnail consumers
@@ -28,7 +34,43 @@ public final class Thumbs {
     /** Disk cache directory for generated thumbnails. */
     private static final Path THUMB_CACHE_DIR = AppConfigUtils.getCacheDir().toPath().resolve("thumbs");
 
+    // Shared, capped pool for all asynchronous thumbnail decoding (see loadAsync).  A small, fixed
+    // size bounds the memory burst from concurrent full-resolution decodes and keeps thumbnail work
+    // off SwingWorker's app-wide pool.  Daemon threads so it never blocks JVM exit.
+    private static final int LOADER_THREADS = 3;
+    private static final AtomicInteger LOADER_SEQ = new AtomicInteger(1);
+    private static final ExecutorService LOADER = Executors.newFixedThreadPool(LOADER_THREADS, r -> {
+        Thread t = new Thread(r, "thumb-loader-" + LOADER_SEQ.getAndIncrement());
+        t.setDaemon(true);
+        return t;
+    });
+
     private Thumbs() {}
+
+    /**
+     * Decodes a thumbnail on the shared loader pool and delivers it to {@code onResult} on the EDT
+     * (null when the image can't be read, e.g. HEIC).  Returns a handle the caller can
+     * {@link Future#cancel cancel} — when a preview is replaced or an editor window closes — to drop
+     * queued and interrupt running decodes; {@code onResult} is skipped if the job is cancelled.
+     */
+    public static Future<BufferedImage> loadAsync(Path path, int maxWidth, int maxHeight, String crop,
+                                                  Consumer<BufferedImage> onResult) {
+        SwingWorker<BufferedImage, Void> worker = new SwingWorker<>() {
+            protected BufferedImage doInBackground() { return load(path, maxWidth, maxHeight, crop); }
+            protected void done() {
+                if (isCancelled()) return;
+                BufferedImage img = null;
+                try {
+                    img = get();
+                } catch (Exception e) {
+                    logger.warn("Thumbnail load failed: {}", path);
+                }
+                onResult.accept(img);
+            }
+        };
+        LOADER.execute(worker);
+        return worker;
+    }
 
     /**
      * Loads a disk-cached thumbnail for the given image, scaled to fit within

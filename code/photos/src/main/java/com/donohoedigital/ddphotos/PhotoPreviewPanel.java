@@ -1,18 +1,15 @@
 package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.gui.DDIconButtons;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class PhotoPreviewPanel extends JPanel {
 
-    private static final Logger logger = LogManager.getLogger(PhotoPreviewPanel.class);
     private static final int PLACEHOLDER_ICON_SIZE = 48;
 
     private final Icon placeholderIcon;
@@ -22,7 +19,7 @@ public class PhotoPreviewPanel extends JPanel {
     private Path currentPath_;
     private BufferedImage image;
     private boolean isLoading = false;
-    private SwingWorker<BufferedImage, Void> loadWorker;
+    private Future<BufferedImage> loadWorker;
 
     public PhotoPreviewPanel(int maxWidth, int maxHeight) {
         this.maxWidth = maxWidth;
@@ -61,26 +58,11 @@ public class PhotoPreviewPanel extends JPanel {
         }
 
         isLoading = true;
-        loadWorker = new SwingWorker<>() {
-            @Override
-            protected BufferedImage doInBackground() {
-                return Thumbs.load(path, maxWidth, maxHeight, crop_);
-            }
-
-            @Override
-            protected void done() {
-                if (isCancelled()) return;
-                isLoading = false;
-                try {
-                    image = get();
-                } catch (InterruptedException | ExecutionException e) {
-                    logger.warn("Failed to load preview for: {}", path);
-                    image = null;
-                }
-                repaint();
-            }
-        };
-        loadWorker.execute();
+        loadWorker = Thumbs.loadAsync(path, maxWidth, maxHeight, crop_, img -> {
+            isLoading = false;
+            image = img;  // null when undecodable -> paintPlaceholder draws the camera-off icon
+            repaint();
+        });
     }
 
     // -------------------------------------------------------------------------
