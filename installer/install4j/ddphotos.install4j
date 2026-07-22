@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<install4j version="12.0.5" transformSequenceNumber="12">
+<install4j version="13.0.2" transformSequenceNumber="13">
   <directoryPresets config="./custom" />
   <application name="DD Photos" applicationId="0136-5722-1649-9930" mediaDir="../builds" mediaFilePattern="ddphotos${compiler:sys.version}" shortName="ddphotos" publisher="Donohoe Digital LLC" publisherWeb="http://www.donohoedigital.com/" version="1.0" allPathsRelative="true" macVolumeId="d24c5a0cf4cff0ab" javaMinVersion="25" javaMaxVersion="25">
     <languages>
@@ -15,7 +15,7 @@
       <mountPoint id="1" overrideMode="true" />
     </mountPoints>
     <entries>
-      <dirEntry mountPoint="1" file="../../release" overwriteMode="3" fileMode="666" overrideFileMode="true" overrideOverwriteMode="true" overrideUninstallMode="true" dirMode="777" overrideDirMode="true" />
+      <dirEntry mountPoint="1" file="../../release" overwriteMode="ifNewerOtherwiseAsk" fileMode="666" overrideFileMode="true" overrideOverwriteMode="true" overrideUninstallMode="true" dirMode="777" overrideDirMode="true" />
     </entries>
   </files>
   <launchers>

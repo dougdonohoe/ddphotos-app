@@ -8,10 +8,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* New major version of npm available! 11.17.0 → 12.0.1
-* Upgrade Install4j (need new o/s license)
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
-* Typescript 7?
 * Wizard step for Docker file permissions?
 * Windows - WSL and PowerShell docs
 * Metal bumps look odd on Windows
@@ -32,7 +29,9 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Undo support?  Backup files somewhere in config?
 * Unify help/icon window layout (Support/Help/Photogen.txt/Main)
-
+* Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
+  to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files
+  if they exist (grid).
 
 ---
 
