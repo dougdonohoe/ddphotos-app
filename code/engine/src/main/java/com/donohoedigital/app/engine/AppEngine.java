@@ -18,6 +18,7 @@ import com.donohoedigital.gui.BaseApp;
 import com.donohoedigital.gui.BaseFrame;
 import com.donohoedigital.gui.DDOption;
 import com.donohoedigital.gui.DDWindow;
+import com.install4j.api.launcher.StartupNotification;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -101,6 +102,32 @@ public abstract class AppEngine extends BaseApp {
         if (splashscreen_ != null) {
             splashscreen_.changeUI(this, checkSize());
         }
+
+        // Single-instance support: when launched via the install4j launcher with
+        // "single instance" enabled, a blocked second launch notifies this instance
+        // instead of starting a new one - bring the existing window to the front.
+        // Wrapped because com.install4j.api.launcher.StartupNotification is only on
+        // the classpath when run from the installed launcher (absent in dev/IDE runs).
+        try {
+            StartupNotification.registerStartupListener(parameters ->
+                    SwingUtilities.invokeLater(this::bringToFront));
+        } catch (Throwable t) {
+            logger.debug("install4j StartupNotification unavailable (not launched via installer): {}", String.valueOf(t));
+        }
+    }
+
+    /**
+     * Bring the main window to the front.  Invoked by the install4j single-instance
+     * startup listener when a second launch is attempted.  Note: on Wayland the
+     * compositor may refuse the raise (focus-stealing prevention) and instead just
+     * flag the dock icon; this works reliably under X11.
+     */
+    private void bringToFront() {
+        if (frame_ == null) return;
+        frame_.setExtendedState(frame_.getExtendedState() & ~Frame.ICONIFIED); // de-iconify
+        frame_.setVisible(true);
+        frame_.toFront();
+        frame_.requestFocus();
     }
 
     protected void setLookAndFeel() {
@@ -303,13 +330,6 @@ public abstract class AppEngine extends BaseApp {
      * splash screen if visible
      */
     public void showMainWindow() {
-        // if splash screen visible, remove it
-        if (splashscreen_ != null) {
-            splashscreen_.setVisible(false);
-            splashscreen_.dispose();
-            splashscreen_ = null;
-        }
-
         // init main window
         defaultContext_.getFrame().init(null, true, getStartingSize(), PropertyConfig.getRequiredStringProperty("msg.application.name"), true);
 
@@ -321,6 +341,17 @@ public abstract class AppEngine extends BaseApp {
 
         // display the frame
         displayMainWindow();
+
+        // Remove the splash only AFTER the main window is mapped.  Disposing it
+        // earlier leaves a moment where the app has no mapped top-level window,
+        // which makes GNOME/Wayland drop the dock icon (and restore it only
+        // unreliably) when it re-associates the main window.  Keeping the splash
+        // up until now also covers the config-load/initialStart period visually.
+        if (splashscreen_ != null) {
+            splashscreen_.setVisible(false);
+            splashscreen_.dispose();
+            splashscreen_ = null;
+        }
     }
 
     /**
