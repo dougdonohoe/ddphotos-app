@@ -916,6 +916,8 @@ return true;
     </macosArchive>
   </mediaSets>
   <buildIds>
+    <mediaSet refId="4" />
     <mediaSet refId="15" />
+    <mediaSet refId="201" />
   </buildIds>
 </install4j>
