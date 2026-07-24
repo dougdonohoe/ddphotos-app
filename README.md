@@ -80,8 +80,8 @@ install them ahead of time:
 - **[Docker↗](https://www.docker.com/get-started/)** (_all platforms_) — DD Photos runs
   every `ddphotos` command (`photogen`, `run`, `build`, `serve`, etc.) inside a Docker
   container, so Docker must be installed and running. On Mac and Windows, install
-  **Docker Desktop**; on Linux, the Docker Engine. Docker must be started before you
-  run any commands.
+  **Docker Desktop**. On Linux, use the **Docker Desktop** or
+  just the Docker Engine. Docker must be started before you run any commands.
 
 - **[Git for Windows↗](https://git-scm.com/download/win)** (_Windows only_) — the
   `ddphotos` script is a Bash script, so on Windows it runs under **Git Bash**
