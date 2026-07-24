@@ -35,7 +35,6 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private Site currentSite_;
     private BasesPanel basesPanel_;
     private AlbumsSettings originalSettings_;
-    private boolean editing_ = false;
 
     private OptionText albumId_;
     private OptionText siteName_;
@@ -371,7 +370,6 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     // -------------------------------------------------------------------------
 
     public void loadSite(Site site) {
-        editing_ = false;
         currentSite_ = site;
         originalSettings_ = null;
 
@@ -381,9 +379,9 @@ public class SiteDetailsPanel extends EditableDetailPanel {
             descriptionsFile_.setCustomValidator(null);
             rebuildHeroBaseList();
             populate(new AlbumsSettings());
-            setReadOnly(true);
             editBtn_.setEnabled(false);
             basesPanel_.loadSite(null);
+            setEditing(false);
             return;
         }
 
@@ -409,9 +407,9 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         AlbumsSettings s = af != null ? af.getSettings() : new AlbumsSettings();
         rebuildHeroBaseList();
         populate(s);
-        setReadOnly(true);
         editBtn_.setEnabled(true);
         basesPanel_.loadSite(site);
+        setEditing(false);
     }
 
     private void populate(AlbumsSettings s) {
@@ -455,17 +453,13 @@ public class SiteDetailsPanel extends EditableDetailPanel {
 
     @Override
     protected void enterEditMode() {
-        editing_ = true;
         originalSettings_ = settingsFromFields();
-        setReadOnly(false);
-        checkButtons();
-        fireEditModeChanged();
+        setEditing(true);
     }
 
     @Override
     protected void cancelEdit() {
         loadSite(currentSite_);
-        fireEditModeChanged();
     }
 
     @Override
@@ -495,18 +489,17 @@ public class SiteDetailsPanel extends EditableDetailPanel {
             return;
         }
 
-        editing_ = false;
         originalSettings_ = null;
-        setReadOnly(true);
+        setEditing(false);
         siteBar_.refreshCombo(currentSite_);
-        fireEditModeChanged();
     }
 
     // -------------------------------------------------------------------------
     // Read-only toggle
     // -------------------------------------------------------------------------
 
-    private void setReadOnly(boolean readOnly) {
+    @Override
+    protected void setReadOnly(boolean readOnly) {
         albumId_.setDisplayOnly(readOnly);
         siteName_.setDisplayOnly(readOnly);
         siteUrl_.setDisplayOnly(readOnly);
@@ -548,13 +541,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     // -------------------------------------------------------------------------
 
     public boolean isDirty() {
-        return editing_ && originalSettings_ != null
+        return isEditing() && originalSettings_ != null
                 && !settingsFromFields().equals(originalSettings_);
-    }
-
-    @Override
-    public boolean isEditing() {
-        return editing_;
     }
 
     private AlbumsSettings settingsFromFields() {
@@ -589,7 +577,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     @Override
     protected void checkButtons() {
         updateHeroWarnings();
-        if (!editing_) return;
+        if (!isEditing()) return;
         boolean valid = validatables_.stream().allMatch(DDValidatable::isValidData);
         if (valid) valid = !settingsFromFields().equals(originalSettings_);
         saveBtn_.setEnabled(valid);

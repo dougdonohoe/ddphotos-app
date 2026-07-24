@@ -35,7 +35,6 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
     private AlbumEntry currentEntry_;
     private AlbumEntry originalEntry_;
-    private boolean editing_    = false;
     private boolean populating_ = false;
 
     // Base combo — backed by mutable lists so resetValues() picks up site changes
@@ -255,7 +254,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     /** Caption editing is available on a saved album whose source directory resolves. */
     private void updateEditCaptionsButton() {
         if (editCaptionsBtn_ != null) {
-            editCaptionsBtn_.setEnabled(!editing_ && currentEntry_ != null && resolveSourcePath() != null);
+            editCaptionsBtn_.setEnabled(!isEditing() && currentEntry_ != null && resolveSourcePath() != null);
         }
     }
 
@@ -289,23 +288,19 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     public void loadAlbum(AlbumEntry entry) {
         populating_ = true;
         try {
-            editing_ = false;
             originalEntry_ = null;
             currentEntry_ = entry;
             rebuildBaseList();
             if (entry == null) {
                 clearFields();
-                setReadOnly(true);
-                editBtn_.setEnabled(false);
             } else {
                 populate(entry);
-                setReadOnly(true);
-                editBtn_.setEnabled(true);
             }
+            editBtn_.setEnabled(entry != null);
         } finally {
             populating_ = false;
         }
-        updateWarnings();
+        setEditing(false);
     }
 
     private void rebuildBaseList() {
@@ -361,17 +356,13 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
     @Override
     protected void enterEditMode() {
-        editing_ = true;
         originalEntry_ = entryFromFields();
-        setReadOnly(false);
-        checkButtons();
-        fireEditModeChanged();
+        setEditing(true);
     }
 
     @Override
     protected void cancelEdit() {
         loadAlbum(currentEntry_);
-        fireEditModeChanged();
     }
 
     @Override
@@ -398,10 +389,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             return;
         }
 
-        editing_ = false;
         originalEntry_ = null;
-        setReadOnly(true);
-        fireEditModeChanged();
+        setEditing(false);
 
         if (onSavedCallback_ != null) onSavedCallback_.run();
     }
@@ -410,7 +399,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     // Read-only toggle
     // -------------------------------------------------------------------------
 
-    private void setReadOnly(boolean readOnly) {
+    @Override
+    protected void setReadOnly(boolean readOnly) {
         slug_.setDisplayOnly(readOnly);
         name_.setDisplayOnly(readOnly);
         description_.setDisplayOnly(readOnly);
@@ -430,13 +420,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     // -------------------------------------------------------------------------
 
     public boolean isDirty() {
-        return editing_ && originalEntry_ != null
+        return isEditing() && originalEntry_ != null
                 && !entryFromFields().equals(originalEntry_);
-    }
-
-    @Override
-    public boolean isEditing() {
-        return editing_;
     }
 
     private AlbumEntry entryFromFields() {
@@ -459,7 +444,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     @Override
     protected void checkButtons() {
         updateWarnings();
-        if (!editing_) return;
+        if (!isEditing()) return;
         boolean valid = validatables_.stream().allMatch(DDValidatable::isValidData);
         if (valid) valid = !entryFromFields().equals(originalEntry_);
         saveBtn_.setEnabled(valid);
@@ -496,7 +481,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         albumsList_.reloadAlbumsFile();
 
         // Refresh currentEntry_ from the fresh AlbumsFile so stale base refs are corrected
-        if (currentEntry_ != null && !editing_) {
+        if (currentEntry_ != null && !isEditing()) {
             AlbumsFile af = albumsList_.getCurrentAlbumsFile();
             if (af != null) {
                 String slug = currentEntry_.getSlug();

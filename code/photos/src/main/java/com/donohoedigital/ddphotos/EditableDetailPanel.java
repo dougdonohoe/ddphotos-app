@@ -22,19 +22,34 @@ abstract class EditableDetailPanel extends DDPanel {
     protected List<DDValidatable> validatables_;
     protected DDButton editBtn_, saveBtn_, cancelBtn_;
 
+    private boolean editing_;
     private Runnable onEditModeChanged_;
 
     /**
      * Notified whenever editing starts, is saved, or is canceled (i.e. whenever
-     * {@link #isEditing()} may have changed), so callers can lock other UI
+     * {@link #isEditing()} has changed), so callers can lock other UI
      * while an edit is in progress.
      */
     public void setOnEditModeChanged(Runnable listener) {
         onEditModeChanged_ = listener;
     }
 
-    protected void fireEditModeChanged() {
-        if (onEditModeChanged_ != null) onEditModeChanged_.run();
+    public final boolean isEditing() {
+        return editing_;
+    }
+
+    /**
+     * The single point at which edit mode changes.  Subclasses must never touch the
+     * flag directly: routing every transition (edit / save / cancel / reload) through
+     * here keeps the read-only fields, the buttons and anything else derived from the
+     * mode in sync, and fires the listener exactly once per actual change.
+     */
+    protected final void setEditing(boolean editing) {
+        boolean changed = (editing_ != editing);
+        editing_ = editing;
+        setReadOnly(!editing);
+        checkButtons();
+        if (changed && onEditModeChanged_ != null) onEditModeChanged_.run();
     }
 
     protected void finishBuildUI(JPanel form) {
@@ -80,7 +95,8 @@ abstract class EditableDetailPanel extends DDPanel {
     protected abstract void applyAndSave();
     protected abstract void cancelEdit();
 
-    public abstract boolean isEditing();
+    /** Puts the fields (and the edit/save/cancel buttons) into read-only or editable state. */
+    protected abstract void setReadOnly(boolean readOnly);
 
     // -------------------------------------------------------------------------
     // Shared layout helpers
