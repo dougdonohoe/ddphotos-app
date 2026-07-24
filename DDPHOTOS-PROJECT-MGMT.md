@@ -9,6 +9,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 ## TODO
 
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
+* Clear thumb cache menu item?
 * Wizard step for Docker file permissions?
 * Windows - WSL and PowerShell docs
 * Metal bumps look odd on Windows
