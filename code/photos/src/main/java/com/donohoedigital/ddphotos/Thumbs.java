@@ -3,11 +3,13 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.app.config.AppConfigUtils;
 import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.ImageDef;
+import com.donohoedigital.gui.RenderUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.SwingWorker;
+import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -46,6 +48,25 @@ public final class Thumbs {
     });
 
     private Thumbs() {}
+
+    /**
+     * As {@link #loadAsync(Path, int, int, String, Consumer)}, but sized in <i>device</i> pixels for
+     * the screen showing {@code c}: the requested logical box is multiplied by that screen's scale
+     * factor (1.25 for Windows at 125%, 2.0 for Retina-class).  The caller must then draw the result
+     * into the original logical box, which downscales it — far sharper than generating at logical
+     * size and letting the device transform upscale.
+     *
+     * <p>Thumbnail sizes are part of the disk cache key, so scaled sizes simply get their own cache
+     * entries; nothing collides and no migration is needed.
+     */
+    public static Future<BufferedImage> loadAsyncForDisplay(Component c, Path path,
+                                                            int maxWidth, int maxHeight, String crop,
+                                                            Consumer<BufferedImage> onResult) {
+        double scale = RenderUtils.getDisplayScale(c);
+        int w = Math.max(1, (int) Math.ceil(maxWidth * scale));
+        int h = Math.max(1, (int) Math.ceil(maxHeight * scale));
+        return loadAsync(path, w, h, crop, onResult);
+    }
 
     /**
      * Decodes a thumbnail on the shared loader pool and delivers it to {@code onResult} on the EDT

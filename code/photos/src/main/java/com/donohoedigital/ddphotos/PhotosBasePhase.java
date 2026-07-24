@@ -240,6 +240,11 @@ public class PhotosBasePhase extends BasePhase {
             JMenuItem splash = new JMenuItem("Show Splashscreen");
             splash.addActionListener(_ -> engine_.showSplashScreenAgain());
             menu.add(splash);
+
+            JMenuItem display = new JMenuItem("Display Info...");
+            display.addActionListener(_ -> EngineUtils.displayInformationDialog(
+                    context_, GuiUtils.getDisplayInfoHtml(context_.getFrame())));
+            menu.add(display);
         }
 
         return menu;

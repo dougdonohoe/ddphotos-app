@@ -652,6 +652,80 @@ public class GuiUtils
     }
 
     /** Lower-case extension of the file, or "png" if it has none. */
+    /**
+     * Build an HTML report of the display scale factors in play.  A scale other than 1.0 means
+     * the JDK is upscaling everything drawn in logical pixels to device pixels, which is what
+     * makes fixed-size 1x bitmaps (splash screen, icons) look pixelated.  Non-integer factors
+     * (1.25, 1.5) look worse than a clean 2.0 because edges land on half pixels.
+     *
+     * @param c component whose window identifies the "current" screen; may be null
+     */
+    public static String getDisplayInfoHtml(Component c)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        GraphicsConfiguration current = (c == null) ? null : c.getGraphicsConfiguration();
+        GraphicsDevice currentDevice = (current == null) ? null : current.getDevice();
+
+        sb.append("<b>Screens</b><br>");
+        GraphicsDevice[] devices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+        for (GraphicsDevice device : devices)
+        {
+            GraphicsConfiguration gc = device.getDefaultConfiguration();
+            AffineTransform tx = gc.getDefaultTransform();
+            Rectangle bounds = gc.getBounds();
+            boolean isCurrent = device.equals(currentDevice);
+
+            if (isCurrent) sb.append("<b>");
+            sb.append("&nbsp;&nbsp;").append(device.getIDstring())
+              .append(": ").append(bounds.width).append('x').append(bounds.height)
+              .append(" logical @ (").append(bounds.x).append(',').append(bounds.y).append(')')
+              .append(" &mdash; scale ").append(formatScale(tx.getScaleX()))
+              .append('x').append(formatScale(tx.getScaleY()))
+              .append(" &rarr; ").append(Math.round(bounds.width * tx.getScaleX()))
+              .append('x').append(Math.round(bounds.height * tx.getScaleY())).append(" device");
+            if (isCurrent) sb.append("  &lt;-- this window</b>");
+            sb.append("<br>");
+        }
+
+        if (current != null)
+        {
+            AffineTransform tx = current.getDefaultTransform();
+            sb.append("<br><b>This window</b><br>&nbsp;&nbsp;scale ")
+              .append(formatScale(tx.getScaleX())).append('x').append(formatScale(tx.getScaleY()));
+            if (tx.getScaleX() != 1.0d || tx.getScaleY() != 1.0d)
+            {
+                sb.append(" &mdash; 1x images are being upscaled");
+            }
+            sb.append("<br>");
+        }
+
+        sb.append("<br><b>Java 2D</b><br>");
+        appendProperty(sb, "sun.java2d.uiScale");
+        appendProperty(sb, "sun.java2d.uiScale.enabled");
+        appendProperty(sb, "sun.java2d.opengl");
+        appendProperty(sb, "sun.java2d.d3d");
+        sb.append("&nbsp;&nbsp;java.version = ").append(System.getProperty("java.version")).append("<br>");
+        sb.append("&nbsp;&nbsp;os.name = ").append(System.getProperty("os.name")).append("<br>");
+        sb.append("&nbsp;&nbsp;Toolkit screen resolution = ")
+          .append(Toolkit.getDefaultToolkit().getScreenResolution()).append(" DPI<br>");
+
+        return sb.toString();
+    }
+
+    /** Scale factor without a trailing ".0" on whole numbers */
+    private static String formatScale(double scale)
+    {
+        return (scale == Math.rint(scale)) ? String.valueOf((long) scale) : String.valueOf(scale);
+    }
+
+    private static void appendProperty(StringBuilder sb, String name)
+    {
+        String value = System.getProperty(name);
+        sb.append("&nbsp;&nbsp;").append(name).append(" = ")
+          .append(value == null ? "&lt;unset&gt;" : value).append("<br>");
+    }
+
     private static String formatFor(File file)
     {
         String name = file.getName();

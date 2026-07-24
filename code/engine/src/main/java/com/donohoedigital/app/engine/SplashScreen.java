@@ -43,6 +43,10 @@ public class SplashScreen extends JFrame
         bgFile_ = bg;
         BufferedImage img = ImageDef.getBufferedImage(bg);
         ic_ = new ImageComponent(img, 1.0d);
+        // Splash is a fixed-size 1x bitmap of hard-edged artwork, painted essentially once.
+        // On a scaled display (Windows at 125%/150%, HiDPI) the default nearest-neighbor
+        // interpolation stair-steps the logo badly, so pay for bicubic here.
+        ic_.setInterpolation(RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         ic_.setLayout(new XYLayout());
         setContentPane(ic_);
 

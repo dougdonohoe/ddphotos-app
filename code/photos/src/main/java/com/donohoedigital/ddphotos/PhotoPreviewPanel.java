@@ -1,6 +1,7 @@
 package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.gui.DDIconButtons;
+import com.donohoedigital.gui.RenderUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -58,7 +59,7 @@ public class PhotoPreviewPanel extends JPanel {
         }
 
         isLoading = true;
-        loadWorker = Thumbs.loadAsync(path, maxWidth, maxHeight, crop_, img -> {
+        loadWorker = Thumbs.loadAsyncForDisplay(this, path, maxWidth, maxHeight, crop_, img -> {
             isLoading = false;
             image = img;  // null when undecodable -> paintPlaceholder draws the camera-off icon
             repaint();
@@ -98,8 +99,22 @@ public class PhotoPreviewPanel extends JPanel {
         Insets ins = getInsets();
         int availW = getWidth()  - ins.left - ins.right;
         int availH = getHeight() - ins.top  - ins.bottom;
-        int x = ins.left + (availW - image.getWidth())  / 2;
-        int y = ins.top  + (availH - image.getHeight()) / 2;
-        g.drawImage(image, x, y, null);
+
+        // The thumbnail is generated in device pixels (see Thumbs.loadAsyncForDisplay), so fit it
+        // back into the logical box here.  On an unscaled display this is a 1:1 no-op; on a scaled
+        // one it downscales, which is where images look sharpest.  Deriving the fit from the
+        // image's own aspect keeps this correct if the window moves to a differently-scaled screen.
+        double fit = Math.min((double) maxWidth / image.getWidth(), (double) maxHeight / image.getHeight());
+        int w = Math.max(1, (int) Math.round(image.getWidth()  * fit));
+        int h = Math.max(1, (int) Math.round(image.getHeight() * fit));
+        int x = ins.left + (availW - w) / 2;
+        int y = ins.top  + (availH - h) / 2;
+
+        Object old = RenderUtils.applyInterpolation(g, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        try {
+            g.drawImage(image, x, y, w, h, null);
+        } finally {
+            RenderUtils.restoreInterpolation(g, old);
+        }
     }
 }

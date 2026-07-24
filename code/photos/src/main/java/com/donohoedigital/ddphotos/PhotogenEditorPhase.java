@@ -31,6 +31,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.awt.image.BufferedImage;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -542,9 +543,19 @@ public class PhotogenEditorPhase extends BasePhase {
         label.setHorizontalAlignment(SwingConstants.CENTER);
         // Decoded image, or the "no preview" camera-off placeholder when it can't be read (e.g. HEIC,
         // which ImageIO can't decode) — mirrors PhotoPreviewPanel.  Runs on Thumbs' shared pool.
-        thumbJobs_.add(Thumbs.loadAsync(path, thumbW_, thumbH_, null,
-                img -> label.setIcon(img != null ? new ImageIcon(img) : placeholderIcon())));
+        thumbJobs_.add(Thumbs.loadAsyncForDisplay(label, path, thumbW_, thumbH_, null,
+                img -> label.setIcon(img != null ? thumbIcon(label, img) : placeholderIcon())));
         return label;
+    }
+
+    /**
+     * Wrap a device-pixel thumbnail (see {@link Thumbs#loadAsyncForDisplay}) in an Icon that draws
+     * at logical size.  ImageComponent's icon scale does the downscale, and its paint path applies
+     * an interpolation hint -- a plain ImageIcon would draw at natural size and be too large.
+     */
+    private static Icon thumbIcon(JComponent owner, BufferedImage img) {
+        double scale = RenderUtils.getDisplayScale(owner);
+        return new ImageComponent(img, scale > 0 ? 1.0d / scale : 1.0d).getUniqueIcon();
     }
 
     /** Camera-off icon shown in a row's thumbnail cell when the image can't be decoded. */

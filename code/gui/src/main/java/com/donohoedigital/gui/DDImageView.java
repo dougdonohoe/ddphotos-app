@@ -95,15 +95,29 @@ public class DDImageView extends DDView
     /**
      * paint
      */
-    public void paint(Graphics g, Shape a) 
+    public void paint(Graphics g, Shape a)
     {
 		if (image_ == null) return;
 
         Rectangle rect = (a instanceof Rectangle) ? (Rectangle)a :
                          a.getBounds();
 
-        g.drawImage(image_, rect.x, rect.y+nYadj_, rect.x+nWidth_, rect.y+nHeight_+nYadj_,
-                                0, 0, image_.getWidth(), image_.getHeight(), null);
+        // Help/HTML content paints rarely, so pay for bicubic.  Without an interpolation hint
+        // Java 2D uses nearest-neighbor, which stair-steps these images on a scaled display
+        // (e.g. Windows at 125%) even when they are drawn at their natural size, since the
+        // device transform still scales them up.
+        Object old = null;
+        Graphics2D g2 = (g instanceof Graphics2D) ? (Graphics2D) g : null;
+        if (g2 != null) old = RenderUtils.applyInterpolation(g2, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        try
+        {
+            g.drawImage(image_, rect.x, rect.y+nYadj_, rect.x+nWidth_, rect.y+nHeight_+nYadj_,
+                                    0, 0, image_.getWidth(), image_.getHeight(), null);
+        }
+        finally
+        {
+            if (g2 != null) RenderUtils.restoreInterpolation(g2, old);
+        }
     }
     
     /** Determines the preferred span for this view along an
