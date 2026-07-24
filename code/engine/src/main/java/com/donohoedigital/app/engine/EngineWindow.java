@@ -52,20 +52,21 @@ public class EngineWindow extends BaseFrame {
         DisplayMode mode = getDisplayMode();
         EnginePrefs prefs = engine_.getEnginePrefs();
 
-        // size from prefs
+        // Saved window size from prefs.  NOTE: this is the OUTER frame size (including
+        // title bar and, on Linux/Windows, the in-window menu bar).  It is applied
+        // after pack() below.  We persist/restore the outer size rather than the
+        // content-pane size because the app's menu bar is added AFTER this window is
+        // packed (at phase start); saving the content size caused the in-window menu
+        // bar to take its height out of the content pane on every restart, shrinking
+        // the window a little each launch.  (macOS puts the menu bar in the screen
+        // menu bar, so the content pane is never reduced - hence Mac was unaffected.)
         int w = -1, h = -1;
         if (!bReset) {
             w = prefs.getInt(EngineConstants.PREF_W + "-" + getName(), w);
             h = prefs.getInt(EngineConstants.PREF_H + "-" + getName(), h);
         }
 
-        if (bResizable && w != -1 && h != -1) {
-            size.height = h;
-            size.width = w;
-        }
-
-        // if stored in prefs smaller than our desired minimum,
-        // adjust
+        // clamp the default (content) starting size to sane bounds
         if (size.width < DESIRED_MIN_WIDTH) size.width = DESIRED_MIN_WIDTH;
         if (size.height < DESIRED_MIN_HEIGHT) size.height = DESIRED_MIN_HEIGHT;
 
@@ -137,6 +138,19 @@ public class EngineWindow extends BaseFrame {
         // final frame setup
         validate();
         pack();
+
+        // Apply the saved OUTER window size now that the frame is packed.  Because it
+        // is the outer size, it stays correct even though the menu bar is added later
+        // (the menu bar redistributes space within the fixed outer frame).  Skipped in
+        // the forced-starting-size test mode so that test still controls the size.
+        boolean testingSize = TESTING(EngineConstants.TESTING_CHANGE_STARTING_SIZE) && getName().equals("main");
+        if (bResizable && w != -1 && h != -1 && !testingSize) {
+            if (w < DESIRED_MIN_WIDTH) w = DESIRED_MIN_WIDTH;
+            if (h < DESIRED_MIN_HEIGHT) h = DESIRED_MIN_HEIGHT;
+            if (w > mode.getWidth()) w = mode.getWidth();
+            if (h > mode.getHeight()) h = mode.getHeight();
+            setSize(w, h);
+        }
         center();
 
         // listener, set location
@@ -270,7 +284,7 @@ public class EngineWindow extends BaseFrame {
          */
         public void componentResized(ComponentEvent e) {
             if (TESTING(EngineConstants.TESTING_CHANGE_STARTING_SIZE) && getName().equals("main")) return;
-            getContentPane().getSize(size_);
+            getSize(size_);   // OUTER frame size (decorations + menu bar) - see init()
 
             // save
             EnginePrefs prefs = engine_.getEnginePrefs();

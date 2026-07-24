@@ -20,11 +20,25 @@
       <groupId>com.donohoedigital</groupId>
       <artifactId>gui</artifactId>
     </dependency>
+    <!-- install4j launcher API (StartupNotification for single-instance handling);
+         present at runtime via the installed launcher, hence provided scope -->
+    <dependency>
+      <groupId>com.install4j</groupId>
+      <artifactId>install4j-runtime</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>ej-technologies</id>
+      <url>https://maven.ej-technologies.com/repository/</url>
+    </repository>
+  </repositories>
 
 </project>

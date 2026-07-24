@@ -20,7 +20,7 @@
   </files>
   <launchers>
     <launcher name="ddphotos" id="2" menuName="${compiler:sys.fullName}" icnsFile="../../logo/icons/ddphotos-logo/ddphotos-logo.icns" useCustomMacosExecutableName="true" customMacosExecutableName="${compiler:sys.fullName}">
-      <executable name="ddphotos" iconSet="true" iconFile="../../logo/icons/ddphotos-logo/ddphotos-logo.ico" executableDir="." redirectStderr="false" stderrFile="log/err.txt" stdoutFile="log/out.txt" failOnStderrOutput="false" executableMode="gui">
+      <executable name="ddphotos" iconSet="true" iconFile="../../logo/icons/ddphotos-logo/ddphotos-logo.ico" executableDir="." redirectStderr="false" stderrFile="log/err.txt" stdoutFile="log/out.txt" failOnStderrOutput="false" executableMode="gui" singleInstance="true" windowsSessionSingleInstance="false">
         <versionInfo include="true" fileVersion="1.0.0.0" fileDescription="http://ddphotos.donohoe.info/" legalCopyright="Copyright © 2026. Donohoe Digital LLC." internalName="DD Photos" />
       </executable>
       <java mainClass="com.donohoedigital.ddphotos.PhotosMain" vmParameters="-Xms32m -Xmx256m --enable-native-access=ALL-UNNAMED" preferredVM="client">
@@ -904,7 +904,6 @@ return true;
     <windows name="Windows" id="4" installDir="ddphotos" failOnPostProcessorError="true" architecture="64" />
     <unixInstaller name="Unix Installer" id="15" installDir="ddphotos" customInstallBaseDir="/usr/local/apps">
       <excludedBeans>
-        <bean refId="13" />
         <bean refId="50" />
       </excludedBeans>
     </unixInstaller>
