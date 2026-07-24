@@ -152,10 +152,29 @@ public abstract class AppEngine extends BaseApp {
      */
     @Override
     protected void preConfigManagerInit() {
+        splashscreen_ = createSplashScreen();
+        splashscreen_.setVisible(true);
+    }
+
+    /**
+     * Create a splash screen from the configured background/icon images
+     */
+    private SplashScreen createSplashScreen() {
         URL file = new MatchingResources("classpath*:config/" + sAppName + "/images/" + getSplashBackgroundFile()).getSingleRequiredResourceURL();
         URL icon = new MatchingResources("classpath*:config/" + sAppName + "/images/" + getSplashIconFile()).getSingleRequiredResourceURL();
-        splashscreen_ = new SplashScreen(file, icon, getSplashTitle());
-        splashscreen_.setVisible(true);
+        return new SplashScreen(file, icon, getSplashTitle());
+    }
+
+    /**
+     * Show the splash screen again after startup (used for testing/debug).  Unlike the
+     * startup splash, closing this one just disposes the window instead of exiting.
+     */
+    public void showSplashScreenAgain() {
+        SplashScreen splash = createSplashScreen();
+        splash.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        splash.changeUI(this, null, splash::dispose);
+        splash.setVisible(true);
+        splash.toFront();
     }
 
     /**

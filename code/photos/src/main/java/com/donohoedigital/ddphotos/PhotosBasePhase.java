@@ -236,6 +236,10 @@ public class PhotosBasePhase extends BasePhase {
                 context_.screenshot(screenshotName());
             });
             menu.add(ss);
+
+            JMenuItem splash = new JMenuItem("Show Splashscreen");
+            splash.addActionListener(_ -> engine_.showSplashScreenAgain());
+            menu.add(splash);
         }
 
         return menu;

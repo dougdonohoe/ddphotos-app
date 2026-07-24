@@ -25,7 +25,6 @@ import java.net.*;
  */
 public class SplashScreen extends JFrame
 {
-    private AppEngine engine_;
     private final ImageComponent ic_;
     private final URL bgFile_;
 
@@ -61,8 +60,16 @@ public class SplashScreen extends JFrame
      */
     public void changeUI(AppEngine engine, String sErrorMessage)
     {
-        engine_ = engine;
+        changeUI(engine, sErrorMessage, () -> engine.exit(0));
+    }
 
+    /**
+     * As above, but with a custom action for the exit button (and for clicking the
+     * splash when an error message is shown).  Used when re-displaying the splash
+     * after startup, where closing it should just dispose the window.
+     */
+    public void changeUI(AppEngine engine, String sErrorMessage, Runnable closeAction)
+    {
         int BUTTONSIZE = 15;
         XYConstraints xy;
         setTitle(PropertyConfig.getMessage("msg.title.splash"));
@@ -71,7 +78,7 @@ public class SplashScreen extends JFrame
         if (sErrorMessage != null) sKey = "splash-empty";
 
         // localize
-        sKey = PropertyConfig.localize(sKey, engine_.getLocale());
+        sKey = PropertyConfig.localize(sKey, engine.getLocale());
         ImageDef img = ImageConfig.getImageDef(sKey);
         if (!img.getImageURL().toString().equals(bgFile_.toString()))
         {
@@ -80,7 +87,7 @@ public class SplashScreen extends JFrame
 
         // version label
         DDLabel version = new DDLabel("version", "Splash");
-        GuiManager.setLabelAsMessage(version, engine_.getVersion());
+        GuiManager.setLabelAsMessage(version, engine.getVersion());
         version.setHorizontalAlignment(SwingConstants.CENTER);
         Dimension size = version.getPreferredSize();
         JComponent versionpanel = GuiUtils.NORTH(version);
@@ -107,7 +114,7 @@ public class SplashScreen extends JFrame
                 // exit if clicked
                 public void mouseReleased(MouseEvent e)
                 {
-                    engine_.exit(0);
+                    closeAction.run();
                 }
             };
             GuiUtils.addMouseListenerChildren(this, listener);
@@ -116,7 +123,7 @@ public class SplashScreen extends JFrame
 
         // exit button
         DDButton exit = new DDButton("exitsplash", "Splash");
-        exit.addActionListener((_) -> engine_.exit(0));
+        exit.addActionListener((_) -> closeAction.run());
         exit.setFocusable(false);
         exit.setFocusPainted(false);
         xy = new XYConstraints(ic_.getWidth() - BUTTONSIZE - 6, 5, BUTTONSIZE, BUTTONSIZE);

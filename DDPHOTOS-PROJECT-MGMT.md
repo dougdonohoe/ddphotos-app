@@ -14,10 +14,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Metal bumps look odd on Windows
 * `xboxl` hack in username
 * If `wrangler` errors - treated as success (probably surge too)
-* Linux testing
-  * centering splash?
-  * xdg_open avail?
-  * black screen in XQuartz/Ubuntu
 * `site.env` editor
 * `passwords.yaml` editor
 * `custom.css` editor
