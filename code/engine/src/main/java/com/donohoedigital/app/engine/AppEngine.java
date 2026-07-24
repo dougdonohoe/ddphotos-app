@@ -103,16 +103,18 @@ public abstract class AppEngine extends BaseApp {
             splashscreen_.changeUI(this, checkSize());
         }
 
-        // Single-instance support: when launched via the install4j launcher with
+        // Single-instance support: when launched via the install4j launcher (Windows/Linux) with
         // "single instance" enabled, a blocked second launch notifies this instance
         // instead of starting a new one - bring the existing window to the front.
         // Wrapped because com.install4j.api.launcher.StartupNotification is only on
         // the classpath when run from the installed launcher (absent in dev/IDE runs).
-        try {
-            StartupNotification.registerStartupListener(parameters ->
-                    SwingUtilities.invokeLater(this::bringToFront));
-        } catch (Throwable t) {
-            logger.debug("install4j StartupNotification unavailable (not launched via installer): {}", String.valueOf(t));
+        if (Utils.ISWINDOWS || Utils.ISLINUX) {
+            try {
+                StartupNotification.registerStartupListener(_ ->
+                        SwingUtilities.invokeLater(this::bringToFront));
+            } catch (Throwable t) {
+                logger.debug("install4j StartupNotification unavailable (not launched via installer): {}", String.valueOf(t));
+            }
         }
     }
 
