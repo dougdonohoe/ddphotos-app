@@ -43,4 +43,10 @@ for dest in "$IMAGES"/icon_*.png "$IMAGES"/logo_*.png; do
   fi
 done
 
+# --- ddphotos website screenshots -------------------------------------------
+SHOTS_SRC="$SCRIPT_DIR/../images/screenshots"
+SHOTS_DEST="$HOME/work/ddphotos/images/ddphotos-app"
+echo "Updating website screenshots in $SHOTS_DEST ..."
+cp_v "$SHOTS_SRC/config.png" "$SHOTS_DEST/config.png"
+
 echo "Done."
