@@ -27,8 +27,7 @@ public class PasswordsFileTest {
     /** Matches sample/config/passwords-all.yaml: header comments, site, and two albums. */
     private static final String SAMPLE_ALL =
             """
-            # WARNING: This file is a DEMO ONLY and is intentionally committed for testing purposes.
-            # WARNING: Do NOT commit real passwords.
+            # COMMENT
 
             key: ddphotos-sample-key-all
 
@@ -47,8 +46,7 @@ public class PasswordsFileTest {
     /** Matches sample/config/passwords-uganda.yaml: no site block. */
     private static final String SAMPLE_ALBUMS_ONLY =
             """
-            # WARNING: This file is a DEMO ONLY and is intentionally committed for testing purposes.
-            # WARNING: Do NOT commit real passwords.
+            # COMMENT
 
             key: ddphotos-sample-key-uganda
 
@@ -275,7 +273,7 @@ public class PasswordsFileTest {
         assertFalse("site block should be gone", saved.contains("site:"));
         assertFalse("orphaned site hint should be gone", saved.contains("What say you now?"));
         assertTrue("albums should be untouched", saved.contains("uganda:"));
-        assertTrue("comments should survive", saved.contains("# WARNING"));
+        assertTrue("comments should survive", saved.contains("# COMMENT"));
     }
 
     @Test
@@ -289,7 +287,7 @@ public class PasswordsFileTest {
         assertTrue(saved.contains("password: silverback"));
         assertTrue("existing hint untouched", saved.contains("hint: A big brown ape"));
         assertTrue("other album untouched", saved.contains("password: penguin"));
-        assertTrue("comments survive an edit", saved.contains("# WARNING"));
+        assertTrue("comments survive an edit", saved.contains("# COMMENT"));
     }
 
     @Test

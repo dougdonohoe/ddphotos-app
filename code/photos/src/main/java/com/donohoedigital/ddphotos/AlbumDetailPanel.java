@@ -7,6 +7,7 @@ import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumEntry;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.AlbumsFileException;
+import com.donohoedigital.ddphotos.config.PasswordsFile;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.gui.*;
@@ -28,6 +29,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private static final String PREF_BROWSE_LAST_DIR = "browsesource.lastdir";
     public static final int PREFERRED_TEXT_WIDTH = 350;
     public static final int PREFERRED_SHORT_TEXT_WIDTH = 350;
+    /** Slugs are short, and the row has to leave room for the password controls. */
+    private static final int PREFERRED_SLUG_TEXT_WIDTH = 160;
 
     private final AlbumsListPanel albumsList_;
     private final Preferences prefs_ = PhotosConstants.getAppPreferences();
@@ -45,6 +48,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
     // Fields
     private OptionText slug_;
+    private DDButton passwordBtn_;
+    private DDLabel  lockLabel_;
     private OptionText name_;
     private OptionTextArea description_;
     private OptionFileChooser source_;
@@ -98,15 +103,14 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         DDLabelBorder panel = section("albumbasic");
 
         slug_ = new OptionText(null, "albumslug", STYLE, dummy_,
-                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", 350);
+                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", PREFERRED_SLUG_TEXT_WIDTH);
         slug_.getTextField().setCustomValidator(text -> {
             if (currentAlbumsFile() == null || currentEntry_ == null) return true;
             return currentAlbumsFile().getAlbums().stream()
                     .filter(a -> a != currentEntry_)
                     .noneMatch(a -> text.equals(a.getSlug()));
         });
-        GuiUtils.setPreferredWidth(slug_.getTextField(), PREFERRED_SHORT_TEXT_WIDTH);
-        panel.add(slug_);
+        panel.add(buildSlugRow());
 
         name_ = new OptionText(null, "albumname", STYLE, dummy_, 200, "^.+$", 350);
         GuiUtils.setPreferredWidth(name_.getTextField(), PREFERRED_SHORT_TEXT_WIDTH);
@@ -122,6 +126,66 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         panel.add(manualSort_);
 
         return panel;
+    }
+
+    /**
+     * The album slug field with the password controls beside it: a button that opens
+     * {@link PasswordDialog} and a lock icon reporting whether the album is protected —
+     * by its own password or, failing that, the site's.
+     */
+    private JComponent buildSlugRow() {
+        passwordBtn_ = new DDButton("albumpassword", STYLE);
+        passwordBtn_.addActionListener(_ -> openPasswordDialog());
+
+        lockLabel_ = new DDLabel("albumlock", STYLE);
+
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        controls.setOpaque(false);
+        controls.add(passwordBtn_);
+        controls.add(lockLabel_);
+
+        DDPanel row = new DDPanel();
+        row.setBorderLayoutGap(0, 8);
+        row.add(slug_, BorderLayout.WEST);
+        row.add(controls, BorderLayout.CENTER);
+        return row;
+    }
+
+    private void openPasswordDialog() {
+        Site site = albumsList_.getCurrentSite();
+        if (site == null || currentEntry_ == null) return;
+        TypedHashMap params = new TypedHashMap();
+        params.setObject(PasswordDialog.PARAM_SITE, site);
+        params.setObject(PasswordDialog.PARAM_ALBUM_SLUG, currentEntry_.getSlug());
+        params.setObject("dialog-windowtitle-prop", "msg.windowtitle.PasswordDialog.album");
+        albumsList_.getContext().processPhaseNow("PasswordDialog", params);
+        updatePasswordUi();
+    }
+
+    /**
+     * Refreshes the password button and lock icon.  An album with no entry of its own still
+     * shows a lock when the site is protected — it really is protected — with a tooltip
+     * saying where that protection comes from.
+     */
+    private void updatePasswordUi() {
+        if (passwordBtn_ == null) return;
+        passwordBtn_.setEnabled(!isEditing() && currentEntry_ != null);
+        // Protection can't change while the form is being edited, and checkButtons() fires on
+        // every keystroke - don't re-stat the passwords file that often.
+        if (isEditing()) return;
+
+        AlbumsFile af = currentAlbumsFile();
+        PasswordsFile pf = af != null ? af.getPasswordsFile() : null;
+        String slug = currentEntry_ != null ? currentEntry_.getSlug() : null;
+
+        boolean locked = pf != null && slug != null && pf.isAlbumProtected(slug);
+        boolean own    = locked && pf.hasAlbumEntry(slug);
+
+        lockLabel_.setIcon(locked ? DDIconButtons.LOCK : DDIconButtons.UNLOCK);
+        lockLabel_.setToolTipText(PropertyConfig.getMessage(
+                !locked ? "msg.password.unlocked.album"
+                        : own ? "msg.password.locked.album"
+                              : "msg.password.inherited.album"));
     }
 
     private DDLabelBorder buildSourceSection() {
@@ -337,6 +401,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         coverPreview_.setImageFile(cov.resolved());
         applyStatuses(warningArea_, List.of(src, cov), PREFERRED_TEXT_WIDTH);
         updateEditCaptionsButton();
+        updatePasswordUi();
     }
 
     /** Evaluates the source path against the selected base (folder, no image requirement). */

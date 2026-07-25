@@ -9,6 +9,7 @@ import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.AlbumsFileException;
 import com.donohoedigital.ddphotos.config.AlbumsSettings;
 import com.donohoedigital.ddphotos.config.HeroEntry;
+import com.donohoedigital.ddphotos.config.PasswordsFile;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.gui.*;
@@ -28,6 +29,9 @@ import java.util.function.Predicate;
 public class SiteDetailsPanel extends EditableDetailPanel {
     private static final Logger logger = LogManager.getLogger(SiteDetailsPanel.class);
 
+    /** Site ids are short, and the row has to leave room for the password controls. */
+    private static final int PREFERRED_ID_TEXT_WIDTH = 160;
+
     private final AppContext context_;
     private final SiteBarPanel siteBar_;
     private final TypedHashMap dummy_ = new TypedHashMap();
@@ -37,6 +41,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private AlbumsSettings originalSettings_;
 
     private OptionText albumId_;
+    private DDButton passwordBtn_;
+    private DDLabel  lockLabel_;
     private OptionText siteName_;
     private OptionText siteUrl_;
     private OptionTextArea siteDescription_;
@@ -113,8 +119,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         DDLabelBorder panel = section("sitesettings");
 
         albumId_ = new OptionText(null, "siteid", STYLE, dummy_,
-                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", 350);
-        panel.add(albumId_);
+                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", PREFERRED_ID_TEXT_WIDTH);
+        panel.add(buildIdRow());
 
         siteName_ = new OptionText(null, "sitename", STYLE, dummy_,
                 200, "^.+$", 350);
@@ -136,6 +142,57 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         panel.add(buildThemeRow());
 
         return panel;
+    }
+
+    /**
+     * The site ID field with the password controls beside it: a button that opens
+     * {@link PasswordDialog} and a lock icon reporting whether the site is protected.
+     */
+    private JComponent buildIdRow() {
+        passwordBtn_ = new DDButton("sitepassword", STYLE);
+        passwordBtn_.addActionListener(_ -> openPasswordDialog());
+
+        lockLabel_ = new DDLabel("sitelock", STYLE);
+
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        controls.setOpaque(false);
+        controls.add(passwordBtn_);
+        controls.add(lockLabel_);
+
+        DDPanel row = new DDPanel();
+        row.setBorderLayoutGap(0, 8);
+        row.add(albumId_, BorderLayout.WEST);
+        row.add(controls, BorderLayout.CENTER);
+        return row;
+    }
+
+    private void openPasswordDialog() {
+        if (currentSite_ == null) return;
+        TypedHashMap params = new TypedHashMap();
+        params.setObject(PasswordDialog.PARAM_SITE, currentSite_);
+        params.setObject("dialog-windowtitle-prop", "msg.windowtitle.PasswordDialog.site");
+        context_.processPhaseNow("PasswordDialog", params);
+        updatePasswordUi();
+    }
+
+    /**
+     * Refreshes the password button and lock icon.  Editing is blocked while the panel is in
+     * edit mode, since the dialog writes albums.yaml (for {@code settings.passwords}) behind
+     * the unsaved form.
+     */
+    private void updatePasswordUi() {
+        if (passwordBtn_ == null) return;
+        passwordBtn_.setEnabled(!isEditing() && currentSite_ != null);
+        // Protection can't change while the form is being edited, and checkButtons() fires on
+        // every keystroke - don't re-stat the passwords file that often.
+        if (isEditing()) return;
+
+        AlbumsFile af = albumsFile();
+        PasswordsFile pf = af != null ? af.getPasswordsFile() : null;
+        boolean locked = pf != null && pf.isSiteProtected();
+        lockLabel_.setIcon(locked ? DDIconButtons.LOCK : DDIconButtons.UNLOCK);
+        lockLabel_.setToolTipText(PropertyConfig.getMessage(
+                locked ? "msg.password.locked.site" : "msg.password.unlocked.site"));
     }
 
     /**
@@ -577,6 +634,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     @Override
     protected void checkButtons() {
         updateHeroWarnings();
+        updatePasswordUi();
         if (!isEditing()) return;
         boolean valid = validatables_.stream().allMatch(DDValidatable::isValidData);
         if (valid) valid = !settingsFromFields().equals(originalSettings_);

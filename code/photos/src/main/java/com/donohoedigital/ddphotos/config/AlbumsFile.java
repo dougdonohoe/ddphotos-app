@@ -38,6 +38,7 @@ public class AlbumsFile {
     private Path siteDir;
     private Path configDir;
     private PasswordsFile passwordsFile_;
+    private boolean passwordsSettingUnsaved_;
 
     public AlbumsFile() {
         settings = new AlbumsSettings();
@@ -111,6 +112,7 @@ public class AlbumsFile {
             throw new AlbumsFileException("write " + path + ": " + e.getMessage(), e);
         }
         if (rootNode == null) rootNode = node;
+        passwordsSettingUnsaved_ = false;
     }
 
     // ── getters / setters ───────────────────────────────────────────────────
@@ -280,7 +282,10 @@ public class AlbumsFile {
         if (getPasswordsFile() == null) {
             Path path = resolvePasswordsPath();
             if (path == null) return null;
-            if (isBlank(settings.getPasswords())) settings.setPasswords(PasswordsFile.FILE_NAME);
+            if (isBlank(settings.getPasswords())) {
+                settings.setPasswords(PasswordsFile.FILE_NAME);
+                passwordsSettingUnsaved_ = true;
+            }
             passwordsFile_ = new PasswordsFile(path);
         }
         return passwordsFile_;
@@ -289,6 +294,16 @@ public class AlbumsFile {
     /** Forces a fresh load from disk, replacing the cached instance. */
     public void reloadPasswordsFile() {
         passwordsFile_ = loadPasswordsFromDisk();
+    }
+
+    /**
+     * True when {@link #getOrCreatePasswordsFile()} defaulted {@code settings.passwords} and this
+     * albums.yaml has not been saved since.  {@code settings.passwords} lives in albums.yaml, so
+     * creating a passwords file leaves this file dirty until it is written — and the in-memory
+     * value alone can't tell you that, since an earlier (possibly canceled) create already set it.
+     */
+    public boolean isPasswordsSettingUnsaved() {
+        return passwordsSettingUnsaved_;
     }
 
     /** Saves the cached passwords file, creating it if needed.  No-op if nothing is cached. */

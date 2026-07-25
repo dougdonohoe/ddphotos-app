@@ -106,6 +106,20 @@
         </paramlist>
     </phase>
 
+    <phase name="PasswordDialog" class="com.donohoedigital.ddphotos.PasswordDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.PasswordDialog.site"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <param name="default-button" strvalue="save"/>
+        <paramlist name="buttons">
+            <strvalue>cancel</strvalue>
+            <strvalue>save</strvalue>
+        </paramlist>
+    </phase>
+
     <phase name="DisplayInfoMessage" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
         <param name="style" strvalue="DisplayMessage"/>
         <param name="dialog-style" strvalue="DisplayMessage"/>
