@@ -859,6 +859,77 @@ public class AlbumsFileTest {
         assertTrue(new AlbumsFile().getPhotogenFiles(albumWith("a", null, "relative")).isEmpty());
     }
 
+    // ── passwords file tests ────────────────────────────────────────────────
+
+    @Test
+    public void resolvePasswordsPath_defaultsFileName() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+
+        // Unset: still resolves, using the conventional name.
+        assertEquals(configDir.resolve("passwords.yaml"), af.resolvePasswordsPath());
+
+        af.getSettings().setPasswords("secrets.yaml");
+        assertEquals(configDir.resolve("secrets.yaml"), af.resolvePasswordsPath());
+    }
+
+    @Test
+    public void resolvePasswordsPath_absoluteAndUnknownConfigDir() {
+        AlbumsFile af = new AlbumsFile();
+        assertNull("no config dir and a relative name is unresolvable", af.resolvePasswordsPath());
+
+        af.getSettings().setPasswords("/etc/ddphotos/passwords.yaml");
+        assertEquals(Path.of("/etc/ddphotos/passwords.yaml"), af.resolvePasswordsPath());
+    }
+
+    @Test
+    public void getPasswordsFile_nullWhenUnsetOrAbsent() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+
+        assertNull("settings.passwords unset", af.getPasswordsFile());
+
+        af.getSettings().setPasswords("passwords.yaml");
+        af.reloadPasswordsFile();
+        assertNull("settings.passwords set but no file on disk", af.getPasswordsFile());
+
+        Files.writeString(configDir.resolve("passwords.yaml"), "key: a-key\n", StandardCharsets.UTF_8);
+        af.reloadPasswordsFile();
+        PasswordsFile pf = af.getPasswordsFile();
+        assertNotNull(pf);
+        assertEquals("a-key", pf.getKey());
+        assertSame("subsequent calls return the cached instance", pf, af.getPasswordsFile());
+    }
+
+    @Test
+    public void getOrCreatePasswordsFile_defaultsSetting() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+        assertNull(af.getSettings().getPasswords());
+
+        PasswordsFile pf = af.getOrCreatePasswordsFile();
+        assertNotNull(pf);
+        assertFalse(pf.existsOnDisk());
+        assertEquals("passwords.yaml", af.getSettings().getPasswords());
+        assertEquals(configDir.resolve("passwords.yaml"), pf.getPath());
+        assertSame(pf, af.getOrCreatePasswordsFile());
+
+        // savePasswordsFile() creates it once there is something to write.
+        pf.setKey("a-key");
+        pf.setSitePassword("hunter2");
+        af.savePasswordsFile();
+        assertEquals("key: a-key\n\nsite:\n  password: hunter2\n",
+                     Files.readString(pf.getPath(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void getOrCreatePasswordsFile_nullWithoutConfigDir() {
+        assertNull(new AlbumsFile().getOrCreatePasswordsFile());
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private AlbumsFile loadFixture(String resourcePath) throws Exception {

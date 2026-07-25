@@ -29,6 +29,49 @@ cd code && mvn -pl common,gui,engine,photos compile -q
   to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files
   if they exist (grid).
 
+## Feature Design - password.yaml
+
+Next feature to build is editing the `passwords.yaml` file.
+/Users/donohoe/work/ddphotos/docs/CONFIGURATION.md describes the format and other 
+details about passwords. Some notes:
+
+* The entire site can be password protected
+* Individual albums can be password protected
+* If an album is protected, either directly or inside a protected site, then
+  the passwords.yaml 'key' is used to generate the filename for each photo.
+
+The `albums.yaml` file specifies the name of the passwords file in the `settings.passwords` field.
+By convention the name is `passwords.yaml` and that is what we should default to if we need
+to create a new file.
+
+`settings.password` is relative to config dir as seen in /Users/donohoe/work/ddphotos/cmd/photogen/photogen.go:135-146
+
+Examples:
+
+/Users/donohoe/work/ddphotos/sample/config/passwords-all.yaml - site password and different passwords on 2 albums
+/Users/donohoe/work/ddphotos/sample/config/passwords-uganda.yaml - password on just 1 album
+/Users/donohoe/work/infra/photos/manly-man/passwords.yaml - actual live site, entire site password
+
+If creating a new file, we want to define a random 'key' for the user, let's generate using
+UUID but open to other ideas.  Once it is set, we want to make it harder to change, warning
+the user that changing it will generate new filenames for photos, which may result in unnecessary
+re-uploading of photos.  This will be enforced in the UI design, below.
+
+Step #1 (**DONE**) - create a `PasswordsFile` class and tests, similar to `AlbumsFile` but I think instead of
+having load(path) and save(path) methods, we follow the `SitesFile` pattern of passing in a path
+to the constructor and having a simple save() method to write it.  There will be sites
+which don't yet have a `passwords.yaml` file, so we should have a way to differentiate between
+when a file is expected versus creating a new one.
+
+The `PasswordsFile` class should have methods to set password/hint at the site and album levels.
+It might be helpful to have a helper on `AlbumsFile` to get its `PasswordsFile` if it exists (determining
+the proper absolute path from config dir + `settings.passwords` field).  Probably need a similar setter.
+
+Step #2 - UI for this, design is coming soon.  I'm trying to decide if I want a password/hint field on
+the AlbumDetails section (or maybe a "Password..." button and dialog), or just a dedicated editor for 
+the entire PasswordsFile.  Likewise, need a way to easily set site password and the key.  Anyhow,
+need to brainstorm on this to determine pros/cons.  
+
 ---
 
 # Parking Lot

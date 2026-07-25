@@ -5,12 +5,10 @@ import org.apache.logging.log4j.Logger;
 import org.snakeyaml.engine.v2.api.Dump;
 import org.snakeyaml.engine.v2.api.DumpSettings;
 import org.snakeyaml.engine.v2.api.LoadSettings;
-import org.snakeyaml.engine.v2.api.StreamDataWriter;
 import org.snakeyaml.engine.v2.api.lowlevel.Compose;
 import org.snakeyaml.engine.v2.comments.CommentLine;
 import org.snakeyaml.engine.v2.comments.CommentType;
 import org.snakeyaml.engine.v2.common.FlowStyle;
-import org.snakeyaml.engine.v2.common.ScalarStyle;
 import org.snakeyaml.engine.v2.exceptions.YamlEngineException;
 import org.snakeyaml.engine.v2.nodes.*;
 
@@ -22,6 +20,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
+
+import static com.donohoedigital.ddphotos.config.YamlNodes.*;
 
 public class AlbumsFile {
 
@@ -36,6 +36,8 @@ public class AlbumsFile {
     private Map<String, String> bases;
     private List<AlbumEntry> albums;
     private Path siteDir;
+    private Path configDir;
+    private PasswordsFile passwordsFile_;
 
     public AlbumsFile() {
         settings = new AlbumsSettings();
@@ -126,6 +128,10 @@ public class AlbumsFile {
 
     public Path getSiteDir() { return siteDir; }
     public void setSiteDir(Path siteDir) { this.siteDir = siteDir; }
+
+    /** The directory this albums.yaml lives in; {@code settings.passwords} is relative to it. */
+    public Path getConfigDir() { return configDir; }
+    public void setConfigDir(Path configDir) { this.configDir = configDir; }
 
     // ── path resolution ──────────────────────────────────────────────────────
 
@@ -230,6 +236,71 @@ public class AlbumsFile {
             if (!relative.startsWith("..")) return relative.toString();
         } catch (IOException | IllegalArgumentException ignored) {}
         return path;
+    }
+
+    // ── passwords file ──────────────────────────────────────────────────────
+
+    /**
+     * Resolves {@code settings.passwords} to an absolute path, defaulting the file name to
+     * {@link PasswordsFile#FILE_NAME} when the setting is unset.  An absolute setting is used
+     * as-is; otherwise it is resolved against the config dir, matching photogen's
+     * {@code filepath.Join(configDir, settings.passwords)}.
+     *
+     * <p>Returns null when the config dir is unknown and the setting is not absolute.
+     */
+    public Path resolvePasswordsPath() {
+        String name = settings.getPasswords();
+        Path relative = Path.of(isBlank(name) ? PasswordsFile.FILE_NAME : name);
+        if (relative.isAbsolute()) return relative.normalize();
+        if (configDir == null) return null;
+        return configDir.resolve(relative).normalize();
+    }
+
+    /**
+     * Returns the site's {@link PasswordsFile}, loaded on first access and cached thereafter.
+     * Returns null when {@code settings.passwords} is unset, the path cannot be resolved, or no
+     * file exists there — use {@link #getOrCreatePasswordsFile()} to start a new one.
+     */
+    public PasswordsFile getPasswordsFile() {
+        if (passwordsFile_ == null) {
+            passwordsFile_ = loadPasswordsFromDisk();
+        }
+        return passwordsFile_;
+    }
+
+    /**
+     * Returns the cached {@link PasswordsFile}, creating an empty one if neither a cached
+     * instance nor an on-disk file exists.  Also defaults {@code settings.passwords} to
+     * {@link PasswordsFile#FILE_NAME} when unset — the caller still has to
+     * {@link #save(Path) save} this albums.yaml to persist that.
+     *
+     * <p>Returns null only when the path cannot be resolved (no config dir).
+     */
+    public PasswordsFile getOrCreatePasswordsFile() {
+        if (getPasswordsFile() == null) {
+            Path path = resolvePasswordsPath();
+            if (path == null) return null;
+            if (isBlank(settings.getPasswords())) settings.setPasswords(PasswordsFile.FILE_NAME);
+            passwordsFile_ = new PasswordsFile(path);
+        }
+        return passwordsFile_;
+    }
+
+    /** Forces a fresh load from disk, replacing the cached instance. */
+    public void reloadPasswordsFile() {
+        passwordsFile_ = loadPasswordsFromDisk();
+    }
+
+    /** Saves the cached passwords file, creating it if needed.  No-op if nothing is cached. */
+    public void savePasswordsFile() throws PasswordsFileException {
+        if (passwordsFile_ != null) passwordsFile_.saveOrCreate();
+    }
+
+    private PasswordsFile loadPasswordsFromDisk() {
+        if (isBlank(settings.getPasswords())) return null;
+        Path path = resolvePasswordsPath();
+        if (path == null || !Files.exists(path)) return null;
+        return new PasswordsFile(path).load();
     }
 
     // ── validation ──────────────────────────────────────────────────────────
@@ -357,16 +428,6 @@ public class AlbumsFile {
         // Blank line before 'bases:' (i.e. after the settings block) and before 'albums:'.
         ensureLeadingBlankLine(root.getValue().get(findTupleIndex(root, "bases")).getKeyNode());
         ensureLeadingBlankLine(root.getValue().get(findTupleIndex(root, "albums")).getKeyNode());
-    }
-
-    /** Prepends a blank-line comment to the node unless it already starts with one. */
-    private static void ensureLeadingBlankLine(Node keyNode) {
-        List<CommentLine> comments = keyNode.getBlockComments();
-        comments = (comments == null) ? new ArrayList<>() : new ArrayList<>(comments);
-        if (comments.isEmpty() || comments.getFirst().getCommentType() != CommentType.BLANK_LINE) {
-            comments.addFirst(new CommentLine(Optional.empty(), Optional.empty(), "", CommentType.BLANK_LINE));
-            keyNode.setBlockComments(comments);
-        }
     }
 
     private void syncSettings(MappingNode root) {
@@ -560,26 +621,11 @@ public class AlbumsFile {
 
     // ── node helpers ────────────────────────────────────────────────────────
 
-    private static MappingNode getMappingNode(MappingNode parent, String key) {
-        int idx = findTupleIndex(parent, key);
-        if (idx < 0) return null;
-        Node v = parent.getValue().get(idx).getValueNode();
-        return v instanceof MappingNode mn ? mn : null;
-    }
-
     private static SequenceNode getSequenceNode(MappingNode parent, String key) {
         int idx = findTupleIndex(parent, key);
         if (idx < 0) return null;
         Node v = parent.getValue().get(idx).getValueNode();
         return v instanceof SequenceNode sn ? sn : null;
-    }
-
-    private static MappingNode ensureMappingNode(MappingNode parent, String key) {
-        MappingNode existing = getMappingNode(parent, key);
-        if (existing != null) return existing;
-        MappingNode node = new MappingNode(Tag.MAP, new ArrayList<>(), FlowStyle.BLOCK);
-        parent.getValue().add(new NodeTuple(scalar(key), node));
-        return node;
     }
 
     private static SequenceNode ensureSequenceNode(MappingNode parent, String key) {
@@ -590,121 +636,4 @@ public class AlbumsFile {
         return node;
     }
 
-    private static String getString(MappingNode node, String key) {
-        int idx = findTupleIndex(node, key);
-        if (idx < 0) return null;
-        Node v = node.getValue().get(idx).getValueNode();
-        if (v instanceof ScalarNode sn) {
-            String val = sn.getValue();
-            return (val == null || val.isEmpty()) ? null : val;
-        }
-        return null;
-    }
-
-    private static boolean getBoolean(MappingNode node, String key) {
-        return "true".equalsIgnoreCase(getString(node, key));
-    }
-
-    private static int getInt(MappingNode node, String key) {
-        String v = getString(node, key);
-        if (v == null) return 0;
-        try { return Integer.parseInt(v); } catch (NumberFormatException e) { return 0; }
-    }
-
-    /**
-     * Sets a string value in a mapping node.
-     * - Non-blank value: update existing node (preserving style/comments) or add new.
-     * - Blank/null value + key exists: remove the key.
-     * - Blank/null value + key missing: skip (don't add).
-     */
-    private static void setOptionalString(MappingNode node, String key, String value) {
-        int idx = findTupleIndex(node, key);
-        if (!isBlank(value)) {
-            if (idx >= 0) {
-                NodeTuple old = node.getValue().get(idx);
-                if (old.getValueNode() instanceof ScalarNode oldVal) {
-                    ScalarNode newVal = new ScalarNode(Tag.STR, value, oldVal.getScalarStyle());
-                    newVal.setBlockComments(oldVal.getBlockComments());
-                    newVal.setInLineComments(oldVal.getInLineComments());
-                    newVal.setEndComments(oldVal.getEndComments());
-                    node.getValue().set(idx, new NodeTuple(old.getKeyNode(), newVal));
-                } else {
-                    node.getValue().set(idx, new NodeTuple(old.getKeyNode(), scalar(value)));
-                }
-            } else {
-                node.getValue().add(new NodeTuple(scalar(key), scalar(value)));
-            }
-        } else if (idx >= 0) {
-            removeKey(node, key);
-        }
-    }
-
-    /**
-     * Sets a boolean value in a mapping node, always emitting an explicit
-     * "true"/"false" for clarity (updating the existing key or adding it).
-     */
-    private static void setBoolean(MappingNode node, String key, boolean value) {
-        int idx = findTupleIndex(node, key);
-        ScalarNode boolNode = new ScalarNode(Tag.BOOL, Boolean.toString(value), ScalarStyle.PLAIN);
-        if (idx >= 0) {
-            node.getValue().set(idx, new NodeTuple(node.getValue().get(idx).getKeyNode(), boolNode));
-        } else {
-            node.getValue().add(new NodeTuple(scalar(key), boolNode));
-        }
-    }
-
-    private static void setOptionalInt(MappingNode node, String key, int value) {
-        if (value == 0) {
-            removeKey(node, key);
-        } else {
-            int idx = findTupleIndex(node, key);
-            ScalarNode intNode = new ScalarNode(Tag.INT, Integer.toString(value), ScalarStyle.PLAIN);
-            if (idx >= 0) {
-                node.getValue().set(idx, new NodeTuple(node.getValue().get(idx).getKeyNode(), intNode));
-            } else {
-                node.getValue().add(new NodeTuple(scalar(key), intNode));
-            }
-        }
-    }
-
-    private static void removeKey(MappingNode node, String key) {
-        node.getValue().removeIf(t -> scalarKey(t).equals(key));
-    }
-
-    private static int findTupleIndex(MappingNode node, String key) {
-        List<NodeTuple> tuples = node.getValue();
-        for (int i = 0; i < tuples.size(); i++) {
-            if (scalarKey(tuples.get(i)).equals(key)) return i;
-        }
-        return -1;
-    }
-
-    private static String scalarKey(NodeTuple t) {
-        return t.getKeyNode() instanceof ScalarNode sn ? sn.getValue() : "";
-    }
-
-    private static String scalarValue(NodeTuple t) {
-        return t.getValueNode() instanceof ScalarNode sn ? (sn.getValue() != null ? sn.getValue() : "") : "";
-    }
-
-    private static ScalarNode scalar(String value) {
-        return new ScalarNode(Tag.STR, value, ScalarStyle.PLAIN);
-    }
-
-    private static boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
-    private static final class StringStreamWriter implements StreamDataWriter {
-        private final StringBuilder sb = new StringBuilder();
-
-        @Override
-        public void write(String str) { sb.append(str); }
-
-        @Override
-        public void write(String str, int off, int len) { sb.append(str, off, off + len); }
-
-        @Override
-        public String toString() { return sb.toString(); }
-    }
 }
