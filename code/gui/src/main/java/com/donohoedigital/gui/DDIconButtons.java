@@ -27,6 +27,8 @@ public class DDIconButtons
     public static final FlatSVGIcon ARROW_RIGHT   = svgIcon("icons/arrow-right.svg");
     public static final FlatSVGIcon SEARCH        = svgIcon("icons/search.svg");
     public static final FlatSVGIcon CLOSE         = svgIcon("icons/x.svg");
+    public static final FlatSVGIcon LOCK          = svgIcon("icons/lock.svg");
+    public static final FlatSVGIcon UNLOCK        = svgIcon("icons/lock-open.svg");
 
     public static DDButton iconButton(String name, String style, Icon icon)
     {

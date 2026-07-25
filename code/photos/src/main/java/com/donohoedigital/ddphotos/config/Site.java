@@ -87,7 +87,7 @@ public class Site implements NamedObject, Comparable<Site> {
     public AlbumsFile getOrCreateAlbumsFile() {
         if (getAlbumsFile() == null) {
             albumsFile_ = new AlbumsFile();
-            if (dirPath != null && !dirPath.isBlank()) albumsFile_.setSiteDir(Path.of(dirPath));
+            setDirsOn(albumsFile_);
         }
         return albumsFile_;
     }
@@ -111,11 +111,21 @@ public class Site implements NamedObject, Comparable<Site> {
         if (path == null || !Files.exists(path)) return null;
         try {
             AlbumsFile af = AlbumsFile.load(path);
-            if (dirPath != null && !dirPath.isBlank()) af.setSiteDir(Path.of(dirPath));
+            setDirsOn(af);
             return af;
         } catch (AlbumsFileException e) {
             throw new ApplicationError(e);
         }
+    }
+
+    /**
+     * Tells the albums file where it lives: the site dir (for resolving bases) and the config
+     * dir (for resolving {@code settings.passwords}).
+     */
+    private void setDirsOn(AlbumsFile af) {
+        if (dirPath != null && !dirPath.isBlank()) af.setSiteDir(Path.of(dirPath));
+        String configDir = getActualConfigPath();
+        if (configDir != null && !configDir.isEmpty()) af.setConfigDir(Path.of(configDir));
     }
 
     public String getDirPath() { return dirPath; }

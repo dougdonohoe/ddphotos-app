@@ -16,7 +16,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * `xboxl` hack in username
 * If `wrangler` errors - treated as success (probably surge too)
 * `site.env` editor
-* `passwords.yaml` editor
 * `custom.css` editor
   * Custom `css` file (should exist, but is not required) 
 * Test what happens if site goes away after adding it to tool
@@ -25,6 +24,11 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Undo support?  Backup files somewhere in config?
 * Unify help/icon window layout (Support/Help/Photogen.txt/Main)
+* Merge `EditableDetailPanel.addRow` with `PhotosDialog.addFieldRow` - the two build the same
+  label/field/trailing-widget GridBag row. They differ only in label anchor (WEST vs EAST),
+  insets, and field typing (`JComponent` vs `DDTextField`); `addRow` is static, takes a `JPanel`,
+  spans the field across 2 columns when there's no trailing widget, and has an `addSpanRow`
+  sibling. A shared helper with an alignment flag would cover both.
 * Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
   to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files
   if they exist (grid).
@@ -32,6 +36,93 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 ---
 
 # Parking Lot
+
+## Feature Design - password.yaml
+
+Next feature to build is editing the `passwords.yaml` file.
+/Users/donohoe/work/ddphotos/docs/CONFIGURATION.md describes the format and other 
+details about passwords. Some notes:
+
+* The entire site can be password protected
+* Individual albums can be password protected
+* If an album is protected, either directly or inside a protected site, then
+  the passwords.yaml 'key' is used to generate the filename for each photo.
+
+The `albums.yaml` file specifies the name of the passwords file in the `settings.passwords` field.
+By convention the name is `passwords.yaml` and that is what we should default to if we need
+to create a new file.
+
+`settings.password` is relative to config dir as seen in /Users/donohoe/work/ddphotos/cmd/photogen/photogen.go:135-146
+
+Examples:
+
+/Users/donohoe/work/ddphotos/sample/config/passwords-all.yaml - site password and different passwords on 2 albums
+/Users/donohoe/work/ddphotos/sample/config/passwords-uganda.yaml - password on just 1 album
+/Users/donohoe/work/infra/photos/manly-man/passwords.yaml - actual live site, entire site password
+
+If creating a new file, we want to define a random 'key' for the user, let's generate using
+UUID but open to other ideas.  Once it is set, we want to make it harder to change, warning
+the user that changing it will generate new filenames for photos, which may result in unnecessary
+re-uploading of photos.  This will be enforced in the UI design, below.
+
+Step #1 (**DONE**) - create a `PasswordsFile` class and tests, similar to `AlbumsFile` but I think instead of
+having load(path) and save(path) methods, we follow the `SitesFile` pattern of passing in a path
+to the constructor and having a simple save() method to write it.  There will be sites
+which don't yet have a `passwords.yaml` file, so we should have a way to differentiate between
+when a file is expected versus creating a new one.
+
+The `PasswordsFile` class should have methods to set password/hint at the site and album levels.
+It might be helpful to have a helper on `AlbumsFile` to get its `PasswordsFile` if it exists (determining
+the proper absolute path from config dir + `settings.passwords` field).  Probably need a similar setter.
+
+Step #2 (**DONE**) - UI for this, design is coming soon.  I'm trying to decide if I want a password/hint field on
+the AlbumDetails section (or maybe a "Password..." button and dialog), or just a dedicated editor for 
+the entire PasswordsFile.  Likewise, need a way to easily set site password and the key.  Anyhow,
+need to brainstorm on this to determine pros/cons.
+
+Design decision.  I'd like a shared `PasswordDialog` that follows pattern set by
+code/photos/src/main/java/com/donohoedigital/ddphotos/AlbumDialog.java.  The dialog
+will allow editing the key and a password/hint for the site or for a specific album.
+The explanatory text (e.g., wrapWithInstructions) will change based on album/site.
+The key field will have a checkbox to the right that says "Edit Key", defaulting to
+unchecked, and when checked, we should an information dialog (displayInformationDialog) with
+a doNotShow option that explains implications of changing the key.  Special case:
+If it is set to `ddphotos-init-secret-password` which is the value in the 'init' sample
+site, we should automatically change it to a UUID value and notify the user that we
+did so via a displayInformationDialog notice.
+
+How to launch this dialog? A new "Password / Hint" button placed to the right of the
+site id text field in Site Settings section of src/main/java/com/donohoedigital/ddphotos/SiteDetailsPanel.java
+and to the right of album id text field in the Album section of
+src/main/java/com/donohoedigital/ddphotos/AlbumDetailPanel.java.  Next to this button should
+be a DDIconButtons showing a Lock/Unlock icon (which need to be added) indicating whether a password is set.
+The icon will obviously need to be updated after and edit.
+
+The PasswordDialog should load passwords file each time it is invoked to ensure it has fresh data.
+After edit/save, the file should be saved.
+
+Don't forget about help text for the text fields.
+
+Refactor awareness:  `addFieldRow` turned out not to be duplicated - there is one definition on
+`PhotosDialog`, inherited by `AlbumDialog`/`BaseDialog`/`SiteDialog`/`PasswordDialog`.  It only
+needed its trailing parameter widened from `JButton` to `JComponent` so the "Edit Key" checkbox
+could sit in that column.  The real near-duplicate is `EditableDetailPanel.addRow` - moved to the
+TODO list above.
+
+As built:
+
+* `PasswordDialog` is dual-mode via `PARAM_ALBUM_SLUG` (null = site), modelled on `BaseDialog`.
+  It reloads the passwords file on every open, and pre-generates a key for a brand-new file so
+  the "key is required" validation can never be hit.
+* Passwords show in plain text - they are handed to visitors, and the YAML stores them in the
+  clear anyway.
+* The lock is a `DDLabel` carrying `DDIconButtons.LOCK`/`UNLOCK`, not a button - it has no action.
+  An album with no entry of its own still shows locked when the site is protected, with a tooltip
+  saying the protection is inherited.
+* Creating the passwords file defaults `settings.passwords`, which lives in `albums.yaml`.
+  `AlbumsFile.isPasswordsSettingUnsaved()` tracks that so the dialog knows to save `albums.yaml`
+  too - the in-memory value can't be used for this, since a cancelled create already set it.
+
 
 ## Feature Design - photogen.txt files
 

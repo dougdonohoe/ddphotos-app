@@ -45,7 +45,8 @@ abstract class PhotosDialog extends DialogPhase
         return wrapper;
     }
 
-    protected int addFieldRow(DDPanel form, String name, DDTextField field, JButton btn, int row)
+    /** @param trailing optional widget in the third column (browse button, checkbox, ...) */
+    protected int addFieldRow(DDPanel form, String name, DDTextField field, JComponent trailing, int row)
     {
         GridBagConstraints lc = new GridBagConstraints();
         lc.gridx = 0; lc.gridy = row;
@@ -60,11 +61,11 @@ abstract class PhotosDialog extends DialogPhase
         fc.insets = new Insets(4, 0, 4, 2);
         form.add(field, fc);
 
-        if (btn != null) {
+        if (trailing != null) {
             GridBagConstraints bc = new GridBagConstraints();
             bc.gridx = 2; bc.gridy = row;
             bc.insets = new Insets(4, 2, 4, 4);
-            form.add(btn, bc);
+            form.add(trailing, bc);
         }
         return row + 1;
     }

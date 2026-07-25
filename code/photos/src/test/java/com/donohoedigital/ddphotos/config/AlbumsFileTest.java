@@ -366,9 +366,17 @@ public class AlbumsFileTest {
     public void roundTrip_relocatesMisplacedBasesBeforeAlbums() throws Exception {
         // A file where bases was previously written AFTER albums: saving must relocate it.
         Path f = writeYaml(
-                "settings:\n  id: site\n" +
-                "albums:\n  - slug: a\n    name: A\n    source: rel\n    base: t7\n" +
-                "bases:\n  t7: /Volumes/T7/Photos\n");
+                """
+                        settings:
+                          id: site
+                        albums:
+                          - slug: a
+                            name: A
+                            source: rel
+                            base: t7
+                        bases:
+                          t7: /Volumes/T7/Photos
+                        """);
         AlbumsFile af = AlbumsFile.load(f);
 
         Path out = tmp.newFile("out.yaml").toPath();
@@ -857,6 +865,126 @@ public class AlbumsFileTest {
     public void getPhotogenFiles_unresolvableSource_empty() {
         // relative source with no base → resolveSourcePath returns null
         assertTrue(new AlbumsFile().getPhotogenFiles(albumWith("a", null, "relative")).isEmpty());
+    }
+
+    // ── passwords file tests ────────────────────────────────────────────────
+
+    @Test
+    public void resolvePasswordsPath_defaultsFileName() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+
+        // Unset: still resolves, using the conventional name.
+        assertEquals(configDir.resolve("passwords.yaml"), af.resolvePasswordsPath());
+
+        af.getSettings().setPasswords("secrets.yaml");
+        assertEquals(configDir.resolve("secrets.yaml"), af.resolvePasswordsPath());
+    }
+
+    @Test
+    public void resolvePasswordsPath_absoluteAndUnknownConfigDir() {
+        AlbumsFile af = new AlbumsFile();
+        assertNull("no config dir and a relative name is unresolvable", af.resolvePasswordsPath());
+
+        af.getSettings().setPasswords("/etc/ddphotos/passwords.yaml");
+        assertEquals(Path.of("/etc/ddphotos/passwords.yaml"), af.resolvePasswordsPath());
+    }
+
+    @Test
+    public void getPasswordsFile_nullWhenUnsetOrAbsent() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+
+        assertNull("settings.passwords unset", af.getPasswordsFile());
+
+        af.getSettings().setPasswords("passwords.yaml");
+        af.reloadPasswordsFile();
+        assertNull("settings.passwords set but no file on disk", af.getPasswordsFile());
+
+        Files.writeString(configDir.resolve("passwords.yaml"), "key: a-key\n", StandardCharsets.UTF_8);
+        af.reloadPasswordsFile();
+        PasswordsFile pf = af.getPasswordsFile();
+        assertNotNull(pf);
+        assertEquals("a-key", pf.getKey());
+        assertSame("subsequent calls return the cached instance", pf, af.getPasswordsFile());
+    }
+
+    @Test
+    public void getOrCreatePasswordsFile_defaultsSetting() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+        assertNull(af.getSettings().getPasswords());
+
+        PasswordsFile pf = af.getOrCreatePasswordsFile();
+        assertNotNull(pf);
+        assertFalse(pf.existsOnDisk());
+        assertEquals("passwords.yaml", af.getSettings().getPasswords());
+        assertEquals(configDir.resolve("passwords.yaml"), pf.getPath());
+        assertSame(pf, af.getOrCreatePasswordsFile());
+
+        // savePasswordsFile() creates it once there is something to write.
+        pf.setKey("a-key");
+        pf.setSitePassword("hunter2");
+        af.savePasswordsFile();
+        assertEquals("key: a-key\n\nsite:\n  password: hunter2\n",
+                     Files.readString(pf.getPath(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void getOrCreatePasswordsFile_nullWithoutConfigDir() {
+        assertNull(new AlbumsFile().getOrCreatePasswordsFile());
+    }
+
+    /**
+     * The PasswordDialog flow for a site that has no passwords file yet: creating one defaults
+     * settings.passwords, which lives in albums.yaml and so has to be saved there too.
+     */
+    @Test
+    public void getOrCreatePasswordsFile_settingIsPersistedToAlbumsYaml() throws Exception {
+        Path siteDir = tmp.newFolder("site").toPath();
+        Path configDir = Files.createDirectories(siteDir.resolve("config"));
+        Files.writeString(configDir.resolve("albums.yaml"), """
+                settings:
+                  id: my-photos
+                  site_name: My Photos
+
+                albums:
+                  - slug: uganda
+                    name: Uganda
+                    source: /tmp/uganda
+                """, StandardCharsets.UTF_8);
+
+        Site site = new Site("My Photos", siteDir.toString(), null);
+        AlbumsFile af = site.getOrCreateAlbumsFile();
+        assertNull("fixture must start with no passwords setting", af.getSettings().getPasswords());
+
+        // First open of the dialog: the user cancels, so nothing is written.
+        af.reloadPasswordsFile();
+        assertNotNull(af.getOrCreatePasswordsFile());
+        assertEquals("passwords.yaml", af.getSettings().getPasswords());
+        assertTrue(af.isPasswordsSettingUnsaved());
+
+        // Second open: settings.passwords is already set in memory, so the in-memory value can
+        // no longer reveal that albums.yaml is still missing it.
+        af.reloadPasswordsFile();
+        PasswordsFile pf = af.getOrCreatePasswordsFile();
+        assertTrue("albums.yaml still lacks the setting after a cancelled create",
+                   af.isPasswordsSettingUnsaved());
+
+        pf.setKey("my-photos-key");
+        pf.setSitePassword("hunter2");
+        af.savePasswordsFile();
+        assertTrue(Files.exists(configDir.resolve("passwords.yaml")));
+
+        site.saveAlbumsFile();
+        assertFalse("saving clears the flag", af.isPasswordsSettingUnsaved());
+
+        String albums = Files.readString(configDir.resolve("albums.yaml"), StandardCharsets.UTF_8);
+        assertTrue("albums.yaml must record settings.passwords:\n" + albums,
+                   albums.contains("passwords: passwords.yaml"));
     }
 
     // ── helpers ─────────────────────────────────────────────────────────────
