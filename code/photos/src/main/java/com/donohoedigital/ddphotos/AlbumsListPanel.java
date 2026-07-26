@@ -149,7 +149,8 @@ public class AlbumsListPanel extends DDPanel {
             AlbumEntry newEntry = albums.removeLast();
 
             int selectedIdx = list_.getSelectedIndex();
-            int insertIdx = selectedIdx >= 0 ? selectedIdx + 1 : sizeBefore;
+            // Insert just before the selected album (at the end when nothing is selected).
+            int insertIdx = selectedIdx >= 0 ? selectedIdx : sizeBefore;
 
             albums.add(insertIdx, newEntry);
 
