@@ -43,7 +43,7 @@ It's that simple.
 With DD Photos, you define where your albums live in the **Config** tab, and
 can specify a name, description and choose your cover photo.  Here, you also define
 details about your site, like name, description, optional HTML text and the
-hero image.
+hero image.  You can also set captions for your photos, and site or album passwords.
 
 Once you have defined where your photos live, you use the **Photogen** tab to
 run the `photogen` tool, which resizes the photos for web viewing and generates index files that
@@ -101,7 +101,7 @@ be used when you run `ddphotos` commands.
 
 ## TL;DR Running DD Photos From Source
 
-If you are impatient and just want to run the DD Photos app without
+If you are an impatient developer and just want to run the DD Photos app from source without
 reading all the [developer documentation](README-DEV.md), follow these steps:
 
 1. Clone this repo
