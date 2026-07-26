@@ -3,6 +3,22 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.donohoedigital.com ../../../../../../common/src/main/resources/config/xml-schema/styles.xsd">
 
+	<!-- FONTS: use a system/logical family (SansSerif, Monospaced) - NOT a bundled .ttf.
+
+	     Swing's text views position the caret using FontMetrics from an identity-transform
+	     FontRenderContext, but glyphs are painted through the Graphics2D device transform (2x on
+	     Retina).  A font loaded via Font.createFont() quantizes its advance widths against the
+	     *device* pixel grid, so measured width and painted width disagree and the error accumulates
+	     left-to-right - the caret drifts further from the text the longer the text gets.  Bundled
+	     Inter at 15pt was ~20px (about 3 characters) off over an 82-char caption, and no point size
+	     avoids it: measured drift ran 9-41px across sizes 11-24.  Logical families measure
+	     identically at every display scale.  Enforced by StylesFontTest.
+
+	     Trade-off accepted: logical families resolve per-platform (Helvetica on macOS, Arial on
+	     Windows - metrically compatible; Linux depends on fontconfig, usually DejaVu Sans, which is
+	     wider).  Check fixed pixel widths on Linux: NAME_COL_WIDTH in PhotogenEditorPhase and the
+	     caption box width passed to OptionTextArea. -->
+
 	<!--        -->
 	<!-- COLORS -->
 	<!--        -->
@@ -39,7 +55,7 @@
 	<color name="engine.basepanel" copy="white"/>
 	<color name="version.label.fg" copy="primaryfont"/>
 	<color name="version.label.bg" default="true"/>
-	 <font name="version.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="11"/>
+	 <font name="version.label" fontname="SansSerif" pointsize="11"/>
 
 	<!-- internal-frame modal title bars -->
 	<color name="modal.title.info.bg" r="140" g="140" b="200"/>
@@ -56,14 +72,14 @@
 
 	<color name="SplashWrong.label.fg" copy="black"/>
 	<color name="SplashWrong.label.bg"  r="204" g="204" b="204" a="245"/>
-	 <font name="SplashWrong.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="24"/>
+	 <font name="SplashWrong.label" fontname="SansSerif" pointsize="24"/>
 
 	<color name="Splash.label.fg"  copy="black"/>
 	<color name="Splash.label.bg" default="true"/>
-	 <font name="Splash.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="12"/>
+	 <font name="Splash.label" fontname="SansSerif" pointsize="12"/>
 	<color name="Splash.button.fg" default="true"/>
 	<color name="Splash.button.bg" default="true"/>
-	 <font name="Splash.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="12"/>
+	 <font name="Splash.button" fontname="SansSerif" pointsize="12"/>
 
 	<!-- ENGINE FONTS/COLORS -->
 	<color name="Console.error"  r="180" g="50"  b="50"/>
@@ -124,7 +140,7 @@
 	<!-- PHOTOS TABS -->
 	<color name="PhotosTabs.tab.fg" r="0" g="0" b="0"/>
 	<color name="PhotosTabs.tab.bg" r="204" g="204" b="204" a="150"/>
-	 <font name="PhotosTabs.tab" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="20"/>
+	 <font name="PhotosTabs.tab" fontname="SansSerif" pointsize="20"/>
 	<color name="PhotosTabs.panel.fg" default="true"/>
 	<color name="PhotosTabs.panel.bg" default="true"/>
 	<!-- PHOTOS TABS -->
@@ -132,19 +148,19 @@
 	<!-- PhotosMain -->
 	<color name="PhotosMain.htmlarea.fg" default="true"/>
 	<color name="PhotosMain.htmlarea.bg" copy="lightgrey"/>
-	 <font name="PhotosMain.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="PhotosMain.htmlarea" fontname="SansSerif" pointsize="16"/>
 	<!-- PhotosMain -->
 
 	<!-- Help -->
 	<color name="Help.htmlarea.fg" default="true"/>
 	<color name="Help.htmlarea.bg" copy="white"/>
-	 <font name="Help.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="Help.htmlarea" fontname="SansSerif" pointsize="16"/>
 	<color name="Help.label.fg" copy="primaryfont"/>
 	<color name="Help.label.bg" default="true"/>
-	 <font name="Help.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="24"/>
+	 <font name="Help.label" fontname="SansSerif" pointsize="24"/>
 	<color name="Help.button.fg" default="true"/>
 	<color name="Help.button.bg" default="true"/>
-	 <font name="Help.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	 <font name="Help.button" fontname="SansSerif" pointsize="14"/>
 	<color name="Help.scrollbar.bg" r="128" g="128" b="128"/>
 	<color name="Help.scrollbar.fg" r="64" g="64" b="64"/>
 	<color name="Help.scrollbar.focus" r="0" g="0" b="255" a="50"/>
@@ -153,7 +169,7 @@
 	<color name="Help.list.bg" default="true"/>
 	<color name="Help.list.selection.bg" default="true"/>
 	<color name="Help.list.selection.fg" default="true"/>
-	 <font name="Help.list" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="Help.list" fontname="SansSerif" pointsize="16"/>
 	<!-- Help -->
 
 	<!-- Support -->
@@ -161,16 +177,16 @@
 	<color name="Support.panel.bg" default="true"/>
 	<color name="Support.label.fg" copy="primaryfont"/>
 	<color name="Support.label.bg" default="true"/>
-	 <font name="Support.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="24"/>	<color name="Support.htmlarea.fg" default="true"/>
+	 <font name="Support.label" fontname="SansSerif" pointsize="24"/>	<color name="Support.htmlarea.fg" default="true"/>
 	<color name="Support.htmlarea.bg" copy="white"/>
-	 <font name="Support.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+	 <font name="Support.htmlarea" fontname="SansSerif" pointsize="18"/>
 	<color name="Support.textarea.fg" copy="black"/>
 	<color name="Support.textarea.bg" copy="white"/>
 	<color name="Support.textarea.error.bg" copy="primarywidget.error"/>
 	 <font name="Support.textarea" fontname="Monospaced" pointsize="18"/>
 	<color name="Support.button.fg" default="true"/>
 	<color name="Support.button.bg" default="true"/>
-	 <font name="Support.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	 <font name="Support.button" fontname="SansSerif" pointsize="14"/>
 	<color name="Support.scrollbar.bg" r="128" g="128" b="128"/>
 	<color name="Support.scrollbar.fg" r="64" g="64" b="64"/>
 	<color name="Support.scrollbar.focus" r="0" g="0" b="255" a="50"/>
@@ -180,42 +196,42 @@
 	<!-- Options -->
 	<color name="Options.labelborder.fg" copy="primarylabelborder.fg"/>
 	<color name="Options.labelborder.bg" copy="white"/>
-	 <font name="Options.labelborder" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="19"/>
+	 <font name="Options.labelborder" fontname="SansSerif" pointsize="19"/>
 	<color name="Options.checkbox.fg" copy="primaryfont"/>
 	<color name="Options.checkbox.check" copy="black"/>
 	<color name="Options.checkbox.bg" default="true"/>
-	 <font name="Options.checkbox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="Options.checkbox" fontname="SansSerif" pointsize="16"/>
 	<color name="Options.radio.bg" default="true"/>
 	<color name="Options.radio.fg" default="true"/>
 	<color name="Options.radio.dot" copy="black"/>
-	 <font name="Options.radio" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="Options.radio" fontname="SansSerif" pointsize="16"/>
 	<color name="Options.label.fg" copy="primaryfont"/>
 	<color name="Options.label.bg" default="true"/>
-	 <font name="Options.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="Options.label" fontname="SansSerif" pointsize="16"/>
 	<color name="Options.spinner.fg" copy="primarywidget.fg"/>
 	<color name="Options.spinner.bg" copy="primarywidget.bg"/>
-	 <font name="Options.spinner" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="Options.spinner" fontname="SansSerif" pointsize="16"/>
 	<color name="Options.panel.fg" copy="white"/>
 	<color name="Options.panel.bg" default="true"/>
 	<color name="Options.split.bg" copy="app.panel.bg"/>
 	<color name="Options.split.focus" default="true"/>
 	<color name="Options.htmlarea.fg" copy="primaryfont"/>
 	<color name="Options.htmlarea.bg" copy="primarywidget.bg"/>
-	 <font name="Options.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="12"/>
+	 <font name="Options.htmlarea" fontname="SansSerif" pointsize="12"/>
 	<color name="Options.button.fg" default="true"/>
 	<color name="Options.button.bg" default="true"/>
-	 <font name="Options.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	 <font name="Options.button" fontname="SansSerif" pointsize="14"/>
 	<color name="Options.combobox.fg" copy="black"/>
 	<color name="Options.combobox.bg" copy="white"/>
 	<color name="Options.combobox.mouseover.fg" default="true"/>
 	<color name="Options.combobox.selection.bg" copy="black"/>
 	<color name="Options.combobox.selection.fg" copy="white"/>
-     <font name="Options.combobox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+     <font name="Options.combobox" fontname="SansSerif" pointsize="14"/>
 	<color name="Options.list.fg" default="true"/>
 	<color name="Options.list.bg" default="true"/>
 	<color name="Options.list.selection.bg" default="true"/>
 	<color name="Options.list.selection.fg" default="true"/>
-	 <font name="Options.list" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="Options.list" fontname="SansSerif" pointsize="16"/>
 	<color name="Options.scrollbar.bg" r="128" g="128" b="128"/>
 	<color name="Options.scrollbar.fg" r="64" g="64" b="64"/>
 	<color name="Options.scrollbar.focus" r="0" g="0" b="255" a="50"/>
@@ -223,27 +239,27 @@
 	<color name="Options.textfield.fg" copy="primarywidget.fg"/>
 	<color name="Options.textfield.bg" copy="primarywidget.bg"/>
 	<color name="Options.textfield.error.bg" copy="primarywidget.error"/>
-	 <font name="Options.textfield" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="15"/>
+	 <font name="Options.textfield" fontname="SansSerif" pointsize="15"/>
 	<color name="Options.textarea.fg" copy="primarywidget.fg"/>
 	<color name="Options.textarea.bg" copy="primarywidget.bg"/>
 	<color name="Options.textarea.error.bg" copy="primarywidget.error"/>
-	 <font name="Options.textarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="15"/>
+	 <font name="Options.textarea" fontname="SansSerif" pointsize="15"/>
 	<!-- Options -->
 
 	<!-- OptionsError -->
 	<color name="OptionsError.htmlarea.fg" copy="red"/>
 	<color name="OptionsError.htmlarea.bg" default="true"/>
-	 <font name="OptionsError.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	 <font name="OptionsError.htmlarea" fontname="SansSerif" pointsize="14"/>
 	<!-- OptionsError -->
 
 	<!-- OptionsDialog -->
 	<color name="OptionsDialog.checkbox.fg" copy="black"/>
 	<color name="OptionsDialog.checkbox.check" copy="black"/>
 	<color name="OptionsDialog.checkbox.bg" default="true"/>
-	 <font name="OptionsDialog.checkbox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	 <font name="OptionsDialog.checkbox" fontname="SansSerif" pointsize="14"/>
 	<color name="OptionsDialog.label.fg" copy="black"/>
 	<color name="OptionsDialog.label.bg" copy="black"/>
-	 <font name="OptionsDialog.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18" bold="true"/>
+	 <font name="OptionsDialog.label" fontname="SansSerif" pointsize="18" bold="true"/>
     <color name="OptionsDialog.textfield.fg" copy="black"/>
 	<color name="OptionsDialog.textfield.bg" copy="text"/>
 	<color name="OptionsDialog.textfield.error.bg" copy="primarywidget.error"/>
@@ -251,69 +267,69 @@
 	<color name="OptionsDialog.textarea.fg" copy="black"/>
 	<color name="OptionsDialog.textarea.bg" copy="text"/>
 	<color name="OptionsDialog.textarea.error.bg" copy="primarywidget.error"/>
-	 <font name="OptionsDialog.textarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+	 <font name="OptionsDialog.textarea" fontname="SansSerif" pointsize="18"/>
     <color name="OptionsDialog.htmlarea.fg" copy="black"/>
 	<color name="OptionsDialog.htmlarea.bg" copy="text"/>
-	 <font name="OptionsDialog.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+	 <font name="OptionsDialog.htmlarea" fontname="SansSerif" pointsize="18"/>
 	<color name="OptionsDialog.button.fg" default="true"/>
 	<color name="OptionsDialog.button.bg" default="true"/>
-	 <font name="OptionsDialog.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="OptionsDialog.button" fontname="SansSerif" pointsize="16"/>
 	<!-- OptionsDialog -->
 
 	<!-- DisplayMessage -->
 	<color name="DisplayMessage.label.fg" r="0" g="0" b="0"/>
 	<color name="DisplayMessage.label.bg" r="0" g="0" b="0"/>
-	 <font name="DisplayMessage.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+	 <font name="DisplayMessage.label" fontname="SansSerif" pointsize="18"/>
 	<color name="DisplayMessage.panel.fg" default="true"/>
 	<color name="DisplayMessage.panel.bg" default="true"/>
 	<color name="DisplayMessage.checkbox.fg" r="0" g="0" b="0"/>
 	<color name="DisplayMessage.checkbox.check" copy="black"/>
 	<color name="DisplayMessage.checkbox.bg" default="true"/>
-	 <font name="DisplayMessage.checkbox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	 <font name="DisplayMessage.checkbox" fontname="SansSerif" pointsize="14"/>
 	<color name="DisplayMessage.htmlarea.fg" r="0" g="0" b="0"/>
 	<color name="DisplayMessage.htmlarea.bg" r="0" g="0" b="0"/>
-	 <font name="DisplayMessage.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="18"/>
+	 <font name="DisplayMessage.htmlarea" fontname="SansSerif" pointsize="18"/>
 	<color name="DisplayMessage.button.fg" default="true"/>
 	<color name="DisplayMessage.button.bg" default="true"/>
-	 <font name="DisplayMessage.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="DisplayMessage.button" fontname="SansSerif" pointsize="16"/>
 	<!-- DisplayMessage -->
 
 	<!-- SITE BAR -->
 	<color name="SiteBar.label.fg" copy="primaryfont"/>
 	<color name="SiteBar.label.bg" default="true"/>
-	 <font name="SiteBar.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16" bold="true"/>
+	 <font name="SiteBar.label" fontname="SansSerif" pointsize="16" bold="true"/>
 	<color name="SiteBar.button.fg" default="true"/>
 	<color name="SiteBar.button.bg" default="true"/>
-	 <font name="SiteBar.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	 <font name="SiteBar.button" fontname="SansSerif" pointsize="14"/>
 	<color name="SiteBar.combobox.fg" copy="black"/>
 	<color name="SiteBar.combobox.bg" copy="white"/>
 	<color name="SiteBar.combobox.mouseover.fg" default="true"/>
 	<color name="SiteBar.combobox.selection.fg" copy="white"/>
 	<color name="SiteBar.combobox.selection.bg" copy="black"/>
-	 <font name="SiteBar.combobox" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="SiteBar.combobox" fontname="SansSerif" pointsize="16"/>
 	<!-- SITE BAR -->
 
 	<!-- Wizard -->
 	<color name="WizardBig.label.fg" copy="primaryfont"/>
 	<color name="WizardBig.label.bg" default="true"/>
-	 <font name="WizardBig.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="20" bold="true"/>
+	 <font name="WizardBig.label" fontname="SansSerif" pointsize="20" bold="true"/>
 
 	<color name="Wizard.label.fg" copy="primaryfont"/>
 	<color name="Wizard.label.bg" default="true"/>
-	 <font name="Wizard.label" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="16"/>
+	 <font name="Wizard.label" fontname="SansSerif" pointsize="16"/>
 	<color name="Wizard.panel.fg" copy="white"/>
 	<color name="Wizard.panel.bg" default="true"/>
 	<color name="Wizard.htmlarea.fg" copy="primaryfont"/>
 	<color name="Wizard.htmlarea.bg" copy="white"/>
-	 <font name="Wizard.htmlarea" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="20"/>
+	 <font name="Wizard.htmlarea" fontname="SansSerif" pointsize="20"/>
 	<color name="Wizard.button.fg" default="true"/>
 	<color name="Wizard.button.bg" default="true"/>
-	 <font name="Wizard.button" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="14"/>
+	 <font name="Wizard.button" fontname="SansSerif" pointsize="14"/>
 
 	<color name="Wizard.textfield.fg" copy="primarywidget.fg"/>
 	<color name="Wizard.textfield.bg" copy="primarywidget.bg"/>
 	<color name="Wizard.textfield.error.bg" copy="primarywidget.error"/>
-	 <font name="Wizard.textfield" fontname="Inter-VariableFont_opsz,wght.ttf" pointsize="15"/>
+	 <font name="Wizard.textfield" fontname="SansSerif" pointsize="15"/>
 	<!-- Wizard -->
 
 </STYLES>

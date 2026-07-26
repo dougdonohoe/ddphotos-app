@@ -12,6 +12,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Clear thumb cache menu item?
 * Wizard step for Docker file permissions?
 * Windows - WSL and PowerShell docs
+* Speed up photogen if already processed a folder (be smarter about this)
 * Metal bumps look odd on Windows
 * `xboxl` hack in username
 * If `wrangler` errors - treated as success (probably surge too)

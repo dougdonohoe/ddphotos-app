@@ -5,9 +5,6 @@ import com.formdev.flatlaf.FlatLightLaf;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,21 +12,12 @@ import java.util.Map;
 
 /**
  * Standalone playground for checking whether a font can render console-style
- * output containing emoji and box-drawing characters - e.g. the RobotoMono
+ * output containing emoji and box-drawing characters - e.g. the Monospaced
  * font used for the "ConsoleBig" style in DD Photos. Pure Swing, no
  * DD widgets, so the only thing under test is the font itself.
  */
 public class ZydecoFontApp extends JFrame
 {
-    private static final String ROBOTO_MONO_NAME = "RobotoMono Regular (bundled .ttf)";
-
-    // candidate paths depending on where `mvn exec:java` (or the IDE) sets the working directory
-    private static final String[] ROBOTO_MONO_PATHS = {
-            "../gui/src/main/resources/config/fonts/RobotoMono-Regular.ttf",
-            "code/gui/src/main/resources/config/fonts/RobotoMono-Regular.ttf",
-            "gui/src/main/resources/config/fonts/RobotoMono-Regular.ttf",
-    };
-
     private static final String SAMPLE_TEXT = """
             ⛅️ wrangler 4.95.0
             ───────────────────
@@ -98,33 +86,11 @@ public class ZydecoFontApp extends JFrame
 
     private void loadFonts()
     {
-        Font roboto = loadRobotoMono();
-        if (roboto != null) {
-            fontsByName.put(ROBOTO_MONO_NAME, roboto);
-        }
-
         fontsByName.put("Monospaced", new Font(Font.MONOSPACED, Font.PLAIN, 12));
 
         for (String family : detectMonospacedFamilies()) {
             fontsByName.put(family, new Font(family, Font.PLAIN, 12));
         }
-    }
-
-    private Font loadRobotoMono()
-    {
-        for (String path : ROBOTO_MONO_PATHS) {
-            File file = new File(path);
-            if (!file.isFile()) {
-                continue;
-            }
-            try (FileInputStream is = new FileInputStream(file)) {
-                return Font.createFont(Font.TRUETYPE_FONT, is);
-            } catch (IOException | FontFormatException e) {
-                System.err.println("Failed to load font from " + file.getAbsolutePath() + ": " + e.getMessage());
-            }
-        }
-        System.err.println("RobotoMono-Regular.ttf not found; tried: " + String.join(", ", ROBOTO_MONO_PATHS));
-        return null;
     }
 
     /**
