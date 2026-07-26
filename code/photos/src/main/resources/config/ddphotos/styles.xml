@@ -11,8 +11,14 @@
 	     *device* pixel grid, so measured width and painted width disagree and the error accumulates
 	     left-to-right - the caret drifts further from the text the longer the text gets.  Bundled
 	     Inter at 15pt was ~20px (about 3 characters) off over an 82-char caption, and no point size
-	     avoids it: measured drift ran 9-41px across sizes 11-24.  Logical families measure
-	     identically at every display scale.  Enforced by StylesFontTest.
+	     avoids it: measured drift ran 9-41px across sizes 11-24.  On macOS logical families go
+	     through CoreText, which ignores the device transform, so they measure identically at every
+	     display scale.  Enforced by StylesFontTest.
+
+	     This fixes macOS only.  Linux and Windows have no CoreText - every font there uses the
+	     FreeType scaler and drifts (measured on Linux: SansSerif 26-36px, Monospaced 27-59px), so
+	     HiDPI users on those platforms can still see it.  No font choice helps; that would need a
+	     custom TextUI measuring at the device scale.  At 100% scaling there is no drift anywhere.
 
 	     Trade-off accepted: logical families resolve per-platform (Helvetica on macOS, Arial on
 	     Windows - metrically compatible; Linux depends on fontconfig, usually DejaVu Sans, which is

@@ -1,6 +1,8 @@
 package com.donohoedigital.ddphotos;
 
+import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.StylesConfig;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Element;
@@ -38,6 +40,16 @@ import static org.junit.Assert.assertNotNull;
  *
  * <p>This test discovers the fonts from {@code styles.xml} rather than hard-coding them, so a
  * newly added style is covered automatically.
+ *
+ * <p><b>The measurement check is macOS-only.</b>  The immunity of logical families comes from
+ * CoreText, which quantizes advances in user space and so ignores the device transform.  Linux
+ * and Windows have no CoreText - every font goes through the FreeType scaler, which is the same
+ * path a bundled {@code .ttf} takes on macOS.  Measured on Linux (temurin 25), <em>every</em>
+ * logical family drifts: SansSerif 26-36px, Serif 25-29px, Monospaced 27-59px.  No font choice
+ * fixes it there, so asserting zero drift off macOS would be a permanent, unactionable CI
+ * failure.  Note this means HiDPI Linux/Windows users can still see caret drift; only a custom
+ * {@code TextUI} that measures at the device scale would fix that.  (There is no drift at all at
+ * 100% scaling, which is the common case on those platforms.)
  */
 public class StylesFontTest {
 
@@ -60,6 +72,11 @@ public class StylesFontTest {
 
     @Test
     public void everyStyleFontMeasuresTheSameAtEveryDisplayScale() throws Exception {
+        // See the class javadoc: only macOS has a font path that can satisfy this.  Every family
+        // drifts on Linux/Windows regardless of what styles.xml says, so this would be a
+        // permanent CI failure there rather than a signal about our font choice.
+        Assume.assumeTrue("measurement check is macOS-only (no CoreText elsewhere)", Utils.ISMAC);
+
         List<String> names = fontStyleNames();
         assertFalse("no <font> entries found in " + STYLES, names.isEmpty());
 
@@ -72,9 +89,10 @@ public class StylesFontTest {
                 double device = width(font, AffineTransform.getScaleInstance(scale, scale));
                 assertEquals(
                         name + " (" + font.getFontName() + " " + font.getSize() + "pt) measures "
-                        + model + "px but renders " + device + "px at " + scale + "x - the caret "
-                        + "will drift from the text.  styles.xml needs a system/logical font "
-                        + "family (SansSerif, Monospaced), not a bundled .ttf.",
+                        + model + "px but renders " + device + "px at " + scale + "x, so glyphs "
+                        + "will not sit where Swing thinks they do - carets and selection in "
+                        + "editable fields drift.  styles.xml needs a system/logical font family "
+                        + "(SansSerif, Monospaced), not a bundled .ttf.",
                         model, device, TOLERANCE);
             }
         }
