@@ -319,3 +319,77 @@ To run the GitHub testing action locally, just use the alias:
 ```shell
 act-ddphotos-app
 ```
+
+## Appendix C: Icons and Screenshots
+
+### Screenshots
+
+The screenshots in `images/screenshots` are captured from the running app, so they have
+to be re-taken by hand whenever the UI changes.
+
+Capturing is a debug feature, enabled with these settings in your
+`[username].properties` file (see [Debug Settings](#debug-settings)):
+
+```properties
+# debug flags must be on for the menu item to appear
+settings.debug.enabled=true
+
+# turn on screenshot menu item
+settings.debug.screenshots=true
+settings.debug.screenshots.path=/Users/donohoe/work/ddphotos-app/images/screenshots
+settings.debug.screenshots.shadow=true
+```
+
+With those set, _Help → Take screenshot..._ (or `Cmd-P`) captures the current window to
+`settings.debug.screenshots.path`.  The filename is chosen automatically from what is
+showing: the current step when the startup wizard is up (e.g. `wizard-docker.png`),
+otherwise the selected tab in the main screen (e.g. `config.png`, `photogen.png`).
+`settings.debug.screenshots.shadow` adds a drop shadow around the window.
+
+Note that `settings.debug.changesize=true` forces the window to the standard screenshot
+size, which keeps the images consistent from one round of captures to the next.
+
+Once the `.png` files are re-taken, rebuild the animated GIF used in `README.md`:
+
+```shell
+tools/bin/create-screenshots-gif.sh
+```
+
+That script lists the frames explicitly (in play order) at the top - edit `FRAMES` if a
+screen is added or removed.  It requires ImageMagick 7 (`brew install imagemagick`).
+
+The full-size images are also linked one-by-one from `docs/SCREENSHOTS.md`, which needs a
+matching entry if a screen is added or removed.
+
+### Icons
+
+All logos and icons come from two hand-maintained SVGs in `logo/`:
+
+* `ddphotos-logo.svg` - full logo (camera body + `PHOTOS` wordmark)
+* `ddphotos-icon.svg` - lens monogram only, for small sizes and app icons
+
+See `logo/icon.md` for the geometry behind them and for how to regenerate the wordmark
+outlines.
+
+If either SVG changes, regenerate all the raster/derived formats (PNGs at every size,
+plus `.icns` for Mac and `.ico` for Windows) into `logo/icons`:
+
+```shell
+logo/generate-icons.sh
+```
+
+This requires Inkscape and ImageMagick (`brew install inkscape imagemagick`).
+
+### Distributing icons and screenshots
+
+`logo/` is the source of truth, so nothing else is edited directly.  After generating new
+icons or taking new screenshots, run:
+
+```shell
+logo/update-icons.sh
+```
+
+That copies the generated files to where they are actually used - the app's resources in
+this repo (`code/photos/src/main/resources/config/ddphotos/images`), and the favicons and
+screenshots in the sister `ddphotos` repo (assumed to be checked out at
+`~/work/ddphotos`).  Both repos then need their changes committed.
