@@ -23,7 +23,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Switching site while something is running (e.g., `run` / `serve`) - problematic?
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Undo support?  Backup files somewhere in config?
-* Unify help/icon window layout (Support/Help/Photogen.txt/Main)
 * Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
   to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files
   if they exist (grid).

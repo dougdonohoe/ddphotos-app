@@ -25,7 +25,7 @@ import java.util.List;
 public class Help extends BasePhase implements ListSelectionListener,
                                                HyperlinkListener, ActionListener
 {
-    private DDPanel base_;
+    private LogoWindowPanel base_;
     private DDHtmlArea html_;
     private OptionList<HelpTopic> list_;
     private DefaultListModel<HelpTopic> listModel_;
@@ -51,29 +51,15 @@ public class Help extends BasePhase implements ListSelectionListener,
     {
         String STYLE = phase_.getString(DialogPhase.PARAM_STYLE, GuiManager.DEFAULT);
 
-        // contents
-        base_ = new DDPanel();
-        BorderLayout layout = (BorderLayout) base_.getLayout();
-        layout.setVgap(5);
-        base_.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-
-        // top - logo/label/nav
-        DDPanel topbase = new DDPanel();
-        DDImageButton button = new DDImageButton("icon48");
-        topbase.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
-        base_.setBorderLayoutGap(0, 2);
-        base_.add(topbase, BorderLayout.NORTH);
-
-        DDLabel label = new DDLabel("helpwindow", STYLE);
-        label.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        topbase.setBorderLayoutGap(0, 20);
-        topbase.add(GuiUtils.NORTH(label), BorderLayout.CENTER);
-        topbase.add(button, BorderLayout.WEST);
+        // contents - white center area (the html reads better on white than on the standard grey)
+        base_ = new LogoWindowPanel("icon48", phase_.getString(EngineConstants.PARAM_HELP_STYLE, null));
+        base_.setContentInsets(0, 10, 10, 10);
+        base_.setTopComponent(new DDLabel("helpwindow", STYLE));
 
         DDPanel navbase = new DDPanel();
         navbase.setLayout(new GridLayout(1, 2, 5, 0));
         navbase.setBorder(BorderFactory.createEmptyBorder(10, 10, 2, 10));
-        topbase.add(GuiUtils.NORTH(navbase), BorderLayout.EAST);
+        base_.setTopRightComponent(navbase);
         bak_ = DDIconButtons.iconButton("help-bak", STYLE, DDIconButtons.ARROW_LEFT);
         bak_.addActionListener(this);
         navbase.add(bak_);
@@ -91,10 +77,16 @@ public class Help extends BasePhase implements ListSelectionListener,
         scroll.setBackground(Color.WHITE);
         html_.setBackground(Color.WHITE);
 
+        // topic list on the left, html on the right
+        DDPanel content = new DDPanel();
+        content.setBorderLayoutGap(0, 2);
+        base_.setCenterComponent(content);
+
+        // left gap only - the right gap comes from the content insets
         DDPanel wrapper = new DDPanel();
-        wrapper.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+        wrapper.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
         wrapper.add(scroll, BorderLayout.CENTER);
-        base_.add(wrapper, BorderLayout.CENTER);
+        content.add(wrapper, BorderLayout.CENTER);
 
         ////
         //// Topic list
@@ -114,7 +106,7 @@ public class Help extends BasePhase implements ListSelectionListener,
         DDScrollPane tScroll = new DDScrollPane(list_, STYLE, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                                                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         tScroll.setPreferredSize(new Dimension(200, 200));
-        base_.add(tScroll, BorderLayout.WEST);
+        content.add(tScroll, BorderLayout.WEST);
         tScroll.setBorder(BorderFactory.createEtchedBorder());
     }
 
@@ -165,6 +157,7 @@ public class Help extends BasePhase implements ListSelectionListener,
 
         // place the whole thing in the Engine's base panel
         context_.setMainUIComponent(this, base_, true, list_);
+        if (base_.getHelpText() != null) context_.getWindow().setHelpTextWidget(base_.getHelpText());
     }
 
     /**

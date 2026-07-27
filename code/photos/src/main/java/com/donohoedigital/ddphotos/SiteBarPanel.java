@@ -28,7 +28,6 @@ public class SiteBarPanel extends DDPanel
 
     private final AppContext context_;
 
-    private final DDImageButton logoButton_;
     private final SitesFile sitesFile_;
     private final OptionCombo<Site> siteOption_;
     private final DDComboBox<Site> siteCombo_;
@@ -45,8 +44,6 @@ public class SiteBarPanel extends DDPanel
         context_ = context;
         sitesFile_ = sitesFile;
 
-        setBorder(BorderFactory.createEmptyBorder(4, 11, 0, 8));
-
         siteOption_ = new OptionCombo<>(
                 new DataElement<>("sitecombo", sitesFile_.getSites(), null),
                 PhotosConstants.PREFS_NODE_APP, "sitecombo", STYLE,
@@ -62,9 +59,14 @@ public class SiteBarPanel extends DDPanel
         editBtn_.addActionListener(  _ -> onEdit());
         deleteBtn_.addActionListener(_ -> onDelete());
 
+        // logo, outer border and top inset come from the enclosing LogoWindowPanel; the trailing
+        // glue absorbs the extra width so the widgets stay left-aligned.  The combo needs its
+        // maximum pinned too - it is a BorderLayout with the label CENTER and the combo EAST, so
+        // left unbounded BoxLayout hands it the slack and the two drift apart.
+        siteOption_.setMaximumSize(siteOption_.getPreferredSize());
+
         DDPanel widgets = new DDPanel();
         widgets.setLayout(new BoxLayout(widgets, BoxLayout.X_AXIS));
-        widgets.setBorder(BorderFactory.createEmptyBorder(11, 20, 0, 0));
         widgets.add(siteOption_);
         widgets.add(Box.createHorizontalStrut(8));
         widgets.add(addBtn_);
@@ -72,14 +74,9 @@ public class SiteBarPanel extends DDPanel
         widgets.add(editBtn_);
         widgets.add(Box.createHorizontalStrut(4));
         widgets.add(deleteBtn_);
+        widgets.add(Box.createHorizontalGlue());
 
-        DDPanel bar = new DDPanel();
-        bar.setLayout(new BoxLayout(bar, BoxLayout.X_AXIS));
-        logoButton_ = new DDImageButton("icon48");
-        bar.add(logoButton_);
-        bar.add(GuiUtils.NORTH(widgets));
-
-        add(bar, BorderLayout.WEST);
+        add(widgets, BorderLayout.CENTER);
 
         // selectSite (e.g., a site just added via the wizard) overrides the prefs-saved selection
         refreshCombo(selectSite);
@@ -204,10 +201,6 @@ public class SiteBarPanel extends DDPanel
     public Site getSelectedSite()
     {
         return (Site) siteCombo_.getSelectedItem();
-    }
-
-    public DDComponent getLogoComponent() {
-        return logoButton_;
     }
 
     // -------------------------------------------------------------------------

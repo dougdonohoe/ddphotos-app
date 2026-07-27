@@ -15,7 +15,7 @@ import java.util.*;
  * buttons to copy it to the clipboard or open the folder containing it.
  */
 public class Support extends BasePhase {
-    private DDPanel base_;
+    private LogoWindowPanel base_;
     private DDTextArea log_;
     private boolean bRunning_ = false;
 
@@ -35,30 +35,21 @@ public class Support extends BasePhase {
     private void createDialogContents() {
         String STYLE = phase_.getString(DialogPhase.PARAM_STYLE, GuiManager.DEFAULT);
 
-        base_ = new DDPanel(GuiManager.DEFAULT, STYLE);
-        base_.setBorderLayoutGap(10, 0);
+        base_ = new LogoWindowPanel("icon48", phase_.getString(EngineConstants.PARAM_HELP_STYLE, null));
+        base_.setTopComponent(new DDLabel("supportwindow", STYLE));
 
-        // top - logo/label/nav
-        DDPanel topbase = new DDPanel();
-        DDImageButton button = new DDImageButton("icon48");
-        topbase.setBorder(BorderFactory.createEmptyBorder(4, 10, 0, 10));
-        base_.setBorderLayoutGap(0, 2);
-        base_.add(topbase, BorderLayout.NORTH);
-
-        DDLabel label = new DDLabel("supportwindow", STYLE);
-        label.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        topbase.setBorderLayoutGap(0, 20);
-        topbase.add(GuiUtils.NORTH(label), BorderLayout.CENTER);
-        topbase.add(button, BorderLayout.WEST);
+        // the buttons sit below the grey area, on the window's white background, so the contents
+        // are a transparent wrapper rather than the grey panel itself
+        DDPanel content = new DDPanel();
+        base_.setCenterComponent(content);
 
         DDPanel middlebase = new DDPanel();
         middlebase.setBackground(StylesConfig.getColor("app.panel.bg"));
         middlebase.setOpaque(true);
-        base_.add(middlebase, BorderLayout.CENTER);
+        content.add(middlebase, BorderLayout.CENTER);
 
         DDHtmlArea info = new DDHtmlArea("support", STYLE);
         middlebase.add(info, BorderLayout.NORTH);
-        middlebase.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
         info.setText(PropertyConfig.getMessage("msg.support"));
         info.setBorder(BorderFactory.createEmptyBorder(10, 2, 10, 2));
         info.addHyperlinkListener(GuiUtils.HYPERLINK_HANDLER);
@@ -84,7 +75,7 @@ public class Support extends BasePhase {
         copy.addActionListener(_ -> doClipboard());
         buttons.add(copy);
 
-        base_.add(buttons, BorderLayout.SOUTH);
+        content.add(buttons, BorderLayout.SOUTH);
     }
 
     /**
@@ -99,6 +90,7 @@ public class Support extends BasePhase {
 
         // place the whole thing in the Engine's base panel
         context_.setMainUIComponent(this, base_, true, log_);
+        if (base_.getHelpText() != null) context_.getWindow().setHelpTextWidget(base_.getHelpText());
     }
 
     /**

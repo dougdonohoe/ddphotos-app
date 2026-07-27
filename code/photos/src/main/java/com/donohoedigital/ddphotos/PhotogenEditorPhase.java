@@ -89,7 +89,7 @@ public class PhotogenEditorPhase extends BasePhase {
     private boolean built_;
     private boolean switching_;
 
-    private DDPanel base_;
+    private LogoWindowPanel base_;
     private OptionCombo<String> folderCombo_;
     private JScrollPane scroll_;
     private JPanel rowsPanel_;
@@ -176,18 +176,16 @@ public class PhotogenEditorPhase extends BasePhase {
         thumbH_ = Math.max(THUMB_MIN_H, captionHeight);
         thumbW_ = Math.round(thumbH_ * 1.5f);
 
-        base_ = new DDPanel();
+        Color panelBg = StylesConfig.getColor("app.panel.bg");
 
-        JComponent topBar = buildTopBar();
-        topBar.setBorder(BorderFactory.createEmptyBorder(4, 10, 0, 10));
-        base_.add(topBar, BorderLayout.NORTH);
+        base_ = new LogoWindowPanel("icon48", PhotosBasePhase.STYLE);
+        base_.setTopComponent(buildTopBar());
+        base_.setCenterBackground(panelBg);
+        base_.setContentInsets(10, 10, 5, 10);
+        helptext_ = base_.getHelpText();
 
         DDPanel center = new DDPanel();
-        center.setOpaque(true);
-        Color panelBg = StylesConfig.getColor("app.panel.bg");
-        center.setBackground(panelBg);
-        center.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10));
-        base_.add(center, BorderLayout.CENTER);
+        base_.setCenterComponent(center);
         rowsPanel_ = new ScrollingRows();
         rowsPanel_.setLayout(new BoxLayout(rowsPanel_, BoxLayout.Y_AXIS));
         scroll_ = new JScrollPane(rowsPanel_);
@@ -198,10 +196,6 @@ public class PhotogenEditorPhase extends BasePhase {
         center.add(scroll_, BorderLayout.CENTER);
         center.add(buildBottomBar(), BorderLayout.SOUTH);
 
-        // SOUTH: help text
-        helptext_ = PhotosUtils.createHelpText(PhotosBasePhase.STYLE);
-        base_.add(helptext_, BorderLayout.SOUTH);
-
         Path initial = initialFolderDir();
         switching_ = true;
         folderCombo_.getComboBox().setSelectedItem(valueForDir(initial));
@@ -210,10 +204,10 @@ public class PhotogenEditorPhase extends BasePhase {
         onDirtyChanged();
     }
 
+    /** The widget row to the right of the logo; the logo and its insets come from LogoWindowPanel. */
     private JComponent buildTopBar() {
         DDPanel widgets = new DDPanel();
         widgets.setLayout(new BoxLayout(widgets, BoxLayout.X_AXIS));
-        widgets.setBorder(BorderFactory.createEmptyBorder(11, 20, 0, 0));
         siteLabel_ = new DDLabel("photogensite", STYLE);
         siteLabel_.setText(siteLabelHtml());
         widgets.add(siteLabel_);
@@ -227,12 +221,7 @@ public class PhotogenEditorPhase extends BasePhase {
         folderCombo_.setMaximumSize(new Dimension(Math.max(240, size.width), size.height));
         widgets.add(folderCombo_);
 
-        DDPanel bar = new DDPanel();
-        bar.setLayout(new BoxLayout(bar, BoxLayout.X_AXIS));
-        bar.add(new DDImageButton("icon48"));
-        bar.add(GuiUtils.NORTH(widgets));
-
-        return bar;
+        return widgets;
     }
 
     private JComponent buildBottomBar() {

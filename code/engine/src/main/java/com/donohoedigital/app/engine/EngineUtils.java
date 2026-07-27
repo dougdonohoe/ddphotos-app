@@ -8,6 +8,7 @@ package com.donohoedigital.app.engine;
 
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.app.config.*;
+import com.donohoedigital.gui.GuiUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +21,7 @@ public class EngineUtils
 {  
     //static Logger logger = LogManager.getLogger(EngineUtils.class);
 
-    public static final int STANDARD_BORDER_GAP = 10;
+    public static final int STANDARD_BORDER_GAP = GuiUtils.STANDARD_BORDER_GAP;
 
     /**
      * Show message in a confirmation dialog. Return true if 'yes'

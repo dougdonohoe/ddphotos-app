@@ -41,7 +41,7 @@ public class PhotosBasePhase extends BasePhase {
     private final SitesFile sitesFile_;
 
     private AppContext context_;
-    protected DDPanel centerPanel_;
+    protected LogoWindowPanel base_;
     protected DDHtmlArea helptext_;
     private TourController tourController_;
 
@@ -59,13 +59,11 @@ public class PhotosBasePhase extends BasePhase {
         super.init(engine, context, phase);
         context_ = context;
 
-        centerPanel_ = new DDPanel();
-        centerPanel_.setLayout(new BorderLayout());
+        base_ = new LogoWindowPanel("icon48", STYLE);
+        base_.setContentInsets(0, 0, 0, 0); // tabs run flush to the window edges
+        helptext_ = base_.getHelpText();
 
-        helptext_ = PhotosUtils.createHelpText(STYLE);
-        centerPanel_.add(helptext_, BorderLayout.SOUTH);
-
-        context_.setMainUIComponent(this, centerPanel_, true, null);
+        context_.setMainUIComponent(this, base_, true, null);
         context_.getWindow().setHelpTextWidget(helptext_);
         // Fallback for windows without their own help widget (internal dialogs,
         // Help/Support windows), so their hover-help shows in this main help area.
@@ -95,17 +93,19 @@ public class PhotosBasePhase extends BasePhase {
         wizardPanel_ = new WizardPanel(context_, sitesFile_, rerun);
         wrapper.add(wizardPanel_);
 
-        centerPanel_.add(wrapper, BorderLayout.CENTER);
+        // the wizard fills the window on its own (it sets its own welcome help message)
+        base_.setTopBarVisible(false);
+        base_.setCenterComponent(wrapper);
     }
 
     private void buildRegularUI(Site selectSite) {
+        // set explicitly: finishing the wizard re-enters this phase, which may reuse the instance
+        // (and its hidden logo strip) rather than building a fresh one
+        base_.setTopBarVisible(true);
+
         SiteBarPanel siteBar = new SiteBarPanel(context_, sitesFile_, selectSite);
-        DockerStatusPanel dockerStatus = new DockerStatusPanel(context_);
-        DDPanel northStrip = new DDPanel();
-        northStrip.setLayout(new BorderLayout());
-        northStrip.add(siteBar, BorderLayout.CENTER);
-        northStrip.add(GuiUtils.NORTH(dockerStatus), BorderLayout.EAST);
-        centerPanel_.add(northStrip, BorderLayout.NORTH);
+        base_.setTopComponent(siteBar);
+        base_.setTopRightComponent(new DockerStatusPanel(context_));
 
         OptionTabbedPane tabs = new OptionTabbedPane(TAB_STYLE, TOP, PhotosConstants.PREFS_NODE_APP, "maintabs");
         tabs_ = tabs;
@@ -139,13 +139,9 @@ public class PhotosBasePhase extends BasePhase {
             tabs.restoreFromPrefs();
         }
 
-        DDPanel tabsContainer = new DDPanel();
-        tabsContainer.setLayout(new BorderLayout());
-        tabsContainer.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        tabsContainer.add(tabs, BorderLayout.CENTER);
-        centerPanel_.add(tabsContainer, BorderLayout.CENTER);
+        base_.setCenterComponent(tabs);
 
-        context_.getWindow().showHelp(siteBar.getLogoComponent()); // init help
+        context_.getWindow().showHelp(base_.getLogoComponent()); // init help
         context_.getWindow().ignoreNextHelp(); // ignore enter so main help message doesn't go away immediately
 
         // Offer the new-user tour on every launch until it is completed or opted out of (the

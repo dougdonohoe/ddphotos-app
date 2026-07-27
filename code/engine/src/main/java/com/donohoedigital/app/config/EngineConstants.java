@@ -32,4 +32,8 @@ public class EngineConstants
     // per album) get distinct titles and their own remembered size/position.
     public static final String PARAM_WINDOW_NAME  = "window-name";
     public static final String PARAM_WINDOW_TITLE = "window-title-override";
+
+    // style of the bottom hover-help strip (see LogoWindowPanel).  Named by the app rather than
+    // the engine, since the styles themselves are app config; absent means no help strip.
+    public static final String PARAM_HELP_STYLE = "help-style";
 }

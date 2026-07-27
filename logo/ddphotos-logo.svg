@@ -79,7 +79,7 @@
      opacity="0.5"
      id="circle3" />
   <!--
-    Lens, concentric on the camera body centre (135,103).
+    Lens, concentric on the camera body center (135,103).
     Barrel R=71 + 1.5 half-stroke = 72.5, so the outer edge sits at y=30.5
     and y=175.5 - an even 8.5px gap to the body top (22) and bottom (184).
   -->
@@ -141,7 +141,7 @@
   <!--
     PHOTOS wordmark, outlined from Helvetica Neue Medium 26px so that rendering
     does not depend on the installed fonts or on a renderer honouring
-    textLength. Ink box: x 26.417..243.583 (centred on 135), baseline y=216.44.
+    textLength. Ink box: x 26.417..243.583 (centered on 135), baseline y=216.44.
     Do not edit by hand - see logo/icon.md to regenerate.
 
     DO NOT trim the viewBox height to the ink. The 230 height is deliberate:

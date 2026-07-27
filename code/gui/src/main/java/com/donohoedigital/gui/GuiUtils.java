@@ -40,6 +40,9 @@ public class GuiUtils
 
     public static final Color COLOR_DISABLED_TEXT = StylesConfig.getColor("gui.text.disabled.fg");
 
+    /** Standard gap used around window contents and inside the hover-help strip. */
+    public static final int STANDARD_BORDER_GAP = 10;
+
     /** Thin border drawn around screenshots (see {@link #printToImage}). */
     private static final Color SCREENSHOT_BORDER = new Color(0xB0, 0xB0, 0xB0);
 
@@ -368,6 +371,23 @@ public class GuiUtils
     public static final Border BLUEBORDER = BorderFactory.createLineBorder(Color.blue);
     public static final Border BLACKBORDER = BorderFactory.createLineBorder(Color.black);
     public static final Border GRAYBORDER = BorderFactory.createLineBorder(Color.darkGray);
+
+    /**
+     * Creates the standard bottom hover-help widget used by DD Photos windows: a display-only,
+     * fixed-height {@link DDHtmlArea}.  {@link LogoWindowPanel} creates and installs one of these;
+     * a window using it directly should add it to the SOUTH of its contents and register it with
+     * {@code context.getWindow().setHelpTextWidget(...)} so hover-help renders here.
+     */
+    public static DDHtmlArea createHelpText(String style)
+    {
+        DDHtmlArea help = new DDHtmlArea(GuiManager.DEFAULT, style);
+        help.setDisplayOnly(true);
+        help.setOpaque(true); // must follow setDisplayOnly, which turns opacity off
+        help.setBorder(BorderFactory.createEmptyBorder(STANDARD_BORDER_GAP, STANDARD_BORDER_GAP,
+                                                       STANDARD_BORDER_GAP, STANDARD_BORDER_GAP));
+        help.setPreferredSize(new Dimension(10000, 40)); // fix height as diff fonts can make it twitchy
+        return help;
+    }
 
     public static JComponent CENTER(JComponent c)
     {
