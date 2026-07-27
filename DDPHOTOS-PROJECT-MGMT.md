@@ -13,7 +13,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Wizard step for Docker file permissions?
 * Windows - WSL and PowerShell docs
 * Speed up photogen if already processed a folder (be smarter about this)
-* Metal bumps look odd on Windows
 * `xboxl` hack in username
 * `site.env` editor
 * `custom.css` editor

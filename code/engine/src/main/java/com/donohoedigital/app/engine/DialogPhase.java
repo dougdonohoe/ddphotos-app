@@ -8,13 +8,13 @@ package com.donohoedigital.app.engine;
 
 import com.donohoedigital.base.ApplicationError;
 import com.donohoedigital.base.ErrorCodes;
-import com.donohoedigital.config.ImageConfig;
 import com.donohoedigital.config.Prefs;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.app.config.AppButton;
 import com.donohoedigital.app.config.AppPhase;
 import com.donohoedigital.gui.BaseFrame;
 import com.donohoedigital.gui.DDButton;
+import com.donohoedigital.gui.DDMultiResIcon;
 import com.donohoedigital.gui.DialogType;
 import com.donohoedigital.gui.GuiUtils;
 import com.donohoedigital.gui.InternalDialog;
@@ -346,7 +346,7 @@ public abstract class DialogPhase extends BasePhase implements InternalDialog.Di
         ApplicationError.assertNotNull(frame, "BaseFrame is null");
         dialog_.setBaseFrame(frame);
 
-        ImageIcon winicon = ImageConfig.getImageIcon(phase_.getString("dialog-windowtitle-image", "dialog-windowtitle-image"));
+        Icon winicon = DDMultiResIcon.load(phase_.getString("dialog-windowtitle-image", "dialog-windowtitle-image"));
         dialog_.setFrameIcon(winicon);
         back_ = new DialogBackground(context_, phase_, this, bNoShowOption_, sNoShowCheckboxName_, STYLE, minWidth);
         dialog_.setContentPane(back_);

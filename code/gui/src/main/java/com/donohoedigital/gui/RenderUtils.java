@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 
 /**
  * Rendering-hint helpers.
@@ -45,6 +46,26 @@ public final class RenderUtils
     {
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                            old == null ? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR : old);
+    }
+
+    /**
+     * Device pixels per logical pixel for {@code g2}'s current transform.  Returns 1.0 for
+     * anything other than a plain uniform scale-and-translate, since only that case can be
+     * painted in device space by resetting the transform and drawing 1:1.
+     *
+     * <p>Use this rather than {@link #getDisplayScale} when the scale is needed during a paint:
+     * it reflects the transform actually in effect, which may not be the screen's (printing, an
+     * off-screen buffer, a component painted into an image).
+     */
+    public static double getDeviceScale(Graphics2D g2)
+    {
+        if (g2 == null) return 1.0d;
+
+        AffineTransform tx = g2.getTransform();
+        if (tx.getShearX() != 0.0d || tx.getShearY() != 0.0d) return 1.0d;
+
+        double scale = tx.getScaleX();
+        return (scale > 0.0d && scale == tx.getScaleY()) ? scale : 1.0d;
     }
 
     /**

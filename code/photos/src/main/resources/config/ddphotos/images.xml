@@ -15,7 +15,12 @@
 
   <image name="splash" location="splash.png" cache="false"/>
   <image name="splash-empty" location="splash.png" cache="false"/>
+  <!-- dialog title bar icon; drawn at 20 logical px, larger variants for scaled displays
+       (see DDMultiResIcon) - 125% needs 25 real pixels, 150% needs 30, 200% needs 40 -->
   <image name="window-title-icon" location="icon_20x20.png"/>
+  <image name="window-title-icon.32" location="icon_32x32.png"/>
+  <image name="window-title-icon.48" location="icon_48x48.png"/>
+  <image name="window-title-icon.64" location="icon_64x64.png"/>
   <image name="dialog-background" location="dialog-background.png"/>
 
   <!-- main screen icon -->
