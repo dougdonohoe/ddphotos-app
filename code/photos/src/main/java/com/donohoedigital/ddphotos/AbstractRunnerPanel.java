@@ -393,22 +393,25 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
 
     /**
      * Pumps the process streams to the console and, when the process exits, clears {@link #process_},
-     * prints the exit code, refreshes button state, and invokes {@code onComplete} on the EDT.
+     * prints the exit code and elapsed time, refreshes button state, and invokes {@code onComplete}
+     * on the EDT.
      */
     protected void startReaders(Process p, IntConsumer onComplete) {
         userStopped_ = false;
+        long startNanos = System.nanoTime();
         Thread out = new Thread(() -> console_.pumpStream(p.getInputStream(), false));
         Thread err = new Thread(() -> console_.pumpStream(p.getErrorStream(), true));
         Thread mon = new Thread(() -> {
             try {
                 int code = p.waitFor();
+                String elapsed = formatElapsed(System.nanoTime() - startNanos);
                 SwingUtilities.invokeLater(() -> {
                     process_ = null;
                     // After a user stop/kill the exit code is an artifact of how we terminated the
                     // process (e.g. 1 on Windows), not a real result - don't present it as one.
                     console_.appendSystem(wasUserStop(code)
-                            ? PropertyConfig.getMessage("msg.cmd.stopped")
-                            : PropertyConfig.getMessage("msg.cmd.exited", code));
+                            ? PropertyConfig.getMessage("msg.cmd.stoppedTimed", elapsed)
+                            : PropertyConfig.getMessage("msg.cmd.exited", code, elapsed));
                     updateButtonState();
                     onComplete.accept(code);
                 });
@@ -422,6 +425,16 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
         out.start();
         err.start();
         mon.start();
+    }
+
+    /**
+     * Formats an elapsed nanosecond span as mm:ss:mmm. Minutes are not rolled up into hours - a
+     * long-running command reads more clearly as 75:12:340 than as a third unit the user has to parse.
+     */
+    static String formatElapsed(long nanos) {
+        long millis = nanos / 1_000_000L;
+        return String.format("%02d:%02d:%03d",
+                             millis / 60_000L, (millis / 1000L) % 60L, millis % 1000L);
     }
 
     protected void onStop() {
