@@ -16,7 +16,7 @@ abstract class PhotosDialog extends DialogPhase
 
     protected abstract void checkButtons();
 
-    protected DDPanel wrapWithInstructions(String instrName, String instrText, DDPanel form, int preferredWidth)
+    protected DDPanel wrapWithInstructions(String instrName, String instrText, JPanel form, int preferredWidth)
     {
         DDHtmlArea instructions = new DDHtmlArea(instrName, STYLE);
         instructions.setText(instrText);
@@ -43,30 +43,5 @@ abstract class PhotosDialog extends DialogPhase
         validatables_.forEach(v -> v.addValidationListener(this::checkButtons));
 
         return wrapper;
-    }
-
-    /** @param trailing optional widget in the third column (browse button, checkbox, ...) */
-    protected int addFieldRow(DDPanel form, String name, DDTextField field, JComponent trailing, int row)
-    {
-        GridBagConstraints lc = new GridBagConstraints();
-        lc.gridx = 0; lc.gridy = row;
-        lc.anchor = GridBagConstraints.EAST;
-        lc.insets = new Insets(4, 4, 4, 8);
-        form.add(new DDLabel(name, STYLE), lc);
-
-        GridBagConstraints fc = new GridBagConstraints();
-        fc.gridx = 1; fc.gridy = row;
-        fc.fill = GridBagConstraints.HORIZONTAL;
-        fc.weightx = 1.0;
-        fc.insets = new Insets(4, 0, 4, 2);
-        form.add(field, fc);
-
-        if (trailing != null) {
-            GridBagConstraints bc = new GridBagConstraints();
-            bc.gridx = 2; bc.gridy = row;
-            bc.insets = new Insets(4, 2, 4, 4);
-            form.add(trailing, bc);
-        }
-        return row + 1;
     }
 }

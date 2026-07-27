@@ -335,21 +335,13 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         heroPreview_ = new PhotoPreviewPanel(350, 55);
         heroPreview_.setBorder(BorderFactory.createEmptyBorder(7, 0, 0, 0));
 
-        int row = 0;
-        row = addRow(panel, heroBaseLabel_, heroBaseCombo_, null, row);
-        row = addSpanRow(panel, heroImage_, row);
-        row = addRow(panel, heroCropLabel_, cropPanel, null, row);
-        row = addSpanRow(panel, heroWarningArea_, row);
-        row = addSpanRow(panel, heroPreview_, row);
-
-        // Absorb any slack vertical space at the bottom so the GridBag keeps its rows
-        // top-aligned instead of centering them (which opens a gap above Base and
-        // pushes the preview out of view when the panel is tall and narrow).
-        GridBagConstraints glue = new GridBagConstraints();
-        glue.gridx = 0; glue.gridy = row; glue.gridwidth = 3;
-        glue.weighty = 1.0;
-        glue.fill = GridBagConstraints.BOTH;
-        panel.add(Box.createGlue(), glue);
+        GridBagForm.detail(panel, STYLE)
+                .row(heroBaseLabel_, heroBaseCombo_, null)
+                .span(heroImage_)
+                .row(heroCropLabel_, cropPanel, null)
+                .span(heroWarningArea_)
+                .span(heroPreview_)
+                .glue();
 
         return panel;
     }

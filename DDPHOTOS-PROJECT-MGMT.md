@@ -24,11 +24,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Undo support?  Backup files somewhere in config?
 * Unify help/icon window layout (Support/Help/Photogen.txt/Main)
-* Merge `EditableDetailPanel.addRow` with `PhotosDialog.addFieldRow` - the two build the same
-  label/field/trailing-widget GridBag row. They differ only in label anchor (WEST vs EAST),
-  insets, and field typing (`JComponent` vs `DDTextField`); `addRow` is static, takes a `JPanel`,
-  spans the field across 2 columns when there's no trailing widget, and has an `addSpanRow`
-  sibling. A shared helper with an alignment flag would cover both.
 * Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
   to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files
   if they exist (grid).

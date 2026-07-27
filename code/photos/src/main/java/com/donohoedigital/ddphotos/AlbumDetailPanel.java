@@ -273,21 +273,13 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         coverPreview_ = new PhotoPreviewPanel(PREFERRED_TEXT_WIDTH, 188);
         coverPreview_.setBorder(BorderFactory.createEmptyBorder(7, 0, 0, 0));
 
-        int row = 0;
-        row = addRow(panel, baseLabel, baseCombo_, null, row);
-        row = addSpanRow(panel, source_, row);
-        row = addSpanRow(panel, cover_, row);
-        row = addSpanRow(panel, warningArea_, row);
-        row = addSpanRow(panel, coverPreview_, row);
-
-        // Absorb any slack vertical space at the bottom so the GridBag keeps its rows
-        // top-aligned instead of centering them (which opened a big gap above Base and
-        // pushed the preview out of view when the panel is tall and narrow).
-        GridBagConstraints glue = new GridBagConstraints();
-        glue.gridx = 0; glue.gridy = row; glue.gridwidth = 3;
-        glue.weighty = 1.0;
-        glue.fill = GridBagConstraints.BOTH;
-        panel.add(Box.createGlue(), glue);
+        GridBagForm.detail(panel, STYLE)
+                .row(baseLabel, baseCombo_, null)
+                .span(source_)
+                .span(cover_)
+                .span(warningArea_)
+                .span(coverPreview_)
+                .glue();
 
         int labelWidth = GuiUtils.setDDOptionLabelWidths(panel, 16);
         Dimension baseLabelSize = baseLabel.getPreferredSize();

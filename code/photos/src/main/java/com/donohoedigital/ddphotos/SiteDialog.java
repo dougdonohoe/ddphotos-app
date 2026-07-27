@@ -12,7 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -111,33 +110,11 @@ public class SiteDialog extends PhotosDialog
             checkButtons();
         });
 
-        // form layout
-        DDPanel form = new DDPanel();
-        form.setLayout(new GridBagLayout());
-        form.setBorder(new EmptyBorder(8, 8, 4, 8));
-
-        int row = 0;
-        row = addFieldRow(form, "sitedisplayname", displayNameField_, null,         row);
-        row = addFieldRow(form, "sitedirpath",     dirPathField_,     browseDirBtn, row);
-
-        // config override row: [checkbox] [textfield] [browse]
-        GridBagConstraints cc = new GridBagConstraints();
-        cc.gridx = 0; cc.gridy = row;
-        cc.anchor = GridBagConstraints.EAST;
-        cc.insets = new Insets(4, 4, 4, 8);
-        form.add(configOverrideCheck_, cc);
-
-        GridBagConstraints cf = new GridBagConstraints();
-        cf.gridx = 1; cf.gridy = row;
-        cf.fill = GridBagConstraints.HORIZONTAL;
-        cf.weightx = 1.0;
-        cf.insets = new Insets(4, 0, 4, 2);
-        form.add(configPathField_, cf);
-
-        GridBagConstraints cb = new GridBagConstraints();
-        cb.gridx = 2; cb.gridy = row;
-        cb.insets = new Insets(4, 2, 4, 4);
-        form.add(browseConfigBtn, cb);
+        // form layout - the last row leads with a checkbox instead of a label
+        GridBagForm form = GridBagForm.dialog(STYLE)
+                .row("sitedisplayname", displayNameField_, null)
+                .row("sitedirpath",     dirPathField_,     browseDirBtn)
+                .row(configOverrideCheck_, configPathField_, browseConfigBtn);
 
         // pre-fill for add mode from wizard
         if (siteBeingEdited_ == null) {
@@ -173,7 +150,7 @@ public class SiteDialog extends PhotosDialog
         }
 
         return wrapWithInstructions("sitedialoginstruct",
-                PropertyConfig.getMessage("msg.sitedialog.instructions"), form, PREFERRED_WIDTH);
+                PropertyConfig.getMessage("msg.sitedialog.instructions"), form.panel(), PREFERRED_WIDTH);
     }
 
     @Override

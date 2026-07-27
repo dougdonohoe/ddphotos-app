@@ -13,7 +13,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class AlbumDialog extends PhotosDialog
@@ -51,16 +50,12 @@ public class AlbumDialog extends PhotosDialog
         nameField_.setRegExp(".+");
         nameField_.setTextLengthLimit(200);
 
-        DDPanel form = new DDPanel();
-        form.setLayout(new GridBagLayout());
-        form.setBorder(new EmptyBorder(8, 8, 4, 8));
-
-        int row = 0;
-        row = addFieldRow(form, "albumslug", slugField_, null, row);
-              addFieldRow(form, "albumname", nameField_, null, row);
+        GridBagForm form = GridBagForm.dialog(STYLE)
+                .row("albumslug", slugField_, null)
+                .row("albumname", nameField_, null);
 
         return wrapWithInstructions("addalbuminstruct",
-                PropertyConfig.getMessage("msg.addalbum.instructions"), form, PREFERRED_WIDTH);
+                PropertyConfig.getMessage("msg.addalbum.instructions"), form.panel(), PREFERRED_WIDTH);
     }
 
     @Override

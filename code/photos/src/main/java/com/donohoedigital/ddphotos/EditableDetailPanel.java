@@ -132,45 +132,6 @@ abstract class EditableDetailPanel extends DDPanel {
         return (val instanceof String s && !NONE_BASE.equals(s)) ? s : null;
     }
 
-    protected static int addRow(JPanel panel, String labelName, JComponent field, JButton btn, int row) {
-        return addRow(panel, new DDLabel(labelName, STYLE), field, btn, row);
-    }
-
-    protected static int addRow(JPanel panel, JComponent label, JComponent field, JButton btn, int row) {
-        GridBagConstraints lc = new GridBagConstraints();
-        lc.gridx = 0; lc.gridy = row;
-        lc.anchor = GridBagConstraints.WEST;
-        lc.insets = new Insets(3, 0, 3, 8);
-        panel.add(label, lc);
-
-        GridBagConstraints fc = new GridBagConstraints();
-        fc.gridx = 1; fc.gridy = row;
-        fc.fill = GridBagConstraints.HORIZONTAL;
-        fc.weightx = 1.0;
-        fc.gridwidth = btn != null ? 1 : 2;
-        fc.insets = new Insets(3, 0, 3, btn != null ? 2 : 0);
-        panel.add(field, fc);
-
-        if (btn != null) {
-            GridBagConstraints bc = new GridBagConstraints();
-            bc.gridx = 2; bc.gridy = row;
-            bc.insets = new Insets(3, 0, 3, 0);
-            panel.add(btn, bc);
-        }
-        return row + 1;
-    }
-
-    protected static int addSpanRow(JPanel panel, JComponent comp, int row) {
-        GridBagConstraints wc = new GridBagConstraints();
-        wc.gridx = 0; wc.gridy = row;
-        wc.gridwidth = 3;
-        wc.fill = GridBagConstraints.HORIZONTAL;
-        wc.weightx = 1.0;
-        wc.insets = new Insets(2, 0, 2, 0);
-        panel.add(comp, wc);
-        return row + 1;
-    }
-
     protected static void populateBaseList(List<String> keys, List<String> displays, AlbumsFile af) {
         keys.clear();
         displays.clear();

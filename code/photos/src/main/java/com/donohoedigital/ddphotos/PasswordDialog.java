@@ -14,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 /**
@@ -102,16 +101,12 @@ public class PasswordDialog extends PhotosDialog
         editKeyCheck_.setSelected(false);
         editKeyCheck_.addActionListener(_ -> onEditKeyToggled());
 
-        DDPanel form = new DDPanel();
-        form.setLayout(new GridBagLayout());
-        form.setBorder(new EmptyBorder(8, 8, 4, 8));
+        GridBagForm form = GridBagForm.dialog(STYLE)
+                .row("passwordkey",   keyField_,      editKeyCheck_)
+                .row("passwordvalue", passwordField_, null)
+                .row("passwordhint",  hintField_,     null);
 
-        int row = 0;
-        row = addFieldRow(form, "passwordkey",   keyField_,      editKeyCheck_, row);
-        row = addFieldRow(form, "passwordvalue", passwordField_, null,          row);
-              addFieldRow(form, "passwordhint",  hintField_,     null,          row);
-
-        return wrapWithInstructions("passwordinstruct", instructions(), form, PREFERRED_WIDTH);
+        return wrapWithInstructions("passwordinstruct", instructions(), form.panel(), PREFERRED_WIDTH);
     }
 
     @Override

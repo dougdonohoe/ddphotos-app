@@ -14,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -70,13 +69,9 @@ public class BaseDialog extends PhotosDialog
         browseBtn.addActionListener(_ -> browsePath());
         DDIconButtons.makeFolderIcon(browseBtn);
 
-        DDPanel form = new DDPanel();
-        form.setLayout(new GridBagLayout());
-        form.setBorder(new EmptyBorder(8, 8, 4, 8));
-
-        int row = 0;
-        row = addFieldRow(form, "basename", nameField_, null,      row);
-            addFieldRow(form,   "basepath", pathField_, browseBtn, row);
+        GridBagForm form = GridBagForm.dialog(STYLE)
+                .row("basename", nameField_, null)
+                .row("basepath", pathField_, browseBtn);
 
         // Pre-fill for edit mode
         if (editingName_ != null) {
@@ -85,7 +80,7 @@ public class BaseDialog extends PhotosDialog
         }
 
         return wrapWithInstructions("addbaseinstruct",
-                PropertyConfig.getMessage("msg.addbase.instructions"), form, PREFERRED_WIDTH);
+                PropertyConfig.getMessage("msg.addbase.instructions"), form.panel(), PREFERRED_WIDTH);
     }
 
     @Override
