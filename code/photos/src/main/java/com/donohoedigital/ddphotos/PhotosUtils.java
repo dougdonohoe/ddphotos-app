@@ -14,12 +14,26 @@ import java.awt.Dimension;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class PhotosUtils {
 
     /** Path to the private ddphotos wrapper script installed by the New User wizard. */
     public static Path scriptPath() {
         return AppConfigUtils.getBinDir().toPath().resolve("ddphotos");
+    }
+
+    /** CSI escape sequences - colors, cursor moves and the like. */
+    private static final Pattern ANSI = Pattern.compile("\\x1B\\[[0-?]*[ -/]*[@-~]");
+
+    /**
+     * Strips ANSI escapes from command output.  Swing renders none of them, so left in place they
+     * show up as literal noise ({@code [31m}, {@code [0m}) around the text - which is what the tools
+     * we shell out to emit whether or not they are on a terminal (wrangler colors its error output
+     * unconditionally).  Safe to apply a line at a time: escape sequences never span a newline.
+     */
+    public static String stripAnsi(String text) {
+        return text == null ? "" : ANSI.matcher(text).replaceAll("");
     }
 
     /**

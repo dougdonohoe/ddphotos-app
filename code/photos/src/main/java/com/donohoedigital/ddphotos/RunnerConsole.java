@@ -234,7 +234,7 @@ public class RunnerConsole extends JPanel {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
-                String text = line + "\n";
+                String text = PhotosUtils.stripAnsi(line) + "\n";
                 SwingUtilities.invokeLater(() -> appendOutput(text, stderr));
             }
         } catch (IOException e) {
@@ -245,7 +245,7 @@ public class RunnerConsole extends JPanel {
     /**
      * Like pumpStream(), but also accumulates the output into the given StringBuffer
      * (used for prerequisite checks that need to inspect the captured output). stderr
-     * lines are colored as errors but still captured so passed() sees the full output.
+     * lines are colored as errors but still captured so check() sees the full output.
      * A StringBuffer (not StringBuilder) is used because stdout and stderr are pumped
      * on separate threads; its append() is internally synchronized.
      */
@@ -253,7 +253,7 @@ public class RunnerConsole extends JPanel {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
-                String text = line + "\n";
+                String text = PhotosUtils.stripAnsi(line) + "\n";
                 captured.append(text);
                 SwingUtilities.invokeLater(() -> appendOutput(text, stderr));
             }

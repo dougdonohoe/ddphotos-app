@@ -2,6 +2,7 @@ package com.donohoedigital.ddphotos.runner;
 
 import com.donohoedigital.config.ConfigManager;
 import com.donohoedigital.config.PropertyConfig;
+import com.donohoedigital.ddphotos.PhotosUtils;
 import com.donohoedigital.ddphotos.config.Site;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,6 +29,19 @@ public class UpgradeRunner extends DdphotosRunner {
     }
 
     /**
+     * Classifies 'ddphotos version --image'. "No upgrade available" is only a safe conclusion when
+     * the version command actually reported a version - the 'Image:' line proves that, and without
+     * it a failed check would otherwise be reported to the user as "you are up to date".
+     */
+    static Prerequisite.Result checkVersion(String output, int exitCode) {
+        String text = PhotosUtils.stripAnsi(output);
+        if (exitCode != 0) return Prerequisite.Result.ERROR;
+        if (text.contains("Update available")) return Prerequisite.Result.PASSED;
+        if (text.contains("Image:")) return Prerequisite.Result.FAILED;
+        return Prerequisite.Result.ERROR;
+    }
+
+    /**
      * Before running 'ddphotos upgrade', check 'ddphotos version --image'. Only proceed with the
      * upgrade when an update is actually available; otherwise log a message and stop.
      */
@@ -41,8 +55,8 @@ public class UpgradeRunner extends DdphotosRunner {
 
         return new Prerequisite(versionCmd) {
             @Override
-            public boolean passed(String output, int exitCode) {
-                return output.contains("Update available");
+            public Result check(String output, int exitCode) {
+                return checkVersion(output, exitCode);
             }
 
             @Override
@@ -53,6 +67,11 @@ public class UpgradeRunner extends DdphotosRunner {
             @Override
             public String checkingMessage() {
                 return PropertyConfig.getMessage("msg.upgrade.checking");
+            }
+
+            @Override
+            public String errorDialogMessage(int exitCode) {
+                return PropertyConfig.getMessage("msg.upgrade.checkError");
             }
         };
     }

@@ -102,6 +102,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
     @Override
     protected void onRun() {
         RunnerConsole.clearForRun(console_);
+        clearUserStop();
 
         if (currentSite_ == null) {
             console_.appendSystem(PropertyConfig.getMessage("msg.cmd.noSiteSelected"));
@@ -138,6 +139,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             process_ = null;
             console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "prerequisite check", e.getMessage()));
             updateButtonState();
+            fireTour(false);
         }
     }
 
@@ -154,19 +156,29 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                 String output = captured.toString();
                 SwingUtilities.invokeLater(() -> {
                     process_ = null;
-                    if (prereq.passed(output, code)) {
-                        // add a little space after check
-                        console_.appendSystem("");
-                        console_.appendSystem("---");
+                    // A stopped check produced no verdict - its exit code and partial output are
+                    // artifacts of how we killed it, not an answer about the user's login.
+                    if (wasUserStop(code)) {
+                        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
+                        updateButtonState();
+                        fireTour(false);
+                        return;
+                    }
+                    switch (prereq.check(output, code)) {
+                        case PASSED -> {
+                            // add a little space after check
+                            console_.appendSystem("");
+                            console_.appendSystem("---");
 
-                        Prerequisite next = prereq.next();
-                        if (next != null) {
-                            runWithPrerequisite(next, userValues);
-                        } else {
-                            launchMainCommand(userValues);
+                            Prerequisite next = prereq.next();
+                            if (next != null) {
+                                runWithPrerequisite(next, userValues);
+                            } else {
+                                launchMainCommand(userValues);
+                            }
                         }
-                    } else {
-                        handlePrerequisiteFailure(prereq, userValues);
+                        case FAILED -> handlePrerequisiteFailure(prereq, userValues);
+                        case ERROR -> handlePrerequisiteError(prereq, code);
                     }
                 });
             } catch (InterruptedException e) {
@@ -181,6 +193,21 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
         mon.start();
     }
 
+    /**
+     * The check could not be evaluated - report what actually happened and stop. Deliberately does
+     * not run {@link Prerequisite#remediation}: offering to log in or to create a project when we
+     * never got an answer is a guess, and in the create case a guess that changes remote state.
+     */
+    private void handlePrerequisiteError(Prerequisite prereq, int exitCode) {
+        console_.appendSystemError(prereq.errorMessage(exitCode));
+        updateButtonState();
+        fireTour(false);
+        String html = prereq.errorDialogMessage(exitCode);
+        if (html != null) {
+            EngineUtils.displayErrorDialog(context_, html, prereq.errorTitleKey(), null);
+        }
+    }
+
     private void handlePrerequisiteFailure(Prerequisite prereq, Map<String, String> userValues) {
         Prerequisite next = prereq.next();
         switch (prereq.remediation()) {
@@ -190,11 +217,13 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             }
             case Prerequisite.ShowDialog(String html, String titleKey) -> {
                 updateButtonState();
+                fireTour(false);
                 EngineUtils.displayWarningDialog(context_, html, titleKey, null);
             }
             case Prerequisite.ShowMessage(String message) -> {
                 console_.appendSystem(message);
                 updateButtonState();
+                fireTour(false);
             }
             case Prerequisite.ConfirmThenRun(String msgKey, String titleKey, List<String> cmd, Object[] msgArgs) -> {
                 console_.appendSystem(prereq.failedMessage());
@@ -203,6 +232,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                 boolean confirmed = EngineUtils.displayConfirmationDialog(context_, html, titleKey, null);
                 if (!confirmed) {
                     console_.appendSystem(PropertyConfig.getMessage("msg.cmd.aborted"));
+                    fireTour(false);
                     return;
                 }
                 runNext(userValues, next, cmd);
@@ -221,6 +251,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             process_ = null;
             console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "remediation", e.getMessage()));
             updateButtonState();
+            fireTour(false);
         }
     }
 
@@ -242,6 +273,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                     } else {
                         console_.appendSystem(PropertyConfig.getMessage("msg.cmd.failedExit", code));
                         updateButtonState();
+                        fireTour(false);
                     }
                 });
             } catch (InterruptedException e) {

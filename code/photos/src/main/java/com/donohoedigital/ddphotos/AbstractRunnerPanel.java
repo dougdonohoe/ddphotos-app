@@ -443,6 +443,16 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
         return userStopped_ || CommandRunner.isUserStopCode(code);
     }
 
+    /**
+     * Clears the stop flag at the start of a run. {@link #startReaders} does this for the main
+     * command, but a run that begins with a prerequisite check consults {@link #wasUserStop} before
+     * ever reaching it - without this, stopping a check would leave the flag set and every later
+     * run would read as "stopped by the user".
+     */
+    protected void clearUserStop() {
+        userStopped_ = false;
+    }
+
     // ──────────────────────────────────────────────────────────────────────────────
     // AppEngine.CloseListener
     // ──────────────────────────────────────────────────────────────────────────────
