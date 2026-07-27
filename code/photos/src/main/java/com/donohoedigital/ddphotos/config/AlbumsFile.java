@@ -107,7 +107,7 @@ public class AlbumsFile {
         // blockComments to inline the '-' indicator with the first key).
         yaml = insertBlankLinesBetweenSequenceItems(yaml);
         try {
-            Files.writeString(path, yaml, StandardCharsets.UTF_8);
+            AtomicWrite.writeString(path, yaml);
         } catch (IOException e) {
             throw new AlbumsFileException("write " + path + ": " + FileErrors.reason(e), e);
         }

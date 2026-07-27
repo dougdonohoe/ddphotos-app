@@ -97,7 +97,7 @@ public class SitesFile {
                 .build();
         String yaml = new Dump(ds).dumpToString(root);
         try {
-            Files.writeString(path_, yaml, StandardCharsets.UTF_8);
+            AtomicWrite.writeString(path_, yaml);
         } catch (IOException e) {
             throw new SitesFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }

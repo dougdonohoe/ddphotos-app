@@ -31,9 +31,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Detect running container error? Port already in use (nice to have)
-* Config file writes are not atomic - `AlbumsFile.save()` and friends call `Files.writeString`
-  directly, so a failure partway through truncates the user's file. Write to a temp file in the
-  same directory and rename over the original.
 * Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?
 
 ---

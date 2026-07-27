@@ -111,7 +111,7 @@ public class PhotogenFile {
         }
         if (endsWithNewline_) sb.append('\n');
         try {
-            Files.writeString(path_, sb.toString(), StandardCharsets.UTF_8);
+            AtomicWrite.writeString(path_, sb.toString());
         } catch (IOException e) {
             throw new PhotogenFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }

@@ -175,7 +175,7 @@ public class PasswordsFile {
         }
 
         try {
-            Files.writeString(path_, yaml, StandardCharsets.UTF_8);
+            AtomicWrite.writeString(path_, yaml);
         } catch (IOException e) {
             throw new PasswordsFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }
