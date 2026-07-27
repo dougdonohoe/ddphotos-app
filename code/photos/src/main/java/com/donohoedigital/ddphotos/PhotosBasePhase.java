@@ -25,6 +25,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,6 +70,17 @@ public class PhotosBasePhase extends BasePhase {
         // Help/Support windows), so their hover-help shows in this main help area.
         HelpTextManager.setGlobalHelpTextWidget(helptext_);
         context_.getFrame().setJMenuBar(buildMenuBar());
+
+        // On a Mac the menu bar is the screen menu bar and belongs to whichever window has
+        // focus, so the Help, Support and photogen editor windows would show no menus at all.
+        // Give each new window its own copy instead; every item still acts on the main window
+        // (the listeners below close over this phase), so the menus behave identically no
+        // matter which window they are pulled down from.  Elsewhere, the menu bar is drawn in
+        // the window, where the main window's stays put and per-window copies would only take
+        // up space.
+        if (Utils.ISMAC) {
+            engine_.setWindowMenuBarFactory(this::buildMenuBar);
+        }
     }
 
     private static final String TAB_STYLE = "PhotosTabs";
@@ -161,21 +173,34 @@ public class PhotosBasePhase extends BasePhase {
         return menuBar;
     }
 
+    /**
+     * Wraps an action that runs in the main window, bringing that window forward first.
+     * Every window gets its own copy of these menus on a Mac (see init), and each copy runs
+     * the main window's command - so without this the wizard, the tour or a confirmation
+     * dialog would appear behind whichever window the menu was pulled down from.
+     */
+    private ActionListener mainWindowAction(Runnable action) {
+        return _ -> {
+            context_.getWindow().toFront();
+            action.run();
+        };
+    }
+
     private JMenu buildFileMenu() {
         DDMenu menu = new DDMenu("file");
 
         DDMenuItem rerunWizard = new DDMenuItem("rerunwizard");
-        rerunWizard.addActionListener(_ -> doRerunWizard());
+        rerunWizard.addActionListener(mainWindowAction(this::doRerunWizard));
         menu.add(rerunWizard);
 
         menu.addSeparator();
 
         DDMenuItem resetPrefs = new DDMenuItem("resetprefs");
-        resetPrefs.addActionListener(_ -> doResetPrefs());
+        resetPrefs.addActionListener(mainWindowAction(this::doResetPrefs));
         menu.add(resetPrefs);
 
         DDMenuItem resetHiddenDialogs = new DDMenuItem("resethidden");
-        resetHiddenDialogs.addActionListener(_ -> doResetHiddenDialogs());
+        resetHiddenDialogs.addActionListener(mainWindowAction(this::doResetHiddenDialogs));
         menu.add(resetHiddenDialogs);
 
         menu.addSeparator();
@@ -204,9 +229,9 @@ public class PhotosBasePhase extends BasePhase {
         }
 
         DDMenuItem rerunTour = new DDMenuItem("reruntour");
-        rerunTour.addActionListener(_ -> {
+        rerunTour.addActionListener(mainWindowAction(() -> {
             if (tourController_ != null) tourController_.startFromMenu();
-        });
+        }));
         menu.add(rerunTour);
 
         menu.addSeparator();
@@ -228,9 +253,7 @@ public class PhotosBasePhase extends BasePhase {
 
             JMenuItem ss = new JMenuItem("Take screenshot...");
             ss.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-            ss.addActionListener(_ ->  {
-                context_.screenshot(screenshotName());
-            });
+            ss.addActionListener(mainWindowAction(() -> context_.screenshot(screenshotName())));
             menu.add(ss);
 
             JMenuItem splash = new JMenuItem("Show Splashscreen");
@@ -238,8 +261,8 @@ public class PhotosBasePhase extends BasePhase {
             menu.add(splash);
 
             JMenuItem display = new JMenuItem("Display Info...");
-            display.addActionListener(_ -> EngineUtils.displayInformationDialog(
-                    context_, GuiUtils.getDisplayInfoHtml(context_.getFrame())));
+            display.addActionListener(mainWindowAction(() -> EngineUtils.displayInformationDialog(
+                    context_, GuiUtils.getDisplayInfoHtml(context_.getFrame()))));
             menu.add(display);
         }
 

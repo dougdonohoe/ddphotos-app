@@ -376,6 +376,11 @@ public class AppContext
                     context = engine_.createAppContext(sWindowName, nMinWidth, nMinHeight, false);
                     EngineWindow window = context.getFrame();
                     window.init(phase, false, new Dimension(nWidth, nHeight), sTitle, bResizable);
+                    // its own copy of the app's menus - see AppEngine.setWindowMenuBarFactory.
+                    // Added after init(), like the main window's is; the size restored there is
+                    // the outer frame size, so a menu bar arriving later doesn't change it.
+                    JMenuBar menuBar = engine_.createWindowMenuBar();
+                    if (menuBar != null) window.setJMenuBar(menuBar);
                     engine_.contextInited(context);
                     window.display();
                 }

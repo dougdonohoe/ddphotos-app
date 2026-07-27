@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * @author Doug Donohoe
@@ -51,6 +52,9 @@ public abstract class AppEngine extends BaseApp {
 
     // variable based on current state/app
     private AppContext defaultContext_;
+
+    // builds the menu bar given to each new window (null - windows have no menu bar)
+    private Supplier<JMenuBar> windowMenuBarFactory_;
 
     /**
      * Create AppEngine from config file
@@ -281,6 +285,28 @@ public abstract class AppEngine extends BaseApp {
      */
     public AppContext getDefaultContext() {
         return defaultContext_;
+    }
+
+    /**
+     * Register a factory that builds the menu bar for every window this app opens.  A
+     * JMenuBar belongs to one frame, so the factory must return a NEW instance on each
+     * call; the items it creates should act on the main window, so a menu behaves the
+     * same no matter which window it was pulled down from.
+     * <p>
+     * Mainly for macOS, where the menu bar is the screen menu bar and belongs to the
+     * focused window: without a bar of its own, a secondary window shows no menus at all.
+     * Leave unset on platforms where the menu bar is drawn in the window itself and a
+     * copy per window would just take up space.
+     */
+    public void setWindowMenuBarFactory(Supplier<JMenuBar> factory) {
+        windowMenuBarFactory_ = factory;
+    }
+
+    /**
+     * Menu bar for a newly created window, or null if no factory is registered
+     */
+    JMenuBar createWindowMenuBar() {
+        return windowMenuBarFactory_ == null ? null : windowMenuBarFactory_.get();
     }
 
     /**
