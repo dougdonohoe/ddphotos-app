@@ -36,6 +36,7 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
     private Pattern pattern_;
     private boolean bValid_ = true;
     private JButton defaultOverride_ = null;
+    private DDUndoManager undo_;
 
     /**
      *
@@ -74,6 +75,7 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
         addFocusListener(this);
         addMouseListener(this);
         getDocument().addDocumentListener(this);
+        undo_ = DDUndoManager.install(this);
         setDisabledTextColor(GuiUtils.COLOR_DISABLED_TEXT);
         super.setOpaque(false);
 
@@ -134,14 +136,17 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
     }
 
     /**
-     * Override to fire prop change
+     * Override to fire prop change.  The text is set through the undo manager so that loading a
+     * value into a field starts its undo history over rather than adding to it.
      */
     @Override
     public void setText(String sMsg)
     {
         GuiUtils.requireSwingThread();
 
-        super.setText(sMsg);
+        if (undo_ != null) undo_.runSilent(() -> super.setText(sMsg));
+        else super.setText(sMsg);
+
         firePropertyChange("value", null, null);
     }
 
@@ -165,6 +170,7 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
         setOpaque(!bDisplayOnly);
         setEditable(!bDisplayOnly);
         setDragEnabled(!bDisplayOnly);
+        if (bDisplayOnly && undo_ != null) undo_.discardAllEdits();
         setValid(isValidData()); // apply the mode-appropriate background
     }
 
@@ -280,7 +286,8 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
     }
 
     /**
-     * set document, handle listeners
+     * set document, handle listeners.  Note this runs once from the JTextField constructor,
+     * before init() has created the undo manager.
      */
     @Override
     public void setDocument(Document doc)
@@ -292,6 +299,7 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
         }
         super.setDocument(doc);
         doc.addDocumentListener(this);
+        if (undo_ != null) undo_.attachTo(current, doc);
     }
 
     /*

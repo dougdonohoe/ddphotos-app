@@ -37,6 +37,7 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
     private Pattern pattern_;
     private boolean bValid_ = true;
     private JScrollPane scroll_ = null;
+    private DDUndoManager undo_;
 
     /**
      * Creates a new instance of DDTextField, sets name to sName
@@ -61,19 +62,23 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
         addMouseListener(this);
         addFocusListener(this);
         getDocument().addDocumentListener(this);
+        undo_ = DDUndoManager.install(this);
 
         if (Utils.ISMAC) JTextComponent.loadKeymap(getKeymap(), GuiUtils.MAC_CUT_COPY_PASTE, getActions());
     }
 
     /**
-     * Override to fire prop change
+     * Override to fire prop change.  The text is set through the undo manager so that loading a
+     * value into a field starts its undo history over rather than adding to it.
      */
     @Override
     public void setText(String sMsg)
     {
         GuiUtils.requireSwingThread();
 
-        super.setText(sMsg);
+        if (undo_ != null) undo_.runSilent(() -> super.setText(sMsg));
+        else super.setText(sMsg);
+
         firePropertyChange("value", null, null);
     }
 
@@ -100,6 +105,7 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
         if (bDisplayOnly)
         {
             GuiUtils.setDoNothingCaret(this);
+            if (undo_ != null) undo_.discardAllEdits();
         }
         else
         {
@@ -283,9 +289,24 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
      */
     public void setTextLengthLimit(int nLength)
     {
-        getDocument().removeDocumentListener(this);
         setDocument(new LengthLimit(nLength));
-        getDocument().addDocumentListener(this);
+    }
+
+    /**
+     * set document, handle listeners.  Note this runs once from the JTextArea constructor,
+     * before init() has created the undo manager.
+     */
+    @Override
+    public void setDocument(Document doc)
+    {
+        Document current = getDocument();
+        if (current != null)
+        {
+            current.removeDocumentListener(this);
+        }
+        super.setDocument(doc);
+        doc.addDocumentListener(this);
+        if (undo_ != null) undo_.attachTo(current, doc);
     }
 
     /*

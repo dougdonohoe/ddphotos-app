@@ -46,6 +46,9 @@ public class GuiUtils
     /** Thin border drawn around screenshots (see {@link #printToImage}). */
     private static final Color SCREENSHOT_BORDER = new Color(0xB0, 0xB0, 0xB0);
 
+    /** The platform's menu accelerator modifier: Command on a Mac, Control elsewhere. */
+    public static final int MENU_SHORTCUT_MASK = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+
     static final JTextComponent.KeyBinding[] MAC_CUT_COPY_PASTE = {
             new JTextComponent.KeyBinding(
                     KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.META_DOWN_MASK),

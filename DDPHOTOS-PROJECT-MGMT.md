@@ -17,7 +17,8 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
   a settings menu to win/linux)?  Would want to show size of cache.
 * Windows - WSL and PowerShell docs
-* Undo support?  Backup files somewhere in config?
+* Undo support - Still open: reverting `albums.yaml` / `passwords.yaml` /
+  `photogen.txt` to a previous on-disk version - backup files somewhere in config?
 
 * Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
   to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files

@@ -24,11 +24,15 @@ import com.donohoedigital.gui.*;
 import com.formdev.flatlaf.FlatClientProperties;
 
 import javax.swing.*;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Function;
 
 import static javax.swing.JTabbedPane.TOP;
 
@@ -169,6 +173,7 @@ public class PhotosBasePhase extends BasePhase {
     private JMenuBar buildMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(buildFileMenu());
+        menuBar.add(buildEditMenu());
         menuBar.add(buildHelpMenu());
         return menuBar;
     }
@@ -208,10 +213,59 @@ public class PhotosBasePhase extends BasePhase {
         // Mac has Quit item under main app menu; see BaseApp.setupMac
         if (!Utils.ISMAC) {
             DDMenuItem quit = new DDMenuItem("quit");
-            quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+            quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, GuiUtils.MENU_SHORTCUT_MASK));
             quit.addActionListener(_ -> engine_.quit());
             menu.add(quit);
         }
+
+        return menu;
+    }
+
+    /**
+     * Wraps an action that runs against whichever text widget has keyboard focus.  Deliberately
+     * not mainWindowAction: undo has to reach the field the user is actually typing in, which is
+     * often a caption in the photogen editor window rather than anything in the main window.
+     */
+    private ActionListener focusedTextAction(Function<DDUndoManager, Action> which) {
+        return e -> {
+            DDUndoManager undo = DDUndoManager.forFocusOwner();
+            if (undo != null) which.apply(undo).actionPerformed(e);
+        };
+    }
+
+    private JMenu buildEditMenu() {
+        DDMenu menu = new DDMenu("edit");
+
+        DDMenuItem undo = new DDMenuItem("undo");
+        undo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, GuiUtils.MENU_SHORTCUT_MASK));
+        undo.addActionListener(focusedTextAction(DDUndoManager::getUndoAction));
+        menu.add(undo);
+
+        DDMenuItem redo = new DDMenuItem("redo");
+        redo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,
+                GuiUtils.MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK));
+        redo.addActionListener(focusedTextAction(DDUndoManager::getRedoAction));
+        menu.add(redo);
+
+        // Whether there is anything to undo depends on which field has focus, so work it out as
+        // the menu opens.  Both go back to enabled once it closes: a disabled item doesn't fire
+        // its accelerator, and the keys have to keep working with no menu showing.
+        menu.addMenuListener(new MenuListener() {
+            public void menuSelected(MenuEvent e) {
+                DDUndoManager mgr = DDUndoManager.forFocusOwner();
+                undo.setEnabled(mgr != null && mgr.canUndo());
+                redo.setEnabled(mgr != null && mgr.canRedo());
+            }
+
+            public void menuDeselected(MenuEvent e) { enable(); }
+
+            public void menuCanceled(MenuEvent e) { enable(); }
+
+            private void enable() {
+                undo.setEnabled(true);
+                redo.setEnabled(true);
+            }
+        });
 
         return menu;
     }
@@ -252,7 +306,7 @@ public class PhotosBasePhase extends BasePhase {
             menu.add(boom);
 
             JMenuItem ss = new JMenuItem("Take screenshot...");
-            ss.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+            ss.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, GuiUtils.MENU_SHORTCUT_MASK));
             ss.addActionListener(mainWindowAction(() -> context_.screenshot(screenshotName())));
             menu.add(ss);
 
