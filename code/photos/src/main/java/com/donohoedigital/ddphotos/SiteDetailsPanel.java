@@ -269,16 +269,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         // red state and the warning message can never disagree.
         Predicate<String> heroValidator = _ -> evalHero().isValid();
 
-        heroBaseCombo_ = new DDComboBox<>(heroBaseElement_, STYLE);
-        initBaseCombo(heroBaseCombo_);
-
-        // The base display text is a full filesystem path, so the combo's natural
-        // min/preferred width is huge.  Bound it: it stretches to fill via GridBag
-        // when there's room and shrinks to a readable min otherwise, rather than
-        // forcing the whole hero section wider than the viewport.
-        Dimension comboSize = heroBaseCombo_.getPreferredSize();
-        heroBaseCombo_.setPreferredSize(new Dimension(Math.min(comboSize.width, 380), comboSize.height));
-        heroBaseCombo_.setMinimumSize(new Dimension(200, comboSize.height));
+        heroBaseCombo_ = createBaseCombo(heroBaseElement_);
         heroBaseCombo_.addActionListener(_ -> {
             // re-trigger validation now that the base (and thus resolution) changed
             heroImage_.setCustomValidator(heroValidator);
@@ -390,28 +381,6 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         if (heroTopRadio_.isSelected())    return "top";
         if (heroBottomRadio_.isSelected()) return "bottom";
         return "center";
-    }
-
-    private static DDLabelBorder section(String name) {
-        DDLabelBorder panel = new DDLabelBorder(name, STYLE);
-        panel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP, 0, 4, VerticalFlowLayout.FILL));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                panel.getBorder(),
-                BorderFactory.createEmptyBorder(4, 4, 4, 4)));
-        return panel;
-    }
-
-    private static final class ScrollableForm extends JPanel implements Scrollable {
-        @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
-        @Override public int getScrollableUnitIncrement(Rectangle r, int o, int d) { return 16; }
-        @Override public int getScrollableBlockIncrement(Rectangle r, int o, int d) { return 100; }
-        @Override public boolean getScrollableTracksViewportWidth() {
-            // Fill the viewport while it's wide enough; once it's narrower than our
-            // minimum, stop shrinking and let the scroll pane add a horizontal bar.
-            Component parent = getParent();
-            return !(parent instanceof JViewport) || parent.getWidth() >= getMinimumSize().width;
-        }
-        @Override public boolean getScrollableTracksViewportHeight() { return false; }
     }
 
     // -------------------------------------------------------------------------

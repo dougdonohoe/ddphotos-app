@@ -102,18 +102,47 @@ abstract class EditableDetailPanel extends DDPanel {
     // Shared layout helpers
     // -------------------------------------------------------------------------
 
+    /** A titled section whose children stack vertically, one per row. */
+    protected static DDLabelBorder section(String name) {
+        return section(name, new VerticalFlowLayout(VerticalFlowLayout.TOP, 0, 4, VerticalFlowLayout.FILL));
+    }
+
+    /** A titled section laid out as a grid - see {@link GridBagForm#detail}. */
     protected static DDLabelBorder gridSection(String name) {
+        return section(name, new GridBagLayout());
+    }
+
+    private static DDLabelBorder section(String name, LayoutManager layout) {
         DDLabelBorder panel = new DDLabelBorder(name, STYLE);
-        panel.setLayout(new GridBagLayout());
+        panel.setLayout(layout);
         panel.setBorder(BorderFactory.createCompoundBorder(
                 panel.getBorder(),
                 BorderFactory.createEmptyBorder(4, 4, 4, 4)));
         return panel;
     }
 
-    protected static void initBaseCombo(DDComboBox<String> combo) {
+    /** Widest a base combo may get before it stops growing with its content. */
+    private static final int BASE_COMBO_MAX_WIDTH = 380;
+    /** Narrowest a base combo may be squeezed to; below this the path text is unreadable. */
+    private static final int BASE_COMBO_MIN_WIDTH = 200;
+
+    /**
+     * Creates a base-chooser combo over the given element.
+     *
+     * <p>The base display text is a full filesystem path, so the combo's natural
+     * min/preferred width is huge.  Bound it: it stretches to fill via GridBag when
+     * there's room and shrinks to a readable min otherwise, rather than forcing the
+     * whole section wider than the viewport.
+     */
+    protected static DDComboBox<String> createBaseCombo(DataElement<String> element) {
+        DDComboBox<String> combo = new DDComboBox<>(element, STYLE);
         combo.setRequired(false);
         combo.resetValues();
+
+        Dimension size = combo.getPreferredSize();
+        combo.setPreferredSize(new Dimension(Math.min(size.width, BASE_COMBO_MAX_WIDTH), size.height));
+        combo.setMinimumSize(new Dimension(BASE_COMBO_MIN_WIDTH, size.height));
+        return combo;
     }
 
     /**
