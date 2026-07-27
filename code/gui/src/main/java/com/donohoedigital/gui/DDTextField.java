@@ -22,7 +22,7 @@ import java.util.regex.*;
 public class DDTextField extends JFormattedTextField implements DDTextVisibleComponent, DDText,
         KeyListener, DocumentListener,
         FocusListener, MouseListener,
-        DDCustomHelp, DDValidatable
+        DDCustomHelp, DDValidatable, DDDisplayOnly
 {
     // disable bg overlay
     public static final Color DISABLE_BG = new Color(204, 204, 204, 178);

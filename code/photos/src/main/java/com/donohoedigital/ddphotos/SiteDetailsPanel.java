@@ -116,24 +116,24 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private DDLabelBorder buildBasicSection() {
         DDLabelBorder panel = section("sitesettings");
 
-        albumId_ = new OptionText(null, "siteid", STYLE, dummy_,
-                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", PREFERRED_ID_TEXT_WIDTH);
+        albumId_ = editable(new OptionText(null, "siteid", STYLE, dummy_,
+                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", PREFERRED_ID_TEXT_WIDTH));
         panel.add(buildPasswordRow(albumId_, "sitepassword", "sitelock"));
 
-        siteName_ = new OptionText(null, "sitename", STYLE, dummy_,
-                200, "^.+$", 350);
+        siteName_ = editable(new OptionText(null, "sitename", STYLE, dummy_,
+                200, "^.+$", 350));
         panel.add(siteName_);
 
-        siteUrl_ = new OptionText(null, "siteurl", STYLE, dummy_,
-                200, "^(https?://\\S+)?$", 350);
+        siteUrl_ = editable(new OptionText(null, "siteurl", STYLE, dummy_,
+                200, "^(https?://\\S+)?$", 350));
         panel.add(siteUrl_);
 
-        siteDescription_ = new OptionTextArea(null, "sitedescription", STYLE, null, dummy_,
-                500, null, 2, 350);
+        siteDescription_ = editable(new OptionTextArea(null, "sitedescription", STYLE, null, dummy_,
+                500, null, 2, 350));
         panel.add(siteDescription_);
 
-        descriptionsFile_ = new OptionFileChooser(null, "descriptionsfile", STYLE, dummy_,
-                100, 350, null);
+        descriptionsFile_ = editable(new OptionFileChooser(null, "descriptionsfile", STYLE, dummy_,
+                100, 350, null));
         descriptionsFile_.setFileExtensionFilter("txt");
         panel.add(descriptionsFile_);
 
@@ -179,8 +179,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         themeLabel_ = new DDLabel("sitetheme", STYLE);
 
         ButtonGroup themeGroup = new ButtonGroup();
-        themeLightRadio_ = new DDRadioButton("sitethemelight", STYLE);
-        themeDarkRadio_  = new DDRadioButton("sitethemedark",  STYLE);
+        themeLightRadio_ = editable(new DDRadioButton("sitethemelight", STYLE));
+        themeDarkRadio_  = editable(new DDRadioButton("sitethemedark",  STYLE));
         themeGroup.add(themeLightRadio_);
         themeGroup.add(themeDarkRadio_);
         themeDarkRadio_.setSelected(true);
@@ -198,17 +198,17 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private DDLabelBorder buildCopyrightSection() {
         DDLabelBorder panel = section("copyrightcrawling");
 
-        copyrightOwner_ = new OptionText(null, "copyrightowner", STYLE, dummy_, 200, null, 350);
+        copyrightOwner_ = editable(new OptionText(null, "copyrightowner", STYLE, dummy_, 200, null, 350));
         panel.add(copyrightOwner_);
 
         int currentYear = Year.now().getValue();
-        copyrightYear_ = new OptionInteger(null, "copyrightyear", STYLE, dummy_, currentYear, 1800, currentYear, 0);
+        copyrightYear_ = editable(new OptionInteger(null, "copyrightyear", STYLE, dummy_, currentYear, 1800, currentYear, 0));
         copyrightYear_.setEditable(true);
 
         // Tuck Allow Crawling into the year row's free CENTER slot (the spinner + its
         // left label live in WEST) so the two share a line instead of stacking.
         copyrightYear_.setBorderLayoutGap(0, 25);
-        allowCrawling_ = new OptionBoolean(null, "allowcrawling", STYLE, dummy_);
+        allowCrawling_ = editable(new OptionBoolean(null, "allowcrawling", STYLE, dummy_));
         copyrightYear_.add(allowCrawling_, BorderLayout.CENTER);
         panel.add(copyrightYear_);
 
@@ -218,16 +218,16 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private DDLabelBorder buildHtmlSection() {
         DDLabelBorder panel = section("htmlcontent");
 
-        siteTitleHtml_ = new OptionTextArea(null, "sitetitlehtml", STYLE, null, dummy_,
-                1000, null, 2, 350);
+        siteTitleHtml_ = editable(new OptionTextArea(null, "sitetitlehtml", STYLE, null, dummy_,
+                1000, null, 2, 350));
         panel.add(siteTitleHtml_);
 
-        siteSubtitleHtml_ = new OptionTextArea(null, "sitesubtitlehtml", STYLE, null, dummy_,
-                1000, null, 3, 350);
+        siteSubtitleHtml_ = editable(new OptionTextArea(null, "sitesubtitlehtml", STYLE, null, dummy_,
+                1000, null, 3, 350));
         panel.add(siteSubtitleHtml_);
 
-        siteOverviewHtml_ = new OptionTextArea(null, "siteoverviewhtml", STYLE, null, dummy_,
-                2000, null, 5, 350);
+        siteOverviewHtml_ = editable(new OptionTextArea(null, "siteoverviewhtml", STYLE, null, dummy_,
+                2000, null, 5, 350));
         panel.add(siteOverviewHtml_);
 
         return panel;
@@ -240,7 +240,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         // red state and the warning message can never disagree.
         Predicate<String> heroValidator = _ -> evalHero().isValid();
 
-        heroBaseCombo_ = createBaseCombo(heroBaseElement_);
+        heroBaseCombo_ = editable(createBaseCombo(heroBaseElement_));
         heroBaseCombo_.addActionListener(_ -> {
             // re-trigger validation now that the base (and thus resolution) changed
             heroImage_.setCustomValidator(heroValidator);
@@ -248,7 +248,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         });
         heroBaseLabel_ = new DDLabel("siteherobase", STYLE);
 
-        heroImage_ = new OptionFileChooser(null, "siteheroimage", STYLE, dummy_, 500, 350, null);
+        heroImage_ = editable(new OptionFileChooser(null, "siteheroimage", STYLE, dummy_, 500, 350, null));
         heroImage_.setChooserTitle(PropertyConfig.getMessage("msg.filechooser.title.hero"));
         heroImage_.setStartDirSupplier(() -> {
             Path baseAbsPath = resolveHeroBasePath();
@@ -270,9 +270,9 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         heroCropLabel_ = new DDLabel("siteherocrop", STYLE);
 
         ButtonGroup cropGroup = new ButtonGroup();
-        heroTopRadio_    = new DDRadioButton("siteherotop",    STYLE);
-        heroCenterRadio_ = new DDRadioButton("siteherocenter", STYLE);
-        heroBottomRadio_ = new DDRadioButton("siteherobottom", STYLE);
+        heroTopRadio_    = editable(new DDRadioButton("siteherotop",    STYLE));
+        heroCenterRadio_ = editable(new DDRadioButton("siteherocenter", STYLE));
+        heroBottomRadio_ = editable(new DDRadioButton("siteherobottom", STYLE));
         cropGroup.add(heroTopRadio_);
         cropGroup.add(heroCenterRadio_);
         cropGroup.add(heroBottomRadio_);
@@ -481,36 +481,6 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         originalSettings_ = null;
         setEditing(false);
         siteBar_.refreshCombo(currentSite_);
-    }
-
-    // -------------------------------------------------------------------------
-    // Read-only toggle
-    // -------------------------------------------------------------------------
-
-    @Override
-    protected void setReadOnly(boolean readOnly) {
-        albumId_.setDisplayOnly(readOnly);
-        siteName_.setDisplayOnly(readOnly);
-        siteUrl_.setDisplayOnly(readOnly);
-        siteDescription_.setDisplayOnly(readOnly);
-        descriptionsFile_.setDisplayOnly(readOnly);
-        copyrightOwner_.setDisplayOnly(readOnly);
-        copyrightYear_.setDisplayOnly(readOnly);
-        allowCrawling_.setDisplayOnly(readOnly);
-        themeLightRadio_.setDisplayOnly(readOnly);
-        themeDarkRadio_.setDisplayOnly(readOnly);
-        siteTitleHtml_.setDisplayOnly(readOnly);
-        siteSubtitleHtml_.setDisplayOnly(readOnly);
-        siteOverviewHtml_.setDisplayOnly(readOnly);
-        heroBaseCombo_.setDisplayOnly(readOnly);
-        heroImage_.setDisplayOnly(readOnly);
-        heroTopRadio_.setDisplayOnly(readOnly);
-        heroCenterRadio_.setDisplayOnly(readOnly);
-        heroBottomRadio_.setDisplayOnly(readOnly);
-
-        editBtn_.setVisible(readOnly);
-        saveBtn_.setVisible(!readOnly);
-        cancelBtn_.setVisible(!readOnly);
     }
 
     // -------------------------------------------------------------------------

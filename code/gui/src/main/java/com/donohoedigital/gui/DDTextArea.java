@@ -23,7 +23,7 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
                                                      DDText,
                                                      DocumentListener, KeyListener,
                                                      FocusListener, MouseListener,
-                                                     DDValidatable
+                                                     DDValidatable, DDDisplayOnly
 {
     //static Logger logger = LogManager.getLogger(DDTextArea.class);
 

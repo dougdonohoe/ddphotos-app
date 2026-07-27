@@ -13,7 +13,7 @@ import java.awt.event.MouseEvent;
 /**
  * @author Doug Donohoe
  */
-public class DDCheckBox extends JCheckBox implements DDHasLabelComponent, DDValidatable, DDCustomHelp
+public class DDCheckBox extends JCheckBox implements DDHasLabelComponent, DDValidatable, DDCustomHelp, DDDisplayOnly
 {
     private Color cCheckColor_ = null;
 

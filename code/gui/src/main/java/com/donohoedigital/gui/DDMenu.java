@@ -16,7 +16,7 @@ import java.awt.*;
  * 
  * @author  Doug Donohoe
  */
-public class DDMenu extends JMenu implements DDHasLabelComponent 
+public class DDMenu extends JMenu implements DDHasLabelComponent, DDDisplayOnly
 {
     Border swingBorder_;
 

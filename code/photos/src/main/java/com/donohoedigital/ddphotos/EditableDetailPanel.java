@@ -26,8 +26,25 @@ abstract class EditableDetailPanel extends DDPanel {
     protected DDButton passwordBtn_;
     protected DDLabel  lockLabel_;
 
+    /** The fields {@link #setReadOnly} drives, in registration order - see {@link #editable}. */
+    private final List<DDDisplayOnly> editFields_ = new ArrayList<>();
+
     private boolean editing_;
     private Runnable onEditModeChanged_;
+
+    /**
+     * Registers a field with the read-only toggle and hands it back, so subclasses can
+     * wrap it where it's built rather than repeating the list in a separate method:
+     *
+     * <pre>siteName_ = editable(new OptionText(null, "sitename", STYLE, ...));</pre>
+     *
+     * Anything not registered - labels, previews, warning areas - is left alone by
+     * {@link #setReadOnly}.
+     */
+    protected <T extends DDDisplayOnly> T editable(T field) {
+        editFields_.add(field);
+        return field;
+    }
 
     /**
      * Notified whenever editing starts, is saved, or is canceled (i.e. whenever
@@ -99,8 +116,14 @@ abstract class EditableDetailPanel extends DDPanel {
     protected abstract void applyAndSave();
     protected abstract void cancelEdit();
 
-    /** Puts the fields (and the edit/save/cancel buttons) into read-only or editable state. */
-    protected abstract void setReadOnly(boolean readOnly);
+    /** Puts the registered fields (and the edit/save/cancel buttons) into read-only or editable state. */
+    private void setReadOnly(boolean readOnly) {
+        editFields_.forEach(f -> f.setDisplayOnly(readOnly));
+
+        editBtn_.setVisible(readOnly);
+        saveBtn_.setVisible(!readOnly);
+        cancelBtn_.setVisible(!readOnly);
+    }
 
     /** Opens {@link PasswordDialog} for whatever this panel is editing. */
     protected abstract void openPasswordDialog();

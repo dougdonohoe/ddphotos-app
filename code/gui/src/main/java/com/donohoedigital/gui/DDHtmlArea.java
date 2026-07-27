@@ -19,7 +19,7 @@ import java.awt.*;
 /**
  * @author Doug Donohoe
  */
-public class DDHtmlArea extends JEditorPane implements DDTextVisibleComponent
+public class DDHtmlArea extends JEditorPane implements DDTextVisibleComponent, DDDisplayOnly
 {
     static Logger logger = LogManager.getLogger(DDHtmlArea.class);
 

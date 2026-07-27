@@ -100,8 +100,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private DDLabelBorder buildBasicSection() {
         DDLabelBorder panel = section("albumbasic");
 
-        slug_ = new OptionText(null, "albumslug", STYLE, dummy_,
-                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", PREFERRED_SLUG_TEXT_WIDTH);
+        slug_ = editable(new OptionText(null, "albumslug", STYLE, dummy_,
+                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", PREFERRED_SLUG_TEXT_WIDTH));
         slug_.getTextField().setCustomValidator(text -> {
             if (currentAlbumsFile() == null || currentEntry_ == null) return true;
             return currentAlbumsFile().getAlbums().stream()
@@ -110,16 +110,16 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         });
         panel.add(buildPasswordRow(slug_, "albumpassword", "albumlock"));
 
-        name_ = new OptionText(null, "albumname", STYLE, dummy_, 200, "^.+$", 350);
+        name_ = editable(new OptionText(null, "albumname", STYLE, dummy_, 200, "^.+$", 350));
         GuiUtils.setPreferredWidth(name_.getTextField(), PREFERRED_SHORT_TEXT_WIDTH);
         panel.add(name_);
 
-        description_ = new OptionTextArea(null, "albumdescription", STYLE, null, dummy_,
-                500, null, 4, 350);
+        description_ = editable(new OptionTextArea(null, "albumdescription", STYLE, null, dummy_,
+                500, null, 4, 350));
         panel.add(description_);
 
-        recurse_ = new OptionBoolean(null, "albumrecurse", STYLE, dummy_);
-        manualSort_ = new OptionBoolean(null, "albummanualsort", STYLE, dummy_);
+        recurse_ = editable(new OptionBoolean(null, "albumrecurse", STYLE, dummy_));
+        manualSort_ = editable(new OptionBoolean(null, "albummanualsort", STYLE, dummy_));
         panel.add(recurse_);
         panel.add(manualSort_);
 
@@ -172,7 +172,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         Predicate<String> sourceValidator = _ -> evalSource().isValid();
         Predicate<String> coverValidator  = _ -> evalCover().isValid();
 
-        baseCombo_ = createBaseCombo(baseElement_);
+        baseCombo_ = editable(createBaseCombo(baseElement_));
         baseCombo_.addActionListener(_ -> {
             // re-trigger validation now that the base (and thus resolution) changed
             source_.setCustomValidator(sourceValidator);
@@ -180,7 +180,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             checkButtons();
         });
 
-        source_ = new OptionFileChooser(null, "albumsourcepath", STYLE, dummy_, 500, PREFERRED_TEXT_WIDTH, null);
+        source_ = editable(new OptionFileChooser(null, "albumsourcepath", STYLE, dummy_, 500, PREFERRED_TEXT_WIDTH, null));
         source_.getTextField().setRegExp(".+");
         source_.setDirectoryMode(true);
         source_.setChooserTitle(PropertyConfig.getMessage("msg.filechooser.title.source"));
@@ -205,7 +205,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             }
         });
 
-        cover_ = new OptionFileChooser(null, "albumcover", STYLE, dummy_, 200, PREFERRED_TEXT_WIDTH, null);
+        cover_ = editable(new OptionFileChooser(null, "albumcover", STYLE, dummy_, 200, PREFERRED_TEXT_WIDTH, null));
         cover_.setChooserTitle(PropertyConfig.getMessage("msg.filechooser.title.cover"));
         cover_.setStartDirSupplier(() -> {
             Path sourceDir = resolveSourcePath();
@@ -392,26 +392,6 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         setEditing(false);
 
         if (onSavedCallback_ != null) onSavedCallback_.run();
-    }
-
-    // -------------------------------------------------------------------------
-    // Read-only toggle
-    // -------------------------------------------------------------------------
-
-    @Override
-    protected void setReadOnly(boolean readOnly) {
-        slug_.setDisplayOnly(readOnly);
-        name_.setDisplayOnly(readOnly);
-        description_.setDisplayOnly(readOnly);
-        baseCombo_.setDisplayOnly(readOnly);
-        source_.setDisplayOnly(readOnly);
-        cover_.setDisplayOnly(readOnly);
-        recurse_.setDisplayOnly(readOnly);
-        manualSort_.setDisplayOnly(readOnly);
-
-        editBtn_.setVisible(readOnly);
-        saveBtn_.setVisible(!readOnly);
-        cancelBtn_.setVisible(!readOnly);
     }
 
     // -------------------------------------------------------------------------

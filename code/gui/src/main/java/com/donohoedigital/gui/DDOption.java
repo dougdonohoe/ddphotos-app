@@ -21,7 +21,7 @@ import java.util.prefs.*;
  *
  * @author  donohoe
  */
-public abstract class DDOption extends DDPanel implements MouseListener
+public abstract class DDOption extends DDPanel implements MouseListener, DDDisplayOnly
 {
     static Logger logger = LogManager.getLogger(DDOption.class);
     

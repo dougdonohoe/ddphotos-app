@@ -14,7 +14,7 @@ import java.awt.event.MouseEvent;
  *
  * @author  Doug Donohoe
  */
-public class DDRadioButton extends JRadioButton implements DDHasLabelComponent
+public class DDRadioButton extends JRadioButton implements DDHasLabelComponent, DDDisplayOnly
 {
     //static Logger logger = LogManager.getLogger(DDRadioButton.class);
     private Color cDotColor_ = null;

@@ -18,7 +18,7 @@ import java.awt.*;
  *
  * @author  Doug Donohoe
  */
-public class DDMenuItem extends JMenuItem implements DDHasLabelComponent 
+public class DDMenuItem extends JMenuItem implements DDHasLabelComponent, DDDisplayOnly
 {
     private final Border BORDER_INDENT1 = BorderFactory.createEmptyBorder(1, 20, 1, 1);
     private final Border BORDER_INDENT2 = BorderFactory.createEmptyBorder(1, 40, 1, 1);

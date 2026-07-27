@@ -21,7 +21,7 @@ import java.util.Vector;
 * @author  Doug Donohoe
 */
 public class DDComboBox<E> extends JComboBox<E> implements
-            DDTextVisibleComponent,DDExtendedComponent,DDListComponent
+            DDTextVisibleComponent,DDExtendedComponent,DDListComponent,DDDisplayOnly
 {
     private final DataElement<E> elem_;
     DefaultComboBoxModel<E> model_;

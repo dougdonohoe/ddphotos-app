@@ -15,7 +15,7 @@ import java.awt.event.MouseListener;
  *
  * @author Doug Donohoe
  */
-public class DDSpinner extends JSpinner implements DDTextVisibleComponent, DDText, DDCustomHelp, DDValidatable
+public class DDSpinner extends JSpinner implements DDTextVisibleComponent, DDText, DDCustomHelp, DDValidatable, DDDisplayOnly
 {
     private final JFormattedTextField text_;
     private final Color origBg_;
