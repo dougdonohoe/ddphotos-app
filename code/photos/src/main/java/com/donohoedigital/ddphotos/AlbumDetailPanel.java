@@ -48,8 +48,6 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
     // Fields
     private OptionText slug_;
-    private DDButton passwordBtn_;
-    private DDLabel  lockLabel_;
     private OptionText name_;
     private OptionTextArea description_;
     private OptionFileChooser source_;
@@ -110,7 +108,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
                     .filter(a -> a != currentEntry_)
                     .noneMatch(a -> text.equals(a.getSlug()));
         });
-        panel.add(buildSlugRow());
+        panel.add(buildPasswordRow(slug_, "albumpassword", "albumlock"));
 
         name_ = new OptionText(null, "albumname", STYLE, dummy_, 200, "^.+$", 350);
         GuiUtils.setPreferredWidth(name_.getTextField(), PREFERRED_SHORT_TEXT_WIDTH);
@@ -128,30 +126,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         return panel;
     }
 
-    /**
-     * The album slug field with the password controls beside it: a button that opens
-     * {@link PasswordDialog} and a lock icon reporting whether the album is protected —
-     * by its own password or, failing that, the site's.
-     */
-    private JComponent buildSlugRow() {
-        passwordBtn_ = new DDButton("albumpassword", STYLE);
-        passwordBtn_.addActionListener(_ -> openPasswordDialog());
-
-        lockLabel_ = new DDLabel("albumlock", STYLE);
-
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        controls.setOpaque(false);
-        controls.add(passwordBtn_);
-        controls.add(lockLabel_);
-
-        DDPanel row = new DDPanel();
-        row.setBorderLayoutGap(0, 8);
-        row.add(slug_, BorderLayout.WEST);
-        row.add(controls, BorderLayout.CENTER);
-        return row;
-    }
-
-    private void openPasswordDialog() {
+    @Override
+    protected void openPasswordDialog() {
         Site site = albumsList_.getCurrentSite();
         if (site == null || currentEntry_ == null) return;
         TypedHashMap params = new TypedHashMap();
@@ -181,11 +157,9 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         boolean locked = pf != null && slug != null && pf.isAlbumProtected(slug);
         boolean own    = locked && pf.hasAlbumEntry(slug);
 
-        lockLabel_.setIcon(locked ? DDIconButtons.LOCK : DDIconButtons.UNLOCK);
-        lockLabel_.setToolTipText(PropertyConfig.getMessage(
-                !locked ? "msg.password.unlocked.album"
-                        : own ? "msg.password.locked.album"
-                              : "msg.password.inherited.album"));
+        setLockState(locked, !locked ? "msg.password.unlocked.album"
+                                    : own ? "msg.password.locked.album"
+                                          : "msg.password.inherited.album");
     }
 
     private DDLabelBorder buildSourceSection() {

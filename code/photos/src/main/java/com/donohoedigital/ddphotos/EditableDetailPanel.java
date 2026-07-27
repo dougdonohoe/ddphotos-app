@@ -22,6 +22,10 @@ abstract class EditableDetailPanel extends DDPanel {
     protected List<DDValidatable> validatables_;
     protected DDButton editBtn_, saveBtn_, cancelBtn_;
 
+    /** Created by {@link #buildPasswordRow}; null until then. */
+    protected DDButton passwordBtn_;
+    protected DDLabel  lockLabel_;
+
     private boolean editing_;
     private Runnable onEditModeChanged_;
 
@@ -98,6 +102,9 @@ abstract class EditableDetailPanel extends DDPanel {
     /** Puts the fields (and the edit/save/cancel buttons) into read-only or editable state. */
     protected abstract void setReadOnly(boolean readOnly);
 
+    /** Opens {@link PasswordDialog} for whatever this panel is editing. */
+    protected abstract void openPasswordDialog();
+
     // -------------------------------------------------------------------------
     // Shared layout helpers
     // -------------------------------------------------------------------------
@@ -119,6 +126,45 @@ abstract class EditableDetailPanel extends DDPanel {
                 panel.getBorder(),
                 BorderFactory.createEmptyBorder(4, 4, 4, 4)));
         return panel;
+    }
+
+    /**
+     * A row pairing a fixed-width leading component with whatever should sit beside it:
+     * the leading component keeps its preferred width in WEST, the rest of the row goes
+     * to the component in CENTER.
+     */
+    protected static DDPanel westCenterRow(JComponent west, JComponent center) {
+        DDPanel row = new DDPanel();
+        row.setBorderLayoutGap(0, 8);
+        row.add(west,   BorderLayout.WEST);
+        row.add(center, BorderLayout.CENTER);
+        return row;
+    }
+
+    /**
+     * The given field with the password controls beside it: a button that opens
+     * {@link PasswordDialog} and a lock icon reporting whether the thing being edited
+     * is protected.  Both controls are kept in {@link #passwordBtn_} / {@link #lockLabel_}
+     * for the subclass' own {@code updatePasswordUi()} to drive.
+     */
+    protected JComponent buildPasswordRow(JComponent field, String buttonName, String lockName) {
+        passwordBtn_ = new DDButton(buttonName, STYLE);
+        passwordBtn_.addActionListener(_ -> openPasswordDialog());
+
+        lockLabel_ = new DDLabel(lockName, STYLE);
+
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        controls.setOpaque(false);
+        controls.add(passwordBtn_);
+        controls.add(lockLabel_);
+
+        return westCenterRow(field, controls);
+    }
+
+    /** Points the lock icon at its locked/unlocked state and explains it in the tooltip. */
+    protected void setLockState(boolean locked, String tooltipKey) {
+        lockLabel_.setIcon(locked ? DDIconButtons.LOCK : DDIconButtons.UNLOCK);
+        lockLabel_.setToolTipText(PropertyConfig.getMessage(tooltipKey));
     }
 
     /** Widest a base combo may get before it stops growing with its content. */

@@ -41,8 +41,6 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private AlbumsSettings originalSettings_;
 
     private OptionText albumId_;
-    private DDButton passwordBtn_;
-    private DDLabel  lockLabel_;
     private OptionText siteName_;
     private OptionText siteUrl_;
     private OptionTextArea siteDescription_;
@@ -120,7 +118,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
 
         albumId_ = new OptionText(null, "siteid", STYLE, dummy_,
                 64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", PREFERRED_ID_TEXT_WIDTH);
-        panel.add(buildIdRow());
+        panel.add(buildPasswordRow(albumId_, "sitepassword", "sitelock"));
 
         siteName_ = new OptionText(null, "sitename", STYLE, dummy_,
                 200, "^.+$", 350);
@@ -144,29 +142,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         return panel;
     }
 
-    /**
-     * The site ID field with the password controls beside it: a button that opens
-     * {@link PasswordDialog} and a lock icon reporting whether the site is protected.
-     */
-    private JComponent buildIdRow() {
-        passwordBtn_ = new DDButton("sitepassword", STYLE);
-        passwordBtn_.addActionListener(_ -> openPasswordDialog());
-
-        lockLabel_ = new DDLabel("sitelock", STYLE);
-
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        controls.setOpaque(false);
-        controls.add(passwordBtn_);
-        controls.add(lockLabel_);
-
-        DDPanel row = new DDPanel();
-        row.setBorderLayoutGap(0, 8);
-        row.add(albumId_, BorderLayout.WEST);
-        row.add(controls, BorderLayout.CENTER);
-        return row;
-    }
-
-    private void openPasswordDialog() {
+    @Override
+    protected void openPasswordDialog() {
         if (currentSite_ == null) return;
         TypedHashMap params = new TypedHashMap();
         params.setObject(PasswordDialog.PARAM_SITE, currentSite_);
@@ -190,9 +167,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         AlbumsFile af = albumsFile();
         PasswordsFile pf = af != null ? af.getPasswordsFile() : null;
         boolean locked = pf != null && pf.isSiteProtected();
-        lockLabel_.setIcon(locked ? DDIconButtons.LOCK : DDIconButtons.UNLOCK);
-        lockLabel_.setToolTipText(PropertyConfig.getMessage(
-                locked ? "msg.password.locked.site" : "msg.password.unlocked.site"));
+        setLockState(locked, locked ? "msg.password.locked.site" : "msg.password.unlocked.site");
     }
 
     /**
@@ -217,11 +192,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         radios.add(themeLightRadio_);
         radios.add(themeDarkRadio_);
 
-        DDPanel row = new DDPanel();
-        row.setBorderLayoutGap(0, 8);
-        row.add(themeLabel_, BorderLayout.WEST);
-        row.add(radios, BorderLayout.CENTER);
-        return row;
+        return westCenterRow(themeLabel_, radios);
     }
 
     private DDLabelBorder buildCopyrightSection() {
