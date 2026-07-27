@@ -30,8 +30,10 @@ cd code && mvn -pl common,gui,engine,photos compile -q
   We'd need a dialog that confirms re-running the wizard and an option to not show that warning again.
 
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
-* Test what happens if site goes away after adding it to tool
 * Detect running container error? Port already in use (nice to have)
+* Config file writes are not atomic - `AlbumsFile.save()` and friends call `Files.writeString`
+  directly, so a failure partway through truncates the user's file. Write to a temp file in the
+  same directory and rename over the original.
 * Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?
 
 ---

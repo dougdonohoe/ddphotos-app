@@ -1,6 +1,5 @@
 package com.donohoedigital.ddphotos.config;
 
-import com.donohoedigital.base.Utils;
 import com.donohoedigital.ddphotos.PathValidation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,7 +61,7 @@ public class PhotogenFile {
                 loadInternal();
             }
         } catch (PhotogenFileException e) {
-            logger.warn("Failed to load photogen file: {}{}", path_, Utils.formatExceptionText(e));
+            logger.warn("Failed to load photogen file: {}", path_, e);
         }
         return this;
     }
@@ -72,7 +71,7 @@ public class PhotogenFile {
         try {
             content = Files.readString(path_, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new PhotogenFileException("read " + path_ + ": " + e.getMessage(), e);
+            throw new PhotogenFileException("read " + path_ + ": " + FileErrors.reason(e), e);
         }
         existed_ = true;
         parse(content);
@@ -114,7 +113,7 @@ public class PhotogenFile {
         try {
             Files.writeString(path_, sb.toString(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new PhotogenFileException("write " + path_ + ": " + e.getMessage(), e);
+            throw new PhotogenFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }
     }
 

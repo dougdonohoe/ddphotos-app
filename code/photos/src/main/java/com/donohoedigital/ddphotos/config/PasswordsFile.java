@@ -1,6 +1,5 @@
 package com.donohoedigital.ddphotos.config;
 
-import com.donohoedigital.base.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.snakeyaml.engine.v2.api.Dump;
@@ -92,7 +91,7 @@ public class PasswordsFile {
                 loadInternal();
             }
         } catch (PasswordsFileException e) {
-            logger.warn("Failed to load passwords file: {}{}", path_, Utils.formatExceptionText(e));
+            logger.warn("Failed to load passwords file: {}", path_, e);
         }
         return this;
     }
@@ -102,7 +101,7 @@ public class PasswordsFile {
         try {
             content = Files.readString(path_, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new PasswordsFileException("read " + path_ + ": " + e.getMessage(), e);
+            throw new PasswordsFileException("read " + path_ + ": " + FileErrors.reason(e), e);
         }
 
         logger.info("read {}", path_);
@@ -178,7 +177,7 @@ public class PasswordsFile {
         try {
             Files.writeString(path_, yaml, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new PasswordsFileException("write " + path_ + ": " + e.getMessage(), e);
+            throw new PasswordsFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }
         existed_ = true;
     }

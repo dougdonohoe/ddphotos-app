@@ -274,8 +274,7 @@ public class AppContext
                 case ErrorCodes.ERROR_ASSERTION_FAILED:
                 case ErrorCodes.ERROR_UNEXPECTED_EXCEPTION:
                 case ErrorCodes.ERROR_CODE_ERROR:
-                    logger.error(ae.toString());
-                    logger.error(Utils.formatExceptionText(ae));
+                    logger.error(ae.toString(), ae);
                     break;
 
                 default:
@@ -286,8 +285,7 @@ public class AppContext
         }
         catch (Throwable e)
         {
-            logger.error("AppContext - Exception caught processing phase {}", sPhaseName);
-            logger.error(Utils.formatExceptionText(e));
+            logger.error("AppContext - Exception caught processing phase {}", sPhaseName, e);
             _handleProcessPhaseException(e);
         }
         return null;
@@ -315,8 +313,7 @@ public class AppContext
         }
         catch (Throwable t)
         {
-            logger.warn("AppContext - Exception caught handling above error");
-            logger.warn(Utils.formatExceptionText(t));
+            logger.warn("AppContext - Exception caught handling above error", t);
         }
         finally
         {
@@ -330,7 +327,8 @@ public class AppContext
      */
     protected void handleProcessPhaseException(Throwable e)
     {
-        EngineUtils.displayErrorDialog(this, PropertyConfig.getMessage("msg.error.unexpected", e.getMessage()));
+        // toString() rather than getMessage(), which is null for an NPE and many others
+        EngineUtils.displayErrorDialog(this, PropertyConfig.getMessage("msg.error.unexpected", e.toString()));
     }
 
     /**

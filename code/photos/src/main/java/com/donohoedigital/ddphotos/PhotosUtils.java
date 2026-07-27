@@ -2,12 +2,16 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.config.AppConfigUtils;
 import com.donohoedigital.app.engine.AppContext;
+import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.TypedHashMap;
+import com.donohoedigital.config.PropertyConfig;
+import com.donohoedigital.ddphotos.config.FileErrors;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
 
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -52,6 +56,51 @@ public class PhotosUtils {
     /** Escapes the HTML metacharacters {@code & < >} for safe inclusion in an HTML label. */
     public static String escapeHtml(String s) {
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    // -------------------------------------------------------------------------
+    // Save failures
+    // -------------------------------------------------------------------------
+
+    /**
+     * The user-facing explanation for a failed save, as an HTML fragment.
+     *
+     * <p>{@link FileErrors} recognizes the file-system failures worth a sentence of their own;
+     * anything else - a validation failure, say - already carries a readable message.
+     */
+    public static String saveErrorDetail(Throwable e) {
+        String key = FileErrors.messageKey(e);
+        if (key != null) return PropertyConfig.getMessage(key);
+
+        String msg = e.getMessage();
+        return escapeHtml(msg != null && !msg.isBlank() ? msg : FileErrors.reason(e));
+    }
+
+    /**
+     * Shows the standard Save Error dialog: what we were saving, why it failed, and where to
+     * look for more.  The caller logs - it knows which file it was writing and owns the logger
+     * the entry should be attributed to.
+     */
+    public static void showSaveError(AppContext context, Object path, Throwable e) {
+        EngineUtils.displayErrorDialog(context,
+                PropertyConfig.getMessage("msg.error.save",
+                        escapeHtml(String.valueOf(path)), saveErrorDetail(e)),
+                "msg.windowtitle.saveError", null);
+    }
+
+    /**
+     * Save Error for an operation spanning several files - each entry being one already-rendered
+     * {@code <file>: <explanation>} line.  See {@link #saveErrorLine}.
+     */
+    public static void showSaveErrors(AppContext context, List<String> lines) {
+        EngineUtils.displayErrorDialog(context,
+                PropertyConfig.getMessage("msg.error.savemulti", String.join("<br>", lines)),
+                "msg.windowtitle.saveError", null);
+    }
+
+    /** One line for {@link #showSaveErrors}. */
+    public static String saveErrorLine(Object path, Throwable e) {
+        return escapeHtml(path + ": ") + saveErrorDetail(e);
     }
 
     public static Site openAddSiteDialog(AppContext context, SitesFile sitesFile) {

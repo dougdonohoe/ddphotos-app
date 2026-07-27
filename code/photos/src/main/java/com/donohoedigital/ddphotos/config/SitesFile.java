@@ -1,6 +1,5 @@
 package com.donohoedigital.ddphotos.config;
 
-import com.donohoedigital.base.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.snakeyaml.engine.v2.api.Dump;
@@ -39,7 +38,7 @@ public class SitesFile {
                 loadInternal();
             }
         } catch (SitesFileException e) {
-            logger.warn("Failed to load sites file: {}{}", path_, Utils.formatExceptionText(e));
+            logger.warn("Failed to load sites file: {}", path_, e);
         }
         return this;
     }
@@ -50,7 +49,7 @@ public class SitesFile {
         try {
             content = Files.readString(path_, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new SitesFileException("read " + path_ + ": " + e.getMessage(), e);
+            throw new SitesFileException("read " + path_ + ": " + FileErrors.reason(e), e);
         }
 
         Object obj;
@@ -100,7 +99,7 @@ public class SitesFile {
         try {
             Files.writeString(path_, yaml, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new SitesFileException("write " + path_ + ": " + e.getMessage(), e);
+            throw new SitesFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }
     }
 

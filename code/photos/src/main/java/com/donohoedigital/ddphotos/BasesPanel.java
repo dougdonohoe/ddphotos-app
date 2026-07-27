@@ -2,7 +2,6 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.base.TypedHashMap;
-import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumEntry;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
@@ -214,9 +213,8 @@ public class BasesPanel extends DDPanel {
             if (newIdx >= 0) list_.setSelectedIndex(newIdx);
             basesChangedListeners_.forEach(Runnable::run);
         } catch (AlbumsFileException e) {
-            logger.error("Failed to save albums file: {}{}", currentSite_.getAlbumsFilePath(),
-                    Utils.formatExceptionText(e));
-            EngineUtils.displayErrorDialog(context_, e.getMessage(), "msg.windowtitle.saveError", null);
+            logger.error("Failed to save albums file: {}", currentSite_.getAlbumsFilePath(), e);
+            PhotosUtils.showSaveError(context_, currentSite_.getAlbumsFilePath(), e);
         }
         updateButtons();
     }

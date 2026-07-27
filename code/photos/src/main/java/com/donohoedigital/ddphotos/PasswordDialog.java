@@ -2,7 +2,6 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.config.AppButton;
 import com.donohoedigital.app.engine.EngineUtils;
-import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.AlbumsFileException;
@@ -282,9 +281,8 @@ public class PasswordDialog extends PhotosDialog
         try {
             albumsFile_.savePasswordsFile();
         } catch (PasswordsFileException e) {
-            logger.error("Failed to save passwords file: {}{}",
-                    albumsFile_.resolvePasswordsPath(), Utils.formatExceptionText(e));
-            EngineUtils.displayErrorDialog(context_, e.getMessage(), "msg.windowtitle.saveError", null);
+            logger.error("Failed to save passwords file: {}", albumsFile_.resolvePasswordsPath(), e);
+            PhotosUtils.showSaveError(context_, albumsFile_.resolvePasswordsPath(), e);
             return;
         }
 
@@ -293,9 +291,8 @@ public class PasswordDialog extends PhotosDialog
             try {
                 site_.saveAlbumsFile();
             } catch (AlbumsFileException e) {
-                logger.error("Failed to save albums file: {}{}",
-                        site_.getAlbumsFilePath(), Utils.formatExceptionText(e));
-                EngineUtils.displayErrorDialog(context_, e.getMessage(), "msg.windowtitle.saveError", null);
+                logger.error("Failed to save albums file: {}", site_.getAlbumsFilePath(), e);
+                PhotosUtils.showSaveError(context_, site_.getAlbumsFilePath(), e);
             }
         }
     }

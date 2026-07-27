@@ -341,8 +341,7 @@ public abstract class AppEngine extends BaseApp {
      * Log an uncaught EDT exception and show the standard error dialog.
      */
     private void handleUncaughtException(Throwable e) {
-        logger.error(e.toString());
-        logger.error(Utils.formatExceptionText(e));
+        logger.error("AppEngine - uncaught exception on the event thread", e);
 
         AppContext context = getDefaultContext();
         if (context != null) {
@@ -354,8 +353,7 @@ public abstract class AppEngine extends BaseApp {
                 try {
                     EngineUtils.displayErrorDialog(context, PropertyConfig.getMessage("msg.error.unexpected", e.toString()));
                 } catch (Throwable t) {
-                    logger.warn("AppEngine - Exception caught showing error dialog");
-                    logger.warn(Utils.formatExceptionText(t));
+                    logger.warn("AppEngine - Exception caught showing error dialog", t);
                 }
             });
         }

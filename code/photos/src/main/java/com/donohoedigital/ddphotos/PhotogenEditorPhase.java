@@ -5,7 +5,6 @@ import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.app.engine.BasePhase;
 import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.TypedHashMap;
-import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.config.StylesConfig;
@@ -656,13 +655,13 @@ public class PhotogenEditorPhase extends BasePhase {
             try {
                 applyFolder(f);
             } catch (PhotogenFileException e) {
-                logger.error("Failed to save {}{}", f.pf.getPath(), Utils.formatExceptionText(e));
-                errors.add(e.getMessage());
+                logger.error("Failed to save {}", f.pf.getPath(), e);
+                errors.add(PhotosUtils.saveErrorLine(f.pf.getPath(), e));
             }
         }
         onDirtyChanged();
         if (!errors.isEmpty()) {
-            EngineUtils.displayErrorDialog(context_, String.join("\n", errors), "msg.windowtitle.saveError", null);
+            PhotosUtils.showSaveErrors(context_, errors);
             return false;
         }
         return true;

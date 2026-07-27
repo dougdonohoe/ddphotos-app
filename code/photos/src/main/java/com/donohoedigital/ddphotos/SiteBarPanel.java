@@ -2,7 +2,6 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.base.TypedHashMap;
-import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.Site;
@@ -147,8 +146,8 @@ public class SiteBarPanel extends DDPanel
         try {
             sitesFile_.save();
         } catch (SitesFileException e) {
-            logger.error("Failed to save sites file: {}{}", sitesFile_.getPath(), Utils.formatExceptionText(e));
-            EngineUtils.displayErrorDialog(context_, e.getMessage(), "msg.windowtitle.saveError", null);
+            logger.error("Failed to save sites file: {}", sitesFile_.getPath(), e);
+            PhotosUtils.showSaveError(context_, sitesFile_.getPath(), e);
         }
         refreshCombo(null);
     }

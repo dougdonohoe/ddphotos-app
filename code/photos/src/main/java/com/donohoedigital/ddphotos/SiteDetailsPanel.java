@@ -2,7 +2,6 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.base.TypedHashMap;
-import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
@@ -11,7 +10,6 @@ import com.donohoedigital.ddphotos.config.AlbumsSettings;
 import com.donohoedigital.ddphotos.config.HeroEntry;
 import com.donohoedigital.ddphotos.config.PasswordsFile;
 import com.donohoedigital.ddphotos.config.Site;
-import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.gui.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -473,8 +471,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         try {
             currentSite_.saveAlbumsFile();
         } catch (AlbumsFileException e) {
-            logger.error("Failed to save albums file: {}{}", currentSite_.getAlbumsFilePath(), Utils.formatExceptionText(e));
-            EngineUtils.displayErrorDialog(context_, e.getMessage(), "msg.windowtitle.saveError", null);
+            logger.error("Failed to save albums file: {}", currentSite_.getAlbumsFilePath(), e);
+            PhotosUtils.showSaveError(context_, currentSite_.getAlbumsFilePath(), e);
             return;
         }
 

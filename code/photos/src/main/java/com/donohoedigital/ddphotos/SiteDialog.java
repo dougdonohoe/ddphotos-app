@@ -1,12 +1,10 @@
 package com.donohoedigital.ddphotos;
 
-import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
 import com.donohoedigital.ddphotos.config.SitesFileException;
 import com.donohoedigital.app.config.AppButton;
-import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.gui.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -234,8 +232,8 @@ public class SiteDialog extends PhotosDialog
         try {
             sitesFile_.save();
         } catch (SitesFileException e) {
-            logger.error("Failed to save sites file: {}{}", sitesFile_.getPath(), Utils.formatExceptionText(e));
-            EngineUtils.displayErrorDialog(context_, e.getMessage(), "msg.windowtitle.saveError", null);
+            logger.error("Failed to save sites file: {}", sitesFile_.getPath(), e);
+            PhotosUtils.showSaveError(context_, sitesFile_.getPath(), e);
         }
     }
 }

@@ -53,7 +53,7 @@ public class AlbumsFile {
         try {
             content = Files.readString(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new AlbumsFileException("read " + path + ": " + e.getMessage(), e);
+            throw new AlbumsFileException("read " + path + ": " + FileErrors.reason(e), e);
         }
 
         logger.info("read {}", path);
@@ -109,7 +109,7 @@ public class AlbumsFile {
         try {
             Files.writeString(path, yaml, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new AlbumsFileException("write " + path + ": " + e.getMessage(), e);
+            throw new AlbumsFileException("write " + path + ": " + FileErrors.reason(e), e);
         }
         if (rootNode == null) rootNode = node;
         passwordsSettingUnsaved_ = false;
