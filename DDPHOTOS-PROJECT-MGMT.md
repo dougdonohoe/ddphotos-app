@@ -26,6 +26,11 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
   to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files
   if they exist (grid).
+* In @code/photos/src/main/java/com/donohoedigital/ddphotos/WizardPanel.java we disallow moving forward if Docker
+  isn't running, but the use case may be that the user just wants to edit an albums.yaml file - maybe the docker-based
+  commands are run elsewhere.  Consider adding a 'Skip' button to the docker-ready and install-ddphotos script
+  steps?  Another issue is that if the `ddphotos` script disappears we re-launch the wizard so they can install it.
+  We'd need a dialog that confirms re-running the wizard and an option to not show that warning again.
 
 
 ---

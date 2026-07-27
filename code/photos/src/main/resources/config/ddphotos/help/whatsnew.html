@@ -13,10 +13,27 @@
 <ul>
     <li>Added editor for photo captions and manual sort order (<tt>photogen.txt</tt> file).</li>
     <li>Added editor for site and albums passwords (<tt>passwords.yaml</tt> file).</li>
-    <li>Fixed window size restoration when a menu is present (Windows/Linux).</li>
-    <li>Fixed issue where window icons weren't used on Linux.</li>
+    <li>New albums are now added above the selected album rather than at the end.</li>
+    <li>On macOS, menus are now available from every window (Help, Support and the photo editor),
+        not just the main window.</li>
     <li>Only allow single instance to run at a time.</li>
     <li>Sharpen image rendering.</li>
+    <li>Refreshed app icon, logo and splash screen.</li>
+    <li>Clearer guidance when Docker isn't running on Linux, covering both Docker Desktop
+        and Docker Engine.</li>
+    <li>Deploy prerequisite checks now tell the difference between "not set up yet" and
+        "the check itself failed". A failed check shows what actually happened instead of
+        offering a fix that won't help. Notably, DD Photos no longer offers to create a
+        Cloudflare Pages project that already exists.</li>
+    <li>Command console no longer shows raw color codes (<tt>[31m</tt>) in
+        <tt>wrangler</tt> output.</li>
+    <li>Fixed caret drifting away from the text you're editing in long fields (e.g. photo
+        captions) on scaled displays.  DD Photos now uses your system's UI font rather than
+        a bundled one.</li>
+    <li>Fixed window size restoration when a menu is present (Windows/Linux).</li>
+    <li>Fixed issue where window icons weren't used on Linux.</li>
+    <li>Fixed the site folder showing as invalid when editing a site that uses a custom
+        config path.</li>
 </ul>
 
 <!-- 1.0.0b6 -->
