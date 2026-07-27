@@ -8,20 +8,17 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
-* Clear thumb cache menu item?
-* Wizard step for Docker file permissions?
-* Windows - WSL and PowerShell docs
-* Speed up photogen if already processed a folder (be smarter about this)
-* `xboxl` hack in username
-* `site.env` editor
 * `custom.css` editor
-  * Custom `css` file (should exist, but is not required) 
-* Test what happens if site goes away after adding it to tool
-* Detect running container error? Port already in use (nice to have)
-* Switching site while something is running (e.g., `run` / `serve`) - problematic?
-* `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
+  * Custom `css` file (should exist, but is not required)
+* `site.env` editor
+
+* Speed up photogen if already processed a folder (be smarter about this)
+* Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
+* Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
+  a settings menu to win/linux)?  Would want to show size of cache.
+* Windows - WSL and PowerShell docs
 * Undo support?  Backup files somewhere in config?
+
 * Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
   to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files
   if they exist (grid).
@@ -31,6 +28,10 @@ cd code && mvn -pl common,gui,engine,photos compile -q
   steps?  Another issue is that if the `ddphotos` script disappears we re-launch the wizard so they can install it.
   We'd need a dialog that confirms re-running the wizard and an option to not show that warning again.
 
+* `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
+* Test what happens if site goes away after adding it to tool
+* Detect running container error? Port already in use (nice to have)
+* Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?
 
 ---
 
