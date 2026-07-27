@@ -32,19 +32,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
   to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files
   if they exist (grid).
-* `NO_COLOR=1` for non-interactive runs (**ddphotos repo**, `docker/ddphotos`). Wrangler colors its
-  error output even with no TTY, so the GUI console receives raw ANSI (`ESC[31m` ... `ESC[0m`).
-  `RunnerConsole.pumpStream`/`pumpStreamCapturing` now strip CSI escapes via `PhotosUtils.stripAnsi`,
-  so this is no longer a visible bug - it just stops the codes at the source, and helps any other
-  consumer of the script's output.
-  * Add `-e NO_COLOR=1` to the `docker run` in the `wrangler` and `surge` branches (alongside where
-    `WRANGLER_ENV` / `SURGE_ENV` are assembled). Can't be done from the GUI side: Docker doesn't
-    forward host env into the container.
-  * Gate on `$NON_INTERACTIVE` (the GUI passes `--non-interactive`) so terminal users keep color.
-  * Script change, so it needs a release + `ddphotos upgrade` - `entrypoint.sh` warns when the
-    mounted script doesn't match the image.
-  * Won't help with OSC hyperlink sequences (`ESC]8;;url`) if any tool starts emitting them; the
-    console's strip only covers CSI.
 
 
 ---
