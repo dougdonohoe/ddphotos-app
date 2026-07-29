@@ -118,6 +118,14 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             return;
         }
 
+        String running = otherRunningCommand();
+        String busy = running == null ? null : runner_.busyMessage(running);
+        if (busy != null) {
+            EngineUtils.displayWarningDialog(context_, busy, runner_.busyTitleKey(), null);
+            fireTour(false);
+            return;
+        }
+
         Map<String, String> userValues = collectUserValues();
         Prerequisite prereq = runner_.getPrerequisite(currentSite_, userValues);
         if (prereq != null) {

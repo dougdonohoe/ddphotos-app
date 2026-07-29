@@ -61,6 +61,15 @@ public abstract class CommandRunner {
     /** Return a prerequisite check to run before the main command, or null if none. */
     public Prerequisite getPrerequisite(Site site, Map<String, String> userValues) { return null; }
 
+    /**
+     * Message to show instead of running, when another command ({@code runningDisplayName}) is
+     * already running; null (the default) means this command may run alongside others.
+     */
+    public String busyMessage(String runningDisplayName) { return null; }
+
+    /** Title key for the {@link #busyMessage} dialog. */
+    public String busyTitleKey() { return "msg.windowtitle.cmdBusy"; }
+
     public Process launch(Site site, Map<String, String> userValues) throws IOException {
         // Capture the container name (if any) so stop()/kill() can target it directly - reading
         // process command lines to find the container is unreliable (empty on Windows).

@@ -29,6 +29,18 @@ public class UpgradeRunner extends DdphotosRunner {
     }
 
     /**
+     * 'ddphotos upgrade' removes the current image, which docker refuses while any container created
+     * from it is still running - so no other command may be running when the upgrade starts.
+     */
+    @Override
+    public String busyMessage(String runningDisplayName) {
+        return PropertyConfig.getMessage("msg.upgrade.busy", runningDisplayName);
+    }
+
+    @Override
+    public String busyTitleKey() { return "msg.windowtitle.upgradeBusy"; }
+
+    /**
      * Classifies 'ddphotos version --image'. "No upgrade available" is only a safe conclusion when
      * the version command actually reported a version - the 'Image:' line proves that, and without
      * it a failed check would otherwise be reported to the user as "you are up to date".

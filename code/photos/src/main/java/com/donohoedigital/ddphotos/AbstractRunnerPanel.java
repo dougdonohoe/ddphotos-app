@@ -120,13 +120,31 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
 
         onAfterBuild();
         updateButtonState();
+        PANELS.add(this);
         AppEngine.getAppEngine().addCloseListener(this);
     }
 
     @Override
     public void removeNotify() {
         super.removeNotify();
+        PANELS.remove(this);
         AppEngine.getAppEngine().removeCloseListener(this);
+    }
+
+    /**
+     * Every runner panel whose UI has been built, so a panel can ask what else is running. EDT-only
+     * state, registered and unregistered alongside the close listener above.
+     */
+    private static final List<AbstractRunnerPanel> PANELS = new ArrayList<>();
+
+    /** Display name of a command running in another panel, or null if nothing else is running. */
+    protected String otherRunningCommand() {
+        for (AbstractRunnerPanel p : PANELS) {
+            if (p == this || p.activeRunner_ == null) continue;
+            Process proc = p.process_;
+            if (proc != null && proc.isAlive()) return p.activeRunner_.getDisplayName();
+        }
+        return null;
     }
 
     private JPanel buildOptionsPanel() {
