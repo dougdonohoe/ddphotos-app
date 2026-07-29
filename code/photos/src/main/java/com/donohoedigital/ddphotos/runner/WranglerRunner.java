@@ -46,7 +46,7 @@ public class WranglerRunner extends DdphotosRunner {
         return List.of(
             new FlagDef.Constant("pages", VIEW_ONLY),
             new FlagDef.Constant("deploy", VIEW_ONLY),
-            new FlagDef.ValidatedTextField("--project-name", PROJECT_NAME_PATTERN, EDITABLE, 25),
+            new FlagDef.ValidatedTextField("--project-name", PROJECT_NAME_PATTERN, EDITABLE, 300),
             new FlagDef.ChoiceField("export dir", false, ExportRunner.exportDirChoices(site), EDITABLE)
         );
     }

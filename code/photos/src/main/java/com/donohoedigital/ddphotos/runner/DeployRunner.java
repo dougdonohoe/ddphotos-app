@@ -31,7 +31,7 @@ public class DeployRunner extends DdphotosRunner {
     @Override
     protected List<FlagDef> subCommandFlagDefs(Site site) {
         return List.of(
-            new FlagDef.ValidatedTextField("--aws-profile", AWS_PROFILE_PATTERN, EDITABLE, 20)
+            new FlagDef.ValidatedTextField("--aws-profile", AWS_PROFILE_PATTERN, EDITABLE, 275)
         );
     }
 }

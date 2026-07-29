@@ -81,11 +81,11 @@ public sealed interface FlagDef permits FlagDef.Constant,
 
     /** TextField flag with a regexp applied to the input widget; empty is always valid (flag omitted). */
     record ValidatedTextField(String name, String pattern,
-                              FlagVisibility visibility, int columns) implements FlagDef {
+                              FlagVisibility visibility, int width) implements FlagDef {
 
-        /** Convenience: default column width of 15. */
+        /** Convenience: default column width of 240. */
         ValidatedTextField(String name, String pattern, FlagVisibility visibility) {
-            this(name, pattern, visibility, 15);
+            this(name, pattern, visibility, 240);
         }
 
         @Override

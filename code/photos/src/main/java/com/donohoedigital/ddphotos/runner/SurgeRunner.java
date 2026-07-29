@@ -37,7 +37,7 @@ public class SurgeRunner extends DdphotosRunner {
     @Override
     protected List<FlagDef> subCommandFlagDefs(Site site) {
         return List.of(
-            new FlagDef.ValidatedTextField("--domain", DOMAIN_PATTERN, EDITABLE, 25),
+            new FlagDef.ValidatedTextField("--domain", DOMAIN_PATTERN, EDITABLE, 300),
             new FlagDef.ChoiceField("export dir", false, ExportRunner.exportDirChoices(site), EDITABLE)
         );
     }

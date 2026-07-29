@@ -356,7 +356,7 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                     case FlagDef.ValidatedTextField vf -> {
                         OptionText ot = new OptionText(prefsName, widgetName,
                                     style, dummy_, 200,
-                                    vf.pattern(), 240);
+                                    vf.pattern(), vf.width());
                         ot.getTextField().addValidationListener(this::updateButtonState);
                         textControls_.put(def.name(), ot);
                         flagsRow.add(ot);
