@@ -64,7 +64,7 @@ public class SurgeRunner extends DdphotosRunner {
 
     @Override
     public Prerequisite getPrerequisite(Site site, Map<String, String> userValues) {
-        List<String> checkCmd = buildWrappedCommand(site, Map.of(), "surge", "whoami");
+        List<String> checkCmd = buildWrappedCommand(site, Map.of(), "surge", "account", "whoami");
         String notAuthMsg = PropertyConfig.getMessage("msg.surge.notAuthenticated",
                 PhotosUtils.scriptPath());
         return new Prerequisite(checkCmd) {
