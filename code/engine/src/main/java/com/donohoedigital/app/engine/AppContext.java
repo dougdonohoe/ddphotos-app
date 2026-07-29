@@ -430,6 +430,18 @@ public class AppContext
     }
 
     /**
+     * Close requested by the user (window X, Cmd-W) rather than by the phase itself.  Gives the
+     * phase a chance to confirm - e.g. an editor with unsaved changes - before {@link #close()} runs.
+     */
+    public void closeRequested()
+    {
+        if (currentPhase_ != null && !currentPhase_.okayToClose()) return;
+        if (currentMainUIPhase_ != null && currentMainUIPhase_ != currentPhase_
+                && !currentMainUIPhase_.okayToClose()) return;
+        close();
+    }
+
+    /**
      * close this app context (also closes associated window)
      */
     public void close()
@@ -597,7 +609,7 @@ public class AppContext
             }
             else
             {
-                close();
+                closeRequested();
             }
         }
     }
@@ -620,7 +632,7 @@ public class AppContext
         @Override
         public void internalFrameClosing(InternalFrameEvent e)
         {
-            context.close();
+            context.closeRequested();
         }
     }
 

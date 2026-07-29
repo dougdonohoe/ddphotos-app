@@ -2,6 +2,7 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.config.EngineConstants;
 import com.donohoedigital.app.engine.AppContext;
+import com.donohoedigital.app.engine.AppEngine;
 import com.donohoedigital.app.engine.BasePhase;
 import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.TypedHashMap;
@@ -88,12 +89,15 @@ public class PhotogenEditorPhase extends BasePhase {
     private boolean built_;
     private boolean switching_;
 
+    // Held so finish() can unregister it; quitting the app must not discard captions silently either.
+    private AppEngine.CloseListener quitGuard_;
+
     private LogoWindowPanel base_;
     private OptionCombo<String> folderCombo_;
     private JScrollPane scroll_;
     private JPanel rowsPanel_;
     private DDButton upBtn_, downBtn_;
-    private DDButton saveBtn_, saveCloseBtn_;
+    private DDButton cancelBtn_, saveBtn_, saveCloseBtn_, closeBtn_;
     private DDHtmlArea helptext_;
     private DDLabel siteLabel_;
 
@@ -144,6 +148,8 @@ public class PhotogenEditorPhase extends BasePhase {
             albumsFile_ = site_.getAlbumsFile();
             OPEN.put(key_, this);
             buildUI();
+            quitGuard_ = this::confirmDiscard;
+            AppEngine.getAppEngine().addCloseListener(quitGuard_);
             built_ = true;
         }
         context_.setMainUIComponent(this, base_, true, folderCombo_);
@@ -155,6 +161,10 @@ public class PhotogenEditorPhase extends BasePhase {
     public void finish() {
         if (key_ != null && OPEN.get(key_) == this) {
             OPEN.remove(key_);
+        }
+        if (quitGuard_ != null) {
+            AppEngine.getAppEngine().removeCloseListener(quitGuard_);
+            quitGuard_ = null;
         }
         // Cancel any in-flight / queued thumbnail decodes so they don't run after the window closes.
         for (Future<?> job : thumbJobs_) job.cancel(true);
@@ -238,17 +248,20 @@ public class PhotogenEditorPhase extends BasePhase {
         reorder.add(downBtn_);
         bar.add(reorder, BorderLayout.WEST);
 
-        DDButton cancel = new DDButton("cancel", STYLE);
+        cancelBtn_ = new DDButton("cancel", STYLE);
         saveBtn_ = new DDButton("save", STYLE);
         saveCloseBtn_ = new DDButton("saveclose", STYLE);
-        cancel.addActionListener(_ -> onCancel());
+        closeBtn_ = new DDButton("close", STYLE);
+        cancelBtn_.addActionListener(_ -> onCancel());
         saveBtn_.addActionListener(_ -> onSave());
         saveCloseBtn_.addActionListener(_ -> onSaveClose());
+        closeBtn_.addActionListener(_ -> onClose());
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
         actions.setOpaque(false);
-        actions.add(cancel);
+        actions.add(cancelBtn_);
         actions.add(saveBtn_);
         actions.add(saveCloseBtn_);
+        actions.add(closeBtn_);
         bar.add(actions, BorderLayout.EAST);
 
         return bar;
@@ -609,10 +622,16 @@ public class PhotogenEditorPhase extends BasePhase {
     // Dirty / save
     // -------------------------------------------------------------------------
 
+    /**
+     * Exactly one of Cancel / Close is ever live: Cancel discards pending edits (and is pointless
+     * without them), Close simply leaves (and must not be the button that loses them).
+     */
     private void onDirtyChanged() {
         boolean dirty = windowDirty();
+        cancelBtn_.setEnabled(dirty);
         saveBtn_.setEnabled(dirty);
         saveCloseBtn_.setEnabled(dirty);
+        closeBtn_.setEnabled(!dirty);
     }
 
     private boolean windowDirty() {
@@ -640,11 +659,24 @@ public class PhotogenEditorPhase extends BasePhase {
     }
 
     private void onCancel() {
-        if (windowDirty() && !EngineUtils.displayConfirmationDialog(context_,
-                PropertyConfig.getMessage("msg.confirm.photogen.discard"))) {
-            return;
-        }
+        if (confirmDiscard()) context_.close();
+    }
+
+    /** Only enabled when nothing is pending, so there is nothing to confirm. */
+    private void onClose() {
         context_.close();
+    }
+
+    /** True when it's safe to close: nothing pending, or the user confirmed the discard. */
+    private boolean confirmDiscard() {
+        return !windowDirty() || EngineUtils.displayConfirmationDialog(context_,
+                PropertyConfig.getMessage("msg.confirm.photogen.discard"));
+    }
+
+    /** The window X and Cmd-W land here - same discard confirmation as Cancel. */
+    @Override
+    public boolean okayToClose() {
+        return confirmDiscard();
     }
 
     /** Persists every changed folder.  Returns true when all saved without error. */

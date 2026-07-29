@@ -215,7 +215,7 @@ public class EngineWindow extends BaseFrame {
      */
     private class CloseAction extends AbstractAction {
         public void actionPerformed(ActionEvent e) {
-            context_.close();
+            context_.closeRequested();
         }
     }
 

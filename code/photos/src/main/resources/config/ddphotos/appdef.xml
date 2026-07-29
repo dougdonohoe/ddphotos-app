@@ -26,11 +26,6 @@
         <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
         <param name="dialog-help-name" strvalue="empty"/>
         <param name="dialog-style" strvalue="Help"/>
-        <param name="dialog-window-close-activates-button" strvalue="close"/>
-        <param name="default-button" strvalue="close"/>
-        <paramlist name="buttons">
-            <strvalue>close</strvalue>
-        </paramlist>
     </phase>
 
     <phase name="Support" class="com.donohoedigital.app.engine.Support" history="true" window="support" cache="true">
@@ -45,11 +40,6 @@
         <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
         <param name="dialog-help-name" strvalue="empty"/>
         <param name="dialog-style" strvalue="Support"/>
-        <param name="dialog-window-close-activates-button" strvalue="close"/>
-        <param name="default-button" strvalue="close"/>
-        <paramlist name="buttons">
-            <strvalue>close</strvalue>
-        </paramlist>
     </phase>
 
     <phase name="PhotogenEditor" class="com.donohoedigital.ddphotos.PhotogenEditorPhase" history="false" window="photogen-editor" cache="false">

@@ -23,7 +23,14 @@ public interface Phase {
     void start();
     
     void finish();
-    
+
+    /**
+     * Called when the user asks to close this phase's window (the window X, Cmd-W) rather than the
+     * phase closing itself.  Return false to keep the window open - e.g. an editor whose discard
+     * confirmation the user declined.
+     */
+    default boolean okayToClose() { return true; }
+
     AppEngine getAppEngine();
     
     AppPhase getAppPhase();
