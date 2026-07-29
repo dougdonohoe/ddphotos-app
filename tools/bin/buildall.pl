@@ -39,6 +39,9 @@ $BUILDDIR="photos1.x";
 $BASEDIR="builds/$BUILDDIR";
 $GITREPO="ddphotos-app";
 
+# platform token -> installer extension (must match mediaFileName in ddphotos.install4j)
+@PLATFORMS = ( ["mac", "dmg"], ["linux", "sh"], ["windows", "exe"] );
+
 # base dir
 if ($MAC)
 {
@@ -282,7 +285,7 @@ sub build
         chop $win_pw;
 
         # clean old builds
-        runIndented("rm -vf $INSTALLERDIR/${PRODUCT}${VERSION_FILE}.*");
+        runIndented("rm -vf $INSTALLERDIR/${PRODUCT}_*_${VERSION_FILE}.*");
 
 		# run install4j
         $cmd = "/Applications/install4j.app/Contents/Resources/app/bin/install4jc --release=$VERSION " .
@@ -291,14 +294,14 @@ sub build
 
         # Set icons in Mac installer and notarize
         if (!$nonotarize) {
-            runIndented("${DEVDIR}/tools/bin/mac-set-icons-notarize.sh $VERSION_FILE");
+            runIndented("${DEVDIR}/tools/bin/mac-set-icons-notarize.sh " . installerName("mac", "dmg"));
         } else {
             print($indent . "Notarization skipped.\n");
         }
 
         # Create md5sums.txt
         cd($INSTALLERDIR);
-        runIndented("md5 $PRODUCT$VERSION_FILE.* > md5sums.txt");
+        runIndented("md5 " . installerNames() . " > md5sums.txt");
 
         print("Installers are in $INSTALLERDIR\n");
 	}
@@ -307,7 +310,7 @@ sub build
 	if ($github)
 	{
 	    cd($INSTALLERDIR);
-        my $files = join " ", map { "$PRODUCT$VERSION_FILE$_" } (".dmg", ".sh", ".exe");
+        my $files = installerNames();
 	    runIndented("gh release create $VERSION --title 'DD Photos $VERSION' --notes-file md5sums.txt $files");
 	}
 }
@@ -340,6 +343,20 @@ sub getVersion
 	chop $VERSION;
 	$VERSION_FILE = $VERSION =~ s/\./_/gr;
 	print("\nVERSION is '$VERSION', file extension is '$VERSION_FILE'\n");
+}
+
+# installer file name for a platform, e.g. ddphotos_mac_1_0_0b7.dmg
+sub installerName
+{
+	my($platform, $ext) = @_;
+
+	return "${PRODUCT}_${platform}_${VERSION_FILE}.$ext";
+}
+
+# all installer file names, space separated
+sub installerNames
+{
+	return join " ", map { installerName(@$_) } @PLATFORMS;
 }
 
 # chdir with error checking

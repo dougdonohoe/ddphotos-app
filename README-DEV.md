@@ -283,7 +283,7 @@ docker run -it --rm -v $(pwd):$(pwd) -v $HOME/.m2-ubuntu:/root/.m2 \
   
 # Or to test installer in builds dir
 docker run -it --rm -v $(pwd):$(pwd) -w $(pwd) -e DISPLAY=host.docker.internal:0 ddphotosubuntu
-sh ./ddphotos1_.sh
+sh ./ddphotos_linux_*.sh
 ```
 
 You can test X is working by running `xeyes`.  It should display the iconic X app that

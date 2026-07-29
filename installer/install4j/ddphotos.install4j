@@ -901,13 +901,13 @@ return true;
     </widgetStyles>
   </installerGui>
   <mediaSets>
-    <windows name="Windows" id="4" installDir="ddphotos" failOnPostProcessorError="true" architecture="64" />
-    <unixInstaller name="Unix Installer" id="15" installDir="ddphotos" customInstallBaseDir="/usr/local/apps">
+    <windows name="Windows" id="4" mediaFileName="${compiler:sys.shortName}_windows_${compiler:sys.version}" installDir="ddphotos" failOnPostProcessorError="true" architecture="64" />
+    <unixInstaller name="Unix Installer" id="15" mediaFileName="${compiler:sys.shortName}_linux_${compiler:sys.version}" installDir="ddphotos" customInstallBaseDir="/usr/local/apps">
       <excludedBeans>
         <bean refId="50" />
       </excludedBeans>
     </unixInstaller>
-    <macosArchive name="macOS Single Bundle Archive" id="201" volumeName="${compiler:sys.fullName}" architecture="universal" dmgStylingMode="none" launcherId="2">
+    <macosArchive name="macOS Single Bundle Archive" id="201" mediaFileName="${compiler:sys.shortName}_mac_${compiler:sys.version}" volumeName="${compiler:sys.fullName}" architecture="universal" dmgStylingMode="none" launcherId="2">
       <topLevelFiles>
         <symlink name="&quot; &quot;" target="/Applications" />
         <file name=".DS_Store" file="./custom/DS_Store" />
