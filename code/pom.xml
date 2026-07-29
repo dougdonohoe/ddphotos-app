@@ -121,6 +121,19 @@
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.4</version>
+        <configuration>
+          <!-- Tests that build Swing widgets (DDUndoManagerTest) or measure fonts
+               (StylesFontTest) initialize the AWT toolkit, which on macOS gives the forked
+               test JVM a Dock icon for the length of the run.  Headless suppresses that;
+               neither test realizes a window, and the macOS font measurements are unchanged. -->
+          <argLine>-Djava.awt.headless=true</argLine>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>3.11.0</version>
         <configuration>
