@@ -8,7 +8,7 @@
 
 <!-- 1.0.0b7 -->
 <div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
-    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.0b7 - July ??xx, 2026</span></strong>
+    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.0b7 - July 29th, 2026</span></strong>
 </div>
 <ul>
     <li>Added editor for photo captions and manual sort order (<tt>photogen.txt</tt> file).</li>
@@ -26,6 +26,16 @@
         "the check itself failed". A failed check shows what actually happened instead of
         offering a fix that won't help. Notably, DD Photos no longer offers to create a
         Cloudflare Pages project that already exists.</li>
+    <li>The command console now reports how long each command took, both when it finishes and
+        when you stop it.</li>
+    <li><tt>Upgrade</tt> now stops with "Cannot upgrade since <tt>ddphotos serve</tt> is currently
+        running" instead of failing partway through.  Docker won't remove the old image while a
+        container is still using it.</li>
+    <li>When a file can't be saved, DD Photos now says which file and why (missing folder,
+        permission denied, read-only location) rather than showing a raw error.</li>
+    <li><tt>sites.yaml</tt>, <tt>albums.yaml</tt>, <tt>passwords.yaml</tt> and
+        <tt>photogen.txt</tt> are now written atomically, so a save interrupted by a crash or a
+        full disk can't leave a truncated file.</li>
     <li>Command console no longer shows raw color codes (<tt>[31m</tt>) in
         <tt>wrangler</tt> output.</li>
     <li>Fixed caret drifting away from the text you're editing in long fields (e.g. photo
