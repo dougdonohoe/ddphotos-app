@@ -8,7 +8,6 @@ import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.PropertyConfig;
-import com.donohoedigital.config.StylesConfig;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.TextFile;
 import com.donohoedigital.ddphotos.config.TextFileException;
@@ -69,7 +68,7 @@ public abstract class TextEditorPhase extends BasePhase {
     private DDLabel pathLabel_;
     private DDTextArea text_;
     private DDHtmlArea helptext_;
-    private DDButton cancelBtn_, saveBtn_, saveCloseBtn_, closeBtn_;
+    private EditorButtonBar buttons_;
 
     // -------------------------------------------------------------------------
     // Launch / single-instance
@@ -161,12 +160,7 @@ public abstract class TextEditorPhase extends BasePhase {
         file_ = openFile();
         originalText_ = file_ != null ? file_.getContent() : "";
 
-        Color panelBg = StylesConfig.getColor("app.panel.bg");
-
-        base_ = new LogoWindowPanel("icon48", PhotosBasePhase.STYLE);
-        base_.setTopComponent(buildTopBar());
-        base_.setCenterBackground(panelBg);
-        base_.setContentInsets(10, 10, 5, 10);
+        base_ = new EditorWindowPanel(buildTopBar());
         helptext_ = base_.getHelpText();
 
         DDPanel center = new DDPanel();
@@ -195,7 +189,9 @@ public abstract class TextEditorPhase extends BasePhase {
         scroll.setBorder(UIManager.getBorder("ScrollPane.border"));
         text_.setScrollPane(scroll);
         center.add(scroll, BorderLayout.CENTER);
-        center.add(buildBottomBar(), BorderLayout.SOUTH);
+
+        buttons_ = new EditorButtonBar(STYLE, this::onCancel, this::onSave, this::onSaveClose, this::onClose);
+        center.add(buttons_, BorderLayout.SOUTH);
 
         onDirtyChanged();
     }
@@ -243,30 +239,6 @@ public abstract class TextEditorPhase extends BasePhase {
         return header;
     }
 
-    private JComponent buildBottomBar() {
-        DDPanel bar = new DDPanel();
-        bar.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
-
-        cancelBtn_ = new DDButton("cancel", STYLE);
-        saveBtn_ = new DDButton("save", STYLE);
-        saveCloseBtn_ = new DDButton("saveclose", STYLE);
-        closeBtn_ = new DDButton("close", STYLE);
-        cancelBtn_.addActionListener(_ -> onCancel());
-        saveBtn_.addActionListener(_ -> onSave());
-        saveCloseBtn_.addActionListener(_ -> onSaveClose());
-        closeBtn_.addActionListener(_ -> onClose());
-
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
-        actions.setOpaque(false);
-        actions.add(cancelBtn_);
-        actions.add(saveBtn_);
-        actions.add(saveCloseBtn_);
-        actions.add(closeBtn_);
-        bar.add(actions, BorderLayout.EAST);
-
-        return bar;
-    }
-
     private Path filePath() {
         return file_ != null ? file_.getPath() : null;
     }
@@ -295,16 +267,8 @@ public abstract class TextEditorPhase extends BasePhase {
     // Buttons / dirty state
     // -------------------------------------------------------------------------
 
-    /**
-     * Exactly one of Cancel / Close is ever live: Cancel discards pending edits (and is pointless
-     * without them), Close simply leaves (and must not be the button that loses them).
-     */
     private void onDirtyChanged() {
-        boolean dirty = isDirty();
-        cancelBtn_.setEnabled(dirty);
-        saveBtn_.setEnabled(dirty);
-        saveCloseBtn_.setEnabled(dirty);
-        closeBtn_.setEnabled(!dirty);
+        buttons_.setDirty(isDirty());
     }
 
     private boolean isDirty() {

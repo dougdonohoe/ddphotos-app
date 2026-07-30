@@ -97,7 +97,7 @@ public class PhotogenEditorPhase extends BasePhase {
     private JScrollPane scroll_;
     private JPanel rowsPanel_;
     private DDButton upBtn_, downBtn_;
-    private DDButton cancelBtn_, saveBtn_, saveCloseBtn_, closeBtn_;
+    private EditorButtonBar buttons_;
     private DDHtmlArea helptext_;
     private DDLabel siteLabel_;
 
@@ -187,10 +187,7 @@ public class PhotogenEditorPhase extends BasePhase {
 
         Color panelBg = StylesConfig.getColor("app.panel.bg");
 
-        base_ = new LogoWindowPanel("icon48", PhotosBasePhase.STYLE);
-        base_.setTopComponent(buildTopBar());
-        base_.setCenterBackground(panelBg);
-        base_.setContentInsets(10, 10, 5, 10);
+        base_ = new EditorWindowPanel(buildTopBar());
         helptext_ = base_.getHelpText();
 
         DDPanel center = new DDPanel();
@@ -234,9 +231,7 @@ public class PhotogenEditorPhase extends BasePhase {
     }
 
     private JComponent buildBottomBar() {
-        DDPanel bar = new DDPanel();
-        bar.setLayout(new BorderLayout());
-        bar.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
+        buttons_ = new EditorButtonBar(STYLE, this::onCancel, this::onSave, this::onSaveClose, this::onClose);
 
         upBtn_   = DDIconButtons.iconButton("photogenup",   STYLE, DDIconButtons.CHEVRON_UP);
         downBtn_ = DDIconButtons.iconButton("photogendown", STYLE, DDIconButtons.CHEVRON_DOWN);
@@ -246,25 +241,9 @@ public class PhotogenEditorPhase extends BasePhase {
         reorder.setOpaque(false);
         reorder.add(upBtn_);
         reorder.add(downBtn_);
-        bar.add(reorder, BorderLayout.WEST);
+        buttons_.add(reorder, BorderLayout.WEST);
 
-        cancelBtn_ = new DDButton("cancel", STYLE);
-        saveBtn_ = new DDButton("save", STYLE);
-        saveCloseBtn_ = new DDButton("saveclose", STYLE);
-        closeBtn_ = new DDButton("close", STYLE);
-        cancelBtn_.addActionListener(_ -> onCancel());
-        saveBtn_.addActionListener(_ -> onSave());
-        saveCloseBtn_.addActionListener(_ -> onSaveClose());
-        closeBtn_.addActionListener(_ -> onClose());
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
-        actions.setOpaque(false);
-        actions.add(cancelBtn_);
-        actions.add(saveBtn_);
-        actions.add(saveCloseBtn_);
-        actions.add(closeBtn_);
-        bar.add(actions, BorderLayout.EAST);
-
-        return bar;
+        return buttons_;
     }
 
     private String siteLabelHtml() {
@@ -622,16 +601,8 @@ public class PhotogenEditorPhase extends BasePhase {
     // Dirty / save
     // -------------------------------------------------------------------------
 
-    /**
-     * Exactly one of Cancel / Close is ever live: Cancel discards pending edits (and is pointless
-     * without them), Close simply leaves (and must not be the button that loses them).
-     */
     private void onDirtyChanged() {
-        boolean dirty = windowDirty();
-        cancelBtn_.setEnabled(dirty);
-        saveBtn_.setEnabled(dirty);
-        saveCloseBtn_.setEnabled(dirty);
-        closeBtn_.setEnabled(!dirty);
+        buttons_.setDirty(windowDirty());
     }
 
     private boolean windowDirty() {
