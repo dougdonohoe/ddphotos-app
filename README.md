@@ -61,7 +61,16 @@ The remaining tabs are used to publish your site.  Use **Export** with **Wrangle
 
 ## Installation
 
-See [Releases](https://github.com/dougdonohoe/ddphotos-app/releases) for the latest Mac, Linux and Windows installers.
+<!-- installers:begin (updated by tools/bin/buildall.pl -github) -->
+Download the latest release, **1.0.0b7**:
+
+- **Mac**: [ddphotos_mac_1_0_0b7.dmg](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.0b7/ddphotos_mac_1_0_0b7.dmg)
+- **Windows**: [ddphotos_windows_1_0_0b7.exe](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.0b7/ddphotos_windows_1_0_0b7.exe)
+- **Linux**: [ddphotos_linux_1_0_0b7.sh](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.0b7/ddphotos_linux_1_0_0b7.sh)
+<!-- installers:end -->
+
+See [Releases](https://github.com/dougdonohoe/ddphotos-app/releases) for release notes,
+MD5 checksums and previous versions.
 
 [<img src="images/install4j_small.png">](https://www.ej-technologies.com/install4j)
 Installers are built by [Donohoe Digital LLC↗](https://www.donohoedigital.com/)
