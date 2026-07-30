@@ -39,8 +39,9 @@ $BUILDDIR="photos1.x";
 $BASEDIR="builds/$BUILDDIR";
 $GITREPO="ddphotos-app";
 
-# platform token -> installer extension (must match mediaFileName in ddphotos.install4j)
-@PLATFORMS = ( ["mac", "dmg"], ["linux", "sh"], ["windows", "exe"] );
+# platform token -> installer extension, README label
+# (tokens must match mediaFileName in ddphotos.install4j)
+@PLATFORMS = ( ["mac", "dmg", "Mac"], ["windows", "exe", "Windows"], ["linux", "sh", "Linux"] );
 
 # base dir
 if ($MAC)
@@ -60,6 +61,13 @@ if ($dev)
 }
 
 # place to copy installers
+
+#
+# -github-dryrun is a rehearsal of -github.  'perl -s' can't put a hyphenated switch
+# in a normal variable, so pick it up via a symbolic ref.
+#
+$githubdryrun = ${'github-dryrun'};
+$github = 1 if ($githubdryrun);
 
 #
 # if github, skip git, mvn, unpack, buildrelease, installer (assumes done previously).
@@ -99,6 +107,7 @@ if (!$builtsomething)
 	print ("   -noinstaller     skip install4j build step\n");
 	print ("   -nonotarize      skip notarize step\n");
 	print ("   -github          create a release at github with all installers\n");
+	print ("   -github-dryrun   rehearse -github: draft notes, echo the gh command, change nothing\n");
 	print ("   -exitearly       just print env vars\n");
 	print ("\n");
 	exit(1);
@@ -309,9 +318,55 @@ sub build
 	# push installers to GitHub
 	if ($github)
 	{
-	    cd($INSTALLERDIR);
-        my $files = installerNames();
-	    runIndented("gh release create $VERSION --title 'DD Photos $VERSION' --notes-file md5sums.txt $files");
+		# -github skips the git step, so make sure we can still push the README
+		# update before we publish anything
+		checkNotBehind();
+		checkInstallers();
+
+		# draft release notes from whatsnew.html so they can be checked over.  These
+		# are kept alongside the installers, one file per version.
+		$notes = releaseNotes($VERSION);
+		$notesfile = releaseNotesName();
+		writeFile("$INSTALLERDIR/$notesfile", $notes);
+
+		print("\nDraft release notes for $VERSION ($INSTALLERDIR/$notesfile):\n\n");
+		print(("-" x 78) . "\n");
+		print($notes);
+		print(("-" x 78) . "\n");
+
+		# check the notes over before going any further.  The dry run asks too, so
+		# the whole flow gets rehearsed.
+		confirm($githubdryrun
+		        ? "Continue the dry run with these notes?"
+		        : "Create the GitHub release for $VERSION with these notes?");
+
+		cd($INSTALLERDIR);
+		$cmd = "gh release create $VERSION --title 'DD Photos $VERSION' " .
+		       "--notes-file $notesfile " . installerNames();
+
+		if ($githubdryrun)
+		{
+			# check the README markers now, since we stop before rewriting them
+			updateReadme($VERSION, 1);
+
+			print("\nDRY RUN - would run:\n\n    $cmd\n");
+			print("\nDRY RUN - would then point the README.md installer links at $VERSION,\n");
+			print("show the diff, and commit/push it.  No release was created and\n");
+			print("README.md was not touched (only $INSTALLERDIR/$notesfile was written).\n\n");
+			exit(0);
+		}
+
+		runIndented($cmd, $indent);
+
+		# post-release: point the README at the installers we just published
+		updateReadme($VERSION, 0);
+
+		cd($DEVDIR);
+		runIndented("git diff README.md", $indent);
+		confirm("Commit and push this README.md change?");
+		runIndented("git add README.md", $indent);
+		runIndented("git commit -m 'Update README installer links for $VERSION'", $indent);
+		runIndented("git push", $indent);
 	}
 }
 
@@ -356,7 +411,159 @@ sub installerName
 # all installer file names, space separated
 sub installerNames
 {
-	return join " ", map { installerName(@$_) } @PLATFORMS;
+	return join " ", map { installerName($$_[0], $$_[1]) } @PLATFORMS;
+}
+
+# release notes file name, e.g. release_notes_1_0_0b7.md
+sub releaseNotesName
+{
+	return "release_notes_${VERSION_FILE}.md";
+}
+
+# read and return the entire contents of a file
+sub slurp
+{
+	my($file) = @_;
+
+	open (IN, "$file") || die "Couldn't open $file";
+	local $/;
+	my $contents = <IN>;
+	close(IN);
+
+	return $contents;
+}
+
+# write contents to a file
+sub writeFile
+{
+	my($file, $contents) = @_;
+
+	open (OUT, ">$file") || die "Couldn't write $file";
+	print OUT $contents;
+	close(OUT);
+}
+
+# ask a yes/no question, exiting unless the answer is yes
+sub confirm
+{
+	my($prompt) = @_;
+
+	print("\n$prompt [y/N] ");
+	my $answer = <STDIN>;
+	if ($answer !~ /^\s*y(es)?\s*$/i)
+	{
+		print("\nAborted.\n\n");
+		exit(1);
+	}
+}
+
+# -github skips the git step, so make sure the build clone is current.  Otherwise we
+# could publish a release and then be unable to push the README update, and the
+# installers we are about to publish would have been built from stale code.
+sub checkNotBehind
+{
+	cd($DEVDIR);
+	runIndented("git fetch origin", $indent);
+
+	my $behind = `git rev-list --count HEAD..origin/main`;
+	chop $behind;
+	if ($behind > 0)
+	{
+		print("\n*** $DEVDIR is $behind commit(s) behind origin/main.\n");
+		print("*** Re-run 'buildall.pl -full' so the installers match origin/main.\n\n");
+		exit(1);
+	}
+}
+
+# build markdown release notes for $version from the whatsnew.html entry of the same
+# version, assuming the format used since 1.0.0b1
+sub releaseNotes
+{
+	my($version) = @_;
+
+	my $whatsnew = "$DEVDIR/code/photos/src/main/resources/config/ddphotos/help/whatsnew.html";
+	my $html = slurp($whatsnew);
+
+	# the version header, then the <ul> of items that follows it
+	$html =~ m{Version\s+\Q$version\E\s+-\s+([^<]+?)\s*</span>.*?<ul>(.*?)</ul>}s
+		|| die "No 'Version $version' entry found in $whatsnew";
+	my($date, $items) = ($1, $2);
+
+	my $notes = "## Version $version - $date\n\n";
+	while ($items =~ m{<li>(.*?)</li>}gs)
+	{
+		my $item = $1;
+		$item =~ s{<tt>(.*?)</tt>}{`$1`}gs;    # fixed width -> code
+		$item =~ s{<b>(.*?)</b>}{**$1**}gs;    # bold -> bold
+		$item =~ s/&lt;/</g;
+		$item =~ s/&gt;/>/g;
+		$item =~ s/&amp;/&/g;
+		$item =~ s/\s+/ /g;                    # undo the source line wrapping
+		$item =~ s/^\s+|\s+$//g;
+		$notes .= "- $item\n";
+	}
+
+	# changelog against the most recent release that isn't this one (so re-running
+	# -github after the release exists still produces the same notes)
+	my $prevcmd = "gh release list --limit 5 --json tagName " .
+	              "--jq '[.[].tagName] | map(select(. != \"$version\")) | .[0] // \"\"'";
+	my $prev = `$prevcmd`;
+	chop $prev;
+	if ($prev && $prev ne $version)
+	{
+		$notes .= "\n**Full Changelog**: " .
+		          "https://github.com/dougdonohoe/$GITREPO/compare/$prev...$version\n";
+	}
+
+	# md5sums.txt is written by the installer step of the preceding -full run, so make
+	# sure it is for this version and not left over from an earlier one
+	my $verfile = $version =~ s/\./_/gr;
+	my $md5file = "$INSTALLERDIR/md5sums.txt";
+	die "$md5file not found - run 'buildall.pl -full' first" if (! -f $md5file);
+
+	my $md5 = slurp($md5file);
+	die "$md5file has no $verfile entries (stale?) - re-run 'buildall.pl -full'"
+		if ($md5 !~ /\Q$verfile\E/);
+	$notes .= "\n" . $md5;
+
+	return $notes;
+}
+
+# make sure every installer we are about to upload actually exists
+sub checkInstallers
+{
+	for my $platform (@PLATFORMS)
+	{
+		my $file = "$INSTALLERDIR/" . installerName($$platform[0], $$platform[1]);
+		die "$file not found - run 'buildall.pl -full' first" if (! -f $file);
+	}
+}
+
+# rewrite the installer links between the markers in README.md.  If $dryrun, only
+# check that the markers are still there.
+sub updateReadme
+{
+	my($version, $dryrun) = @_;
+
+	my $readme = "$DEVDIR/README.md";
+	my $begin = "<!-- installers:begin (updated by tools/bin/buildall.pl -github) -->";
+	my $end = "<!-- installers:end -->";
+
+	my $block = "$begin\nDownload the latest release, **$version**:\n\n";
+	for my $platform (@PLATFORMS)
+	{
+		my($plat, $ext, $label) = @$platform;
+		my $file = installerName($plat, $ext);
+		$block .= "- **$label**: [$file]" .
+		          "(https://github.com/dougdonohoe/$GITREPO/releases/download/$version/$file)\n";
+	}
+	$block .= $end;
+
+	my $text = slurp($readme);
+	($text =~ s/\Q$begin\E.*?\Q$end\E/$block/s)
+		|| die "Could not find the installers:begin/end markers in $readme";
+
+	writeFile($readme, $text) if (!$dryrun);
 }
 
 # chdir with error checking

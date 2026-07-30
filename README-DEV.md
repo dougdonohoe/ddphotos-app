@@ -393,3 +393,92 @@ That copies the generated files to where they are actually used - the app's reso
 this repo (`code/photos/src/main/resources/config/ddphotos/images`), and the favicons and
 screenshots in the sister `ddphotos` repo (assumed to be checked out at
 `~/work/ddphotos`).  Both repos then need their changes committed.
+
+## Appendix D: Releasing a New Version
+
+### Prep
+
+* Add the new version to the top of the `VERSION` history in
+  `code/photos/src/main/java/com/donohoedigital/ddphotos/PhotosConstants.java` (most
+  recent first - nothing needs commenting out).
+* Add a matching entry at the top of
+  `code/photos/src/main/resources/config/ddphotos/help/whatsnew.html`.  The release notes
+  are generated from this entry, so the version in its header must match the new version
+  exactly.
+* New screenshots needed?  Re-take them and re-run `tools/bin/create-screenshots-gif.sh`
+  (see [Appendix C](#appendix-c-icons-and-screenshots)).
+* Commit everything, since the GitHub release tags the code.
+* Plug in the code signing USB token.
+* Have KeePassXC ready for the signing passwords.
+
+### Build and release
+
+```shell
+# Build everything to ~/builds/photos1.x/full/ddphotos-app/installer/builds
+buildall -full -clean
+
+# Inspect / validate the installers if desired
+
+# Rehearse the release: drafts the notes, echoes the gh command, changes nothing
+buildall -full -github-dryrun
+
+# Release to GitHub
+buildall -full -github
+```
+
+`-full` builds in a **separate clone** at `~/builds/photos1.x/full/ddphotos-app`, not this
+working tree.  `-github` skips the git, mvn, unpack, buildrelease and installer steps,
+assuming a `-full` run already produced and validated the installers.
+
+### What `-github` does
+
+1. Checks the build clone isn't behind `origin/main` and that all three installers exist,
+   failing before anything is published.  Since `-github` skips the git step, a stale clone
+   means both a bad README push and installers built from old code - re-run `-full` if it
+   complains.
+2. Generates release notes from the `whatsnew.html` entry for this version into
+   `installer/builds/release_notes_<version>.md`, converting each `<li>` to a Markdown
+   bullet (`<tt>` becomes code, `<b>` becomes bold), then appending a **Full Changelog**
+   compare link against the previous release and the `md5sums.txt` block.
+3. Prints the drafted notes and waits for approval before running `gh release create`.
+4. Rewrites the installer links in `README.md` between the
+   `<!-- installers:begin ... -->` / `<!-- installers:end -->` markers, shows the diff,
+   and asks before committing and pushing.
+
+The README edit happens in the build clone, so after, do a `git pull` in this working tree
+to pick up both the new tag and the README change.
+
+**Do not hand-edit the marked block in `README.md`** - anything inside those markers is
+regenerated.  Put wording you want kept outside them.
+
+### Testing the release logic
+
+`tools/bin/test-buildall.pl` covers the release-notes and README rewriting without
+publishing anything:
+
+```shell
+tools/bin/test-buildall.pl
+```
+
+It reads the real `whatsnew.html` and `README.md`, works on a throwaway copy of the README,
+and verifies (among other things) that the generated notes for an already-released version
+match what is published on GitHub.  Checks needing a local build are skipped if
+`installer/builds/md5sums.txt` is absent, so run `buildall -dev` first for full coverage.
+Exits non-zero on failure.
+
+Because `buildall.pl` can't be loaded without running a build, the test slices the
+subroutine definitions out of the source text and evals them.  That makes it sensitive to
+the `##### Sub routines` banner in `buildall.pl` staying put.  `checkNotBehind()` and
+`confirm()` aren't covered, since they use the network and stdin - `-github-dryrun` is the
+check for those.
+
+### Developing the installer locally
+
+* `install4j` has a UI for editing `installer/install4j/ddphotos.install4j`; under _Build_
+  you can selectively choose which media files to build.
+* Use `buildall -dev` to build into this working tree instead of the build clone.
+* The `-nogit`, `-nomvn`, `-nounpack`, `-nobuildrelease`, `-noinstaller` and `-nonotarize`
+  options skip individual steps, which saves a lot of time when iterating.  Run `buildall`
+  with no arguments to list them all.
+* Installer file names come from the `mediaFileName` attribute on each media set in
+  `ddphotos.install4j` and must stay in step with the `@PLATFORMS` table in `buildall.pl`.
