@@ -11,6 +11,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * `custom.css` editor
   * Custom `css` file (should exist, but is not required)
 * `site.env` editor
+* `descriptions.txt` editor? Or deprecate this?
 
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
@@ -33,6 +34,43 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Detect running container error? Port already in use (nice to have)
 * Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?
+
+## Feature Design - custom.css and flat-file text editor
+
+Next feature to build is editing a `custom.css` file., which is used to specify custom CSS rules.
+Similar to src/main/java/com/donohoedigital/ddphotos/config/PasswordsFile.java (design notes below),
+this is specified in `albums.yaml` under `settings.css`.   
+
+Real example: /Users/donohoe/work/infra/photos/donohoe/albums.yaml and /Users/donohoe/work/infra/photos/donohoe/custom.css
+
+The same caveats as passwords apply - if
+a `css` entry doesn't exist, we default name to `custom.css` and only save it if it is non-empty.  Saving requires
+saving src/main/java/com/donohoedigital/ddphotos/config/AlbumsFile.java too.
+
+Editor for this is simple - just a DDTextArea.  We'll be editing other flat files in the future (site.env), so
+it should be adaptable.  I envision similar to the src/main/java/com/donohoedigital/ddphotos/PasswordDialog.java,
+a different message at the top of the dialog explaining the purpose of the file, then a field showing the
+full path of the file, a show-in-finder icon that operates similar to the button in the
+src/main/java/com/donohoedigital/app/engine/Support.java window (we'll need a new
+src/main/java/com/donohoedigital/gui/DDIconButtons.java entry - not sure what is the best for this).  Below
+is the text field.  It might be nice to show row numbers on the left side of the field but not sure how
+difficult that is.  
+
+I think I want to make this dialog an external window, so it is resizable, but modal.  Not sure if the app engine
+supports this so we'll need to do some digging into that code.  Not sure if internal dialogs are resizable.  Editing
+CSS (and the upcoming site.env) are for advanced users; they'll have other editing tools, so I don't think we need 
+lots of bells and whistles.  I'm flexible on internal vs external windows and want to know the options.
+
+Let's do this in phases again.  Phase 1 being the CssFile and tests and changes to AlbumsFile.  Phase 2 being the editor.
+
+Regarding the editor, I'm thinking a "Custom CSS..." button in the
+src/main/java/com/donohoedigital/ddphotos/SiteDetailsPanel.java panel - in the blank space below
+the "Site Overview HTML" label - it's a big label since its adjoining text area is 4 lines long.  Line
+227 shows where it is created in buildHtmlSection.  I think might be best to replace the label after 
+creation a panel that has label on top and the new button below it (keep same actual instance of label to
+retain help/font settings).  I can paste a screenshot so you can see the gap that is there.  I'm suggesting these
+manipulations mainly because I don't want to grow the height of the site details panel.
+
 
 ---
 
