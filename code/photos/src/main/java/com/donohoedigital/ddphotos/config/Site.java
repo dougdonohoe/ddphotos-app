@@ -63,6 +63,13 @@ public class Site implements NamedObject, Comparable<Site> {
         return Path.of(configDir).resolve("albums.yaml");
     }
 
+    /** The site's default {@code site.env} - what {@code deploy} uses when {@code --site-env} is not given. */
+    public Path getSiteEnvPath() {
+        String configDir = getActualConfigPath();
+        if (configDir == null) return null;
+        return Path.of(configDir).resolve(SiteEnvFile.FILE_NAME);
+    }
+
     /**
      * Returns the config directory actually in effect: the custom configPath
      * override if set, otherwise {@code <dirPath>/config}.

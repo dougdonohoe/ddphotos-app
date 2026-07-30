@@ -68,6 +68,19 @@
         <param name="dialog-style" strvalue="Options"/>
     </phase>
 
+    <phase name="SiteEnvEditor" class="com.donohoedigital.ddphotos.SiteEnvEditorPhase" history="false" window="site-env-editor" cache="false">
+        <param name="window-title" strvalue="msg.windowtitle.SiteEnvEditor"/>
+        <param name="window-width" intvalue="900"/>
+        <param name="window-height" intvalue="650"/>
+        <param name="window-multi" boolvalue="true"/>
+        <param name="window-resize" boolvalue="true"/>
+        <param name="style" strvalue="TextEditor"/>
+        <param name="bevel-style" strvalue=""/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-style" strvalue="Options"/>
+    </phase>
+
     <phase name="SiteDialog" class="com.donohoedigital.ddphotos.SiteDialog" transient="true">
         <param name="style" strvalue="OptionsDialog"/>
         <param name="dialog-background-image" strvalue="dialog-background"/>

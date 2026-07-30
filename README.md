@@ -98,16 +98,6 @@ install them ahead of time:
   which already have Bash. When installing, it is fine to accept all the default
   options.
 
-### Beta Software
-
-The current version of the DD Photos app is beta software and supports the majority of `ddphotos` features.
-However, some features aren't available yet.  For example, you can't currently edit certain deploy 
-settings or custom CSS.  There may also be bugs.
-
-Support for these features is coming soon. You can still hand-edit the related files as documented in 
-the [ddphotos↗](https://github.com/dougdonohoe/ddphotos#documentation) repo, and they will
-be used when you run `ddphotos` commands.
-
 ## TL;DR Running DD Photos From Source
 
 If you are an impatient developer and just want to run the DD Photos app from source without

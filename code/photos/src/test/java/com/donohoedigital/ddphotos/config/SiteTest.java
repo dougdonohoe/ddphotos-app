@@ -46,6 +46,25 @@ public class SiteTest {
         assertNull(new Site("My Site", "", null).getAlbumsFilePath());
     }
 
+    // ── getSiteEnvPath() ────────────────────────────────────────────────────
+
+    @Test
+    public void getSiteEnvPath_withConfigPath() {
+        Site site = new Site("My Site", "/data/site", "/data/site/custom-config");
+        assertEquals(Path.of("/data/site/custom-config/site.env"), site.getSiteEnvPath());
+    }
+
+    @Test
+    public void getSiteEnvPath_withDirPath_noConfigPath() {
+        Site site = new Site("My Site", "/data/site", null);
+        assertEquals(Path.of("/data/site/config/site.env"), site.getSiteEnvPath());
+    }
+
+    @Test
+    public void getSiteEnvPath_noDirPath_noConfigPath() {
+        assertNull(new Site("My Site", null, null).getSiteEnvPath());
+    }
+
     // ── getActualConfigPath() ────────────────────────────────────────────────
 
     @Test

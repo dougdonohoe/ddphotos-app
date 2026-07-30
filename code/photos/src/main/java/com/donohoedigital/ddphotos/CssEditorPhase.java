@@ -1,6 +1,7 @@
 package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.engine.AppContext;
+import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.AlbumsFileException;
@@ -28,12 +29,13 @@ public class CssEditorPhase extends TextEditorPhase {
 
     private AlbumsFile albumsFile_;
 
-    /** Opens (or focuses the existing) custom CSS window for the given site. */
+    /** Opens (or focuses the existing) custom CSS window for the given site - one per site. */
     public static void open(AppContext context, Site site) {
         if (site == null) return;
-        open(context, site, PHASE_NAME, WINDOW_NAME,
+        open(context, site, PHASE_NAME, WINDOW_NAME + "-" + site.getIdOrDefault(),
              PropertyConfig.getMessage("msg.windowtitle.CssEditor.full",
-                     site.getDisplayName() != null ? site.getDisplayName() : site.getIdOrDefault()));
+                     site.getDisplayName() != null ? site.getDisplayName() : site.getIdOrDefault()),
+             new TypedHashMap());
     }
 
     @Override

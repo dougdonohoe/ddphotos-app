@@ -75,26 +75,28 @@ public abstract class TextEditorPhase extends BasePhase {
     // -------------------------------------------------------------------------
 
     /**
-     * Opens (or focuses the existing) editor window for the given site.
+     * Opens (or focuses the existing) editor window.
      *
      * @param phaseName  the appdef.xml phase to run
-     * @param windowName prefix for this window's remembered size/position; the site id is appended
+     * @param windowName this window's identity, already unique - it names the window and is what
+     *                   its remembered size and position are keyed off, so it must be 1:1 with
+     *                   {@link #OPEN}'s key: the engine builds a context per window name, and
+     *                   {@code OPEN} is the only thing keeping a second one from being created
      * @param title      the window title
+     * @param params     subclass params to hand the phase; the launch params are added here
      */
-    protected static void open(AppContext context, Site site, String phaseName, String windowName, String title) {
+    protected static void open(AppContext context, Site site, String phaseName,
+                               String windowName, String title, TypedHashMap params) {
         if (context == null || site == null) return;
-        String key = phaseName + "/" + site.getIdOrDefault();
+        String key = phaseName + "/" + windowName;
         TextEditorPhase existing = OPEN.get(key);
         if (existing != null && existing.context_ != null) {
             existing.context_.getWindow().toFront();
             return;
         }
-        TypedHashMap params = new TypedHashMap();
         params.setObject(PARAM_SITE, site);
         params.setString(PARAM_KEY, key);
-        // Give each site its own window identity: a distinct title and its own remembered
-        // size/position (the engine keys both off the window name).
-        params.setString(EngineConstants.PARAM_WINDOW_NAME, windowName + "-" + site.getIdOrDefault());
+        params.setString(EngineConstants.PARAM_WINDOW_NAME, windowName);
         params.setString(EngineConstants.PARAM_WINDOW_TITLE, title);
         context.processPhase(phaseName, params);
     }
@@ -246,7 +248,6 @@ public abstract class TextEditorPhase extends BasePhase {
     private void showPath() {
         String path = filePath() != null ? Objects.requireNonNull(filePath()).toString() : "";
         pathLabel_.setText(path);
-        pathLabel_.setToolTipText(path.isEmpty() ? null : path);
     }
 
     /**

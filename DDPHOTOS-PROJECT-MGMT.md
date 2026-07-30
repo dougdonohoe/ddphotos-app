@@ -8,7 +8,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* `site.env` editor - should be a `TextEditorPhase` subclass alongside `CssEditorPhase`
 * `descriptions.txt` editor? Or deprecate this?
 
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
@@ -100,6 +99,38 @@ As built:
 * Reveal button uses a new lucide `external-link` icon - `FOLDER_OPEN` already means "browse for a
   folder".  It opens the containing folder; `Utils.openFolder` can't select a file, and the file may
   not exist yet.
+
+---
+
+## Feature Design - site.env editor (**DONE**)
+
+Second `TextEditorPhase` subclass.  `deploy` sources `site.env` for its rsync / S3 / CloudFront
+settings, resolving `--site-env` first and `[config]/site.env` otherwise, and fails outright if the
+resolved file is missing (`ddphotos/bin/deploy-photos.sh`).  `ddphotos init` scaffolds one, so most
+sites have it; sites created another way had no way to make one from inside the app.
+
+As built:
+
+* `SiteEnvFile extends TextFile` - just the name.  No `albums.yaml` plumbing: nothing there points
+  at this file, so unlike `custom.css` there is no second file to keep in step.
+* `Site.getSiteEnvPath()` sits beside `getAlbumsFilePath()` and gives the default location.
+* Only entry point is a new optional button on `FlagDef.FilePickerField`: a `FlagDef.ExtraButton`
+  record (widget name + icon + `(context, site, value)` action).  `AbstractRunnerPanel` renders it,
+  pairing it with the chooser in a `DDPanel` so the row's `WrapLayout` can't wrap the button away
+  from its field.  `OptionFileChooser` was deliberately left alone - the shared GUI widget knows
+  nothing about this.
+* `TextEditorPhase.open()` now takes a fully-formed window name plus a caller-supplied params map,
+  since the window's identity is the resolved *file*, not the site: the default path keeps the plain
+  `site-env-editor-<siteid>` name, an override appends a hash of the path.  Key and window name have
+  to stay 1:1 - the engine builds one context per window name and the `OPEN` map is the only thing
+  stopping a duplicate.
+* A brand-new file starts empty rather than pre-seeded with `docker/init/site.env`'s commented
+  template - that content would have to be duplicated into `client.properties` and could drift.  The
+  keys are listed in the editor's instruction text instead.
+* Known and accepted: `--site-env`'s validator requires the file to exist, and `DDTextField` caches
+  validity, so hand-typing a path to a missing file leaves the field red until it is next touched -
+  creating the file through the editor won't clear it.  The common case is a blank field, where
+  nothing needs re-validating.
 
 ---
 

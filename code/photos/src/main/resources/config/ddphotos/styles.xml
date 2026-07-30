@@ -252,16 +252,18 @@
 	 <font name="Options.textarea" fontname="SansSerif" pointsize="15"/>
 	<!-- Options -->
 
-	<!-- TextEditor - the flat-file editor windows (custom.css, and site.env to come).
-	     Monospaced, because these are config files where column alignment carries meaning. -->
+	<!-- TextEditor - the flat-file editor windows (custom.css, site.env).  Deliberately a copy of
+	     Options, which the photogen caption editor uses, so the two standalone editor windows look
+	     the same; the one real difference is the Monospaced textarea, since these are config files
+	     where column alignment carries meaning. -->
 	<color name="TextEditor.panel.fg" copy="white"/>
 	<color name="TextEditor.panel.bg" default="true"/>
 	<color name="TextEditor.label.fg" copy="primaryfont"/>
 	<color name="TextEditor.label.bg" default="true"/>
-	 <font name="TextEditor.label" fontname="SansSerif" pointsize="14"/>
+	 <font name="TextEditor.label" fontname="SansSerif" pointsize="16"/>
 	<color name="TextEditor.htmlarea.fg" copy="primaryfont"/>
 	<color name="TextEditor.htmlarea.bg" default="true"/>
-	 <font name="TextEditor.htmlarea" fontname="SansSerif" pointsize="14"/>
+	 <font name="TextEditor.htmlarea" fontname="SansSerif" pointsize="16	"/>
 	<color name="TextEditor.textarea.fg" copy="primarywidget.fg"/>
 	<color name="TextEditor.textarea.bg" copy="primarywidget.bg"/>
 	<color name="TextEditor.textarea.error.bg" copy="primarywidget.error"/>

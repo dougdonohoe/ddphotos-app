@@ -1,6 +1,8 @@
 package com.donohoedigital.ddphotos.runner;
 
+import com.donohoedigital.ddphotos.SiteEnvEditorPhase;
 import com.donohoedigital.ddphotos.config.Site;
+import com.donohoedigital.gui.DDIconButtons;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,8 @@ public class DeployRunner extends DdphotosRunner {
     @Override
     protected List<FlagDef> wrapperFlagDefs(Site site) {
         List<FlagDef> defs = new ArrayList<>(super.wrapperFlagDefs(site));
-        defs.add(new FlagDef.FilePickerField("--site-env", "site.env", EDITABLE));
+        defs.add(new FlagDef.FilePickerField("--site-env", "site.env", EDITABLE,
+                new FlagDef.ExtraButton("editsiteenv", DDIconButtons.EDIT, SiteEnvEditorPhase::open)));
         return defs;
     }
 

@@ -347,10 +347,10 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
 
                     case FlagDef.FilePickerField fld -> {
                         OptionFileChooser ofc = new OptionFileChooser(prefsName, widgetName,
-                                style, dummy_, 200, 300, fld.requiredFilename());
+                                style, dummy_, 200, 280, fld.requiredFilename());
                         ofc.getTextField().addValidationListener(this::updateButtonState);
                         fileControls_.put(def.name(), ofc);
-                        flagsRow.add(ofc);
+                        flagsRow.add(withExtraButton(ofc, fld.extraButton(), style));
                     }
 
                     case FlagDef.ValidatedTextField vf -> {
@@ -366,6 +366,24 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                 }
             }
         }
+    }
+
+    /**
+     * The file chooser, plus its flag's extra button when it declares one.  The two are wrapped
+     * together rather than added to the row side by side: the row is a {@link WrapLayout}, so a
+     * bare sibling could wrap onto the next line on its own, away from the field it belongs to.
+     */
+    private JComponent withExtraButton(OptionFileChooser ofc, FlagDef.ExtraButton extra, String style) {
+        if (extra == null) return ofc;
+
+        DDButton btn = DDIconButtons.iconButton(extra.buttonName(), style, extra.icon());
+        btn.addActionListener(_ -> extra.action().perform(context_, getCurrentSite(), ofc.getText()));
+
+        DDPanel row = new DDPanel();
+        row.setBorderLayoutGap(0, 4);
+        row.add(ofc, BorderLayout.CENTER);
+        row.add(btn, BorderLayout.EAST);
+        return row;
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
