@@ -120,7 +120,7 @@ public class Site implements NamedObject, Comparable<Site> {
 
     /**
      * Tells the albums file where it lives: the site dir (for resolving bases) and the config
-     * dir (for resolving {@code settings.passwords}).
+     * dir (for resolving {@code settings.passwords} and {@code settings.css}).
      */
     private void setDirsOn(AlbumsFile af) {
         if (dirPath != null && !dirPath.isBlank()) af.setSiteDir(Path.of(dirPath));

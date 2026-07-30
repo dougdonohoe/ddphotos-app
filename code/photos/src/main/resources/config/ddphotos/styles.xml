@@ -252,6 +252,35 @@
 	 <font name="Options.textarea" fontname="SansSerif" pointsize="15"/>
 	<!-- Options -->
 
+	<!-- TextEditor - the flat-file editor windows (custom.css, and site.env to come).
+	     Monospaced, because these are config files where column alignment carries meaning. -->
+	<color name="TextEditor.panel.fg" copy="white"/>
+	<color name="TextEditor.panel.bg" default="true"/>
+	<color name="TextEditor.label.fg" copy="primaryfont"/>
+	<color name="TextEditor.label.bg" default="true"/>
+	 <font name="TextEditor.label" fontname="SansSerif" pointsize="14"/>
+	<color name="TextEditor.htmlarea.fg" copy="primaryfont"/>
+	<color name="TextEditor.htmlarea.bg" default="true"/>
+	 <font name="TextEditor.htmlarea" fontname="SansSerif" pointsize="14"/>
+	<color name="TextEditor.textarea.fg" copy="primarywidget.fg"/>
+	<color name="TextEditor.textarea.bg" copy="primarywidget.bg"/>
+	<color name="TextEditor.textarea.error.bg" copy="primarywidget.error"/>
+	 <font name="TextEditor.textarea" fontname="Monospaced" pointsize="14"/>
+	<color name="TextEditor.button.fg" default="true"/>
+	<color name="TextEditor.button.bg" default="true"/>
+	 <font name="TextEditor.button" fontname="SansSerif" pointsize="14"/>
+	<color name="TextEditor.scrollbar.bg" r="128" g="128" b="128"/>
+	<color name="TextEditor.scrollbar.fg" r="64" g="64" b="64"/>
+	<color name="TextEditor.scrollbar.focus" r="0" g="0" b="255" a="50"/>
+	<color name="TextEditor.scrollpane.bg" r="204" g="204" b="204"/>
+	<!-- TextEditor -->
+
+	<!-- TextEditorPath - the file path above the editor; matches the editor's own font. -->
+	<color name="TextEditorPath.label.fg" copy="primaryfont"/>
+	<color name="TextEditorPath.label.bg" default="true"/>
+	 <font name="TextEditorPath.label" fontname="Monospaced" pointsize="14" bold="true"/>
+	<!-- TextEditorPath -->
+
 	<!-- OptionsError -->
 	<color name="OptionsError.htmlarea.fg" copy="red"/>
 	<color name="OptionsError.htmlarea.bg" default="true"/>

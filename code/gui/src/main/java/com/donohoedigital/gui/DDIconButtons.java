@@ -29,6 +29,7 @@ public class DDIconButtons
     public static final FlatSVGIcon CLOSE         = svgIcon("icons/x.svg");
     public static final FlatSVGIcon LOCK          = svgIcon("icons/lock.svg");
     public static final FlatSVGIcon UNLOCK        = svgIcon("icons/lock-open.svg");
+    public static final FlatSVGIcon EXTERNAL_LINK = svgIcon("icons/external-link.svg");
 
     public static DDButton iconButton(String name, String style, Icon icon)
     {

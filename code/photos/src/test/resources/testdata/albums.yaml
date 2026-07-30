@@ -8,6 +8,7 @@ settings:
   copyright_year: 2020
   allow_crawling: true
   descriptions: descriptions.txt
+  css: custom.css
   # HTML fields use >- to preserve whitespace
   site_title_html: >-
     <a href="https://example.com">Test</a>

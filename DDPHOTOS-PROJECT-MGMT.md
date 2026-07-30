@@ -8,9 +8,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* `custom.css` editor
-  * Custom `css` file (should exist, but is not required)
-* `site.env` editor
+* `site.env` editor - should be a `TextEditorPhase` subclass alongside `CssEditorPhase`
 * `descriptions.txt` editor? Or deprecate this?
 
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
@@ -35,11 +33,15 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Detect running container error? Port already in use (nice to have)
 * Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?
 
-## Feature Design - custom.css and flat-file text editor
+---
 
-Next feature to build is editing a `custom.css` file., which is used to specify custom CSS rules.
+# Parking Lot
+
+## Feature Design - custom.css and flat-file text editor (**DONE**)
+
+Editing a `custom.css` file, which is used to specify custom CSS rules.
 Similar to src/main/java/com/donohoedigital/ddphotos/config/PasswordsFile.java (design notes below),
-this is specified in `albums.yaml` under `settings.css`.   
+this is specified in `albums.yaml` under `settings.css`.   For history see PR #7 / git commit 704efce.
 
 Real example: /Users/donohoe/work/infra/photos/donohoe/albums.yaml and /Users/donohoe/work/infra/photos/donohoe/custom.css
 
@@ -71,10 +73,35 @@ creation a panel that has label on top and the new button below it (keep same ac
 retain help/font settings).  I can paste a screenshot so you can see the gap that is there.  I'm suggesting these
 manipulations mainly because I don't want to grow the height of the site details panel.
 
+As built:
+
+* `TextFile` is the shared flat-file model (whole file as one string, `save()` / `saveOrCreate()`
+  guards as `PhotogenFile` has); `CssFile` adds only the `custom.css` name.  `site.env` should be
+  another subclass.
+* Line endings are normalized to `\n` in memory - Swing does that anyway - but the file's own
+  separator is restored on save, so a CRLF file stays CRLF.  An untouched open/close is byte-exact,
+  including the missing trailing newline on the real `donohoe/custom.css`.
+* **Deviation from passwords:** photogen *errors out* on a `settings.css` naming a file that isn't
+  there (`albums_config.go` - `css: file %q does not exist`), whereas a dangling `passwords:` is
+  tolerated.  So `getOrCreateCssFile()` deliberately does not set `settings.css`; `saveCssFile()`
+  adopts it only once the file is on disk.  Otherwise an unrelated Site Details save could persist a
+  dangling reference and break generation.
+* Also unlike passwords, an existing `custom.css` is loaded even when `settings.css` is unset - the
+  editor shows what's really there, and saving wires the setting up.
+* Emptying an existing file writes the empty file and keeps `css:` (an empty stylesheet is harmless;
+  deleting a user's file is not).
+* The editor is an external resizable non-modal window (`TextEditorPhase` -> `CssEditorPhase`),
+  modelled on `PhotogenEditorPhase`: one window per site, remembered size/position, Cancel / Save /
+  Save & Close / Close, and a discard guard on the window X and on app quit.  Internal dialogs are
+  `JInternalFrame`s pinned to `setResizable(false)`, and the engine has no modality for external
+  windows - so resizable and modal were mutually exclusive.
+* No line-number gutter (nothing like it exists in the codebase; these files are tiny).  Monospaced
+  via a new `TextEditor` style block rather than Java code.
+* Reveal button uses a new lucide `external-link` icon - `FOLDER_OPEN` already means "browse for a
+  folder".  It opens the containing folder; `Utils.openFolder` can't select a file, and the file may
+  not exist yet.
 
 ---
-
-# Parking Lot
 
 ## Feature Design - password.yaml
 
