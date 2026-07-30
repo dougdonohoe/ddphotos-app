@@ -39,6 +39,8 @@ public class AlbumsFile {
     private Path configDir;
     private PasswordsFile passwordsFile_;
     private boolean passwordsSettingUnsaved_;
+    private CssFile cssFile_;
+    private boolean cssSettingUnsaved_;
 
     public AlbumsFile() {
         settings = new AlbumsSettings();
@@ -113,6 +115,7 @@ public class AlbumsFile {
         }
         if (rootNode == null) rootNode = node;
         passwordsSettingUnsaved_ = false;
+        cssSettingUnsaved_ = false;
     }
 
     // ── getters / setters ───────────────────────────────────────────────────
@@ -131,7 +134,7 @@ public class AlbumsFile {
     public Path getSiteDir() { return siteDir; }
     public void setSiteDir(Path siteDir) { this.siteDir = siteDir; }
 
-    /** The directory this albums.yaml lives in; {@code settings.passwords} is relative to it. */
+    /** The directory this albums.yaml lives in; {@code settings.passwords} / {@code settings.css} are relative to it. */
     public Path getConfigDir() { return configDir; }
     public void setConfigDir(Path configDir) { this.configDir = configDir; }
 
@@ -316,6 +319,94 @@ public class AlbumsFile {
         Path path = resolvePasswordsPath();
         if (path == null || !Files.exists(path)) return null;
         return new PasswordsFile(path).load();
+    }
+
+    // ── css file ────────────────────────────────────────────────────────────
+
+    /**
+     * Resolves {@code settings.css} to an absolute path, defaulting the file name to
+     * {@link CssFile#FILE_NAME} when the setting is unset.  An absolute setting is used as-is;
+     * otherwise it is resolved against the config dir, matching photogen's
+     * {@code filepath.Join(configDir, settings.css)}.
+     *
+     * <p>Returns null when the config dir is unknown and the setting is not absolute.
+     */
+    public Path resolveCssPath() {
+        String name = settings.getCss();
+        Path relative = Path.of(isBlank(name) ? CssFile.FILE_NAME : name);
+        if (relative.isAbsolute()) return relative.normalize();
+        if (configDir == null) return null;
+        return configDir.resolve(relative).normalize();
+    }
+
+    /**
+     * Returns the site's {@link CssFile}, loaded on first access and cached thereafter.  Returns
+     * null when the path cannot be resolved or no file exists there - use
+     * {@link #getOrCreateCssFile()} to start a new one.
+     *
+     * <p>Unlike the passwords file, a stylesheet sitting at the default location is picked up even
+     * when {@code settings.css} is unset: showing the user their existing {@code custom.css} beats
+     * opening a blank editor over a file that is really there, and saving then wires the setting up.
+     */
+    public CssFile getCssFile() {
+        if (cssFile_ == null) {
+            cssFile_ = loadCssFromDisk();
+        }
+        return cssFile_;
+    }
+
+    /**
+     * Returns the cached {@link CssFile}, creating an empty one if neither a cached instance nor an
+     * on-disk file exists.  {@code settings.css} is deliberately <b>not</b> touched here - see
+     * {@link #saveCssFile()}.
+     *
+     * <p>Returns null only when the path cannot be resolved (no config dir).
+     */
+    public CssFile getOrCreateCssFile() {
+        if (getCssFile() == null) {
+            Path path = resolveCssPath();
+            if (path == null) return null;
+            cssFile_ = new CssFile(path);
+        }
+        return cssFile_;
+    }
+
+    /** Forces a fresh load from disk, replacing the cached instance. */
+    public void reloadCssFile() {
+        cssFile_ = loadCssFromDisk();
+    }
+
+    /**
+     * Saves the cached css file, creating it if needed, and only then adopts
+     * {@code settings.css}.  No-op if nothing is cached.
+     *
+     * <p>The ordering matters: photogen fails outright on a {@code settings.css} naming a file that
+     * doesn't exist ({@code css: file %q does not exist}), so the setting must never be written
+     * ahead of the file.  Defaulting it eagerly - as the passwords file does, which photogen
+     * tolerates - would let an unrelated albums.yaml save persist a dangling reference.
+     */
+    public void saveCssFile() throws TextFileException {
+        if (cssFile_ == null) return;
+        cssFile_.saveOrCreate();
+        if (cssFile_.existsOnDisk() && isBlank(settings.getCss())) {
+            settings.setCss(CssFile.FILE_NAME);
+            cssSettingUnsaved_ = true;
+        }
+    }
+
+    /**
+     * True when {@link #saveCssFile()} defaulted {@code settings.css} and this albums.yaml has not
+     * been saved since.  {@code settings.css} lives in albums.yaml, so writing the stylesheet leaves
+     * this file dirty until it is written too.
+     */
+    public boolean isCssSettingUnsaved() {
+        return cssSettingUnsaved_;
+    }
+
+    private CssFile loadCssFromDisk() {
+        Path path = resolveCssPath();
+        if (path == null || !Files.exists(path)) return null;
+        return new CssFile(path).load();
     }
 
     // ── validation ──────────────────────────────────────────────────────────

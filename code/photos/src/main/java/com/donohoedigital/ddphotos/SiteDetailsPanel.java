@@ -51,6 +51,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private OptionTextArea siteTitleHtml_;
     private OptionTextArea siteSubtitleHtml_;
     private OptionTextArea siteOverviewHtml_;
+    private DDButton cssBtn_;
+    private DDPanel cssLabelWrapper_;
 
     // Hero section
     private final List<String> heroBaseKeys_     = new ArrayList<>();
@@ -99,6 +101,9 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         int labelColWidth = GuiUtils.setDDOptionLabelWidths(form, 16);
         // The theme label isn't a DDOption, so align it to the column by hand.
         setLabelWidth(themeLabel_, labelColWidth);
+        // The Custom CSS button sits beside the overview label inside a wrapper; without this the
+        // wrapper would take the button's width and knock that row's label column out of line.
+        setLabelWidth(cssLabelWrapper_, labelColWidth);
 
         // The hero section doesn't need to align with the sections above it, so give
         // Base / Image / Crop their own tight column and reclaim the wasted gap.
@@ -226,9 +231,53 @@ public class SiteDetailsPanel extends EditableDetailPanel {
 
         siteOverviewHtml_ = editable(new OptionTextArea(null, "siteoverviewhtml", STYLE, null, dummy_,
                 2000, null, 5, 350));
+        addCustomCssButton(siteOverviewHtml_);
         panel.add(siteOverviewHtml_);
 
         return panel;
+    }
+
+    /**
+     * Tucks the "Custom CSS..." button into the empty space below the given field's label - its
+     * text area is five rows tall, so the label column has room to spare and the section doesn't
+     * have to grow to hold another row.  The button sits centered at the bottom of that space.
+     *
+     * <p>The label itself is reused rather than rebuilt, so its help text and font survive.  It
+     * stays the option's {@code getLabelComponent()}, which is what
+     * {@link GuiUtils#setDDOptionLabelWidths} sizes; the wrapper follows it in
+     * {@link #buildUI} via {@link #setLabelWidth} so a wide button can't push this row's label
+     * column out of line with the rest of the form.
+     */
+    private void addCustomCssButton(OptionTextArea option) {
+        cssBtn_ = new DDButton("customcss", STYLE);
+        cssBtn_.addActionListener(_ -> openCssEditor());
+
+        // Centered at the foot of the label column, so it sits opposite the bottom of the text
+        // area rather than crowding the label.
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        buttons.setOpaque(false);
+        buttons.add(cssBtn_);
+
+        JComponent label = option.getLabelComponent();
+        option.remove(label);
+        cssLabelWrapper_ = new DDPanel();
+        cssLabelWrapper_.add(label, BorderLayout.NORTH);
+        cssLabelWrapper_.add(buttons, BorderLayout.SOUTH);
+        option.add(cssLabelWrapper_, BorderLayout.WEST);
+    }
+
+    private void openCssEditor() {
+        if (currentSite_ == null) return;
+        CssEditorPhase.open(context_, currentSite_);
+    }
+
+    /**
+     * The editor writes albums.yaml (for {@code settings.css}), so it is blocked while the form
+     * has unsaved edits - same rule as the password button.
+     */
+    private void updateCssButton() {
+        if (cssBtn_ == null) return;
+        cssBtn_.setEnabled(!isEditing() && currentSite_ != null);
     }
 
     private DDLabelBorder buildHeroSection() {
@@ -535,6 +584,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     protected void checkButtons() {
         updateHeroWarnings();
         updatePasswordUi();
+        updateCssButton();
         if (!isEditing()) return;
         boolean valid = validatables_.stream().allMatch(DDValidatable::isValidData);
         if (valid) valid = !settingsFromFields().equals(originalSettings_);

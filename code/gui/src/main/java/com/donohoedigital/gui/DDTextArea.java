@@ -30,6 +30,7 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
     private Caret cNormal_;
     private boolean bDisplayOnly_ = false;
     private boolean bTabChangesFocus_ = false;
+    private boolean bSelectAllOnFocus_ = true;
     private Color bgNormal_;
     private Color bgDisplayOnly_;
     private Color bgDisabled_;
@@ -216,6 +217,25 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
     public boolean getTabChangesFocus()
     {
         return bTabChangesFocus_;
+    }
+
+    /**
+     * Set whether arriving by keyboard (or a programmatic focus request) selects the whole
+     * contents.  On by default, which suits a form field - typing replaces what was there.
+     * Turn it off where the area holds a document rather than a value, so a file doesn't
+     * arrive one keystroke away from being wiped.
+     */
+    public void setSelectAllOnFocus(boolean b)
+    {
+        bSelectAllOnFocus_ = b;
+    }
+
+    /**
+     * Get whether focus selects the whole contents
+     */
+    public boolean getSelectAllOnFocus()
+    {
+        return bSelectAllOnFocus_;
     }
 
     /**
@@ -416,7 +436,7 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
      */
     public void focusGained(FocusEvent e)
     {
-        if (!bMouse_ && !isDisplayOnly() && isEnabled() && isEditable()) selectAll();
+        if (bSelectAllOnFocus_ && !bMouse_ && !isDisplayOnly() && isEnabled() && isEditable()) selectAll();
     }
 
     /**

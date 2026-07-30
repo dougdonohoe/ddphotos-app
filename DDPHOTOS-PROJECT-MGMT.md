@@ -8,9 +8,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* `custom.css` editor
-  * Custom `css` file (should exist, but is not required)
-* `site.env` editor
+* `descriptions.txt` editor? Or deprecate this?
 
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
@@ -37,6 +35,104 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 ---
 
 # Parking Lot
+
+## Feature Design - custom.css and flat-file text editor (**DONE**)
+
+Editing a `custom.css` file, which is used to specify custom CSS rules.
+Similar to src/main/java/com/donohoedigital/ddphotos/config/PasswordsFile.java (design notes below),
+this is specified in `albums.yaml` under `settings.css`.   For history see PR #7 / git commit 704efce.
+
+Real example: /Users/donohoe/work/infra/photos/donohoe/albums.yaml and /Users/donohoe/work/infra/photos/donohoe/custom.css
+
+The same caveats as passwords apply - if
+a `css` entry doesn't exist, we default name to `custom.css` and only save it if it is non-empty.  Saving requires
+saving src/main/java/com/donohoedigital/ddphotos/config/AlbumsFile.java too.
+
+Editor for this is simple - just a DDTextArea.  We'll be editing other flat files in the future (site.env), so
+it should be adaptable.  I envision similar to the src/main/java/com/donohoedigital/ddphotos/PasswordDialog.java,
+a different message at the top of the dialog explaining the purpose of the file, then a field showing the
+full path of the file, a show-in-finder icon that operates similar to the button in the
+src/main/java/com/donohoedigital/app/engine/Support.java window (we'll need a new
+src/main/java/com/donohoedigital/gui/DDIconButtons.java entry - not sure what is the best for this).  Below
+is the text field.  It might be nice to show row numbers on the left side of the field but not sure how
+difficult that is.  
+
+I think I want to make this dialog an external window, so it is resizable, but modal.  Not sure if the app engine
+supports this so we'll need to do some digging into that code.  Not sure if internal dialogs are resizable.  Editing
+CSS (and the upcoming site.env) are for advanced users; they'll have other editing tools, so I don't think we need 
+lots of bells and whistles.  I'm flexible on internal vs external windows and want to know the options.
+
+Let's do this in phases again.  Phase 1 being the CssFile and tests and changes to AlbumsFile.  Phase 2 being the editor.
+
+Regarding the editor, I'm thinking a "Custom CSS..." button in the
+src/main/java/com/donohoedigital/ddphotos/SiteDetailsPanel.java panel - in the blank space below
+the "Site Overview HTML" label - it's a big label since its adjoining text area is 4 lines long.  Line
+227 shows where it is created in buildHtmlSection.  I think might be best to replace the label after 
+creation a panel that has label on top and the new button below it (keep same actual instance of label to
+retain help/font settings).  I can paste a screenshot so you can see the gap that is there.  I'm suggesting these
+manipulations mainly because I don't want to grow the height of the site details panel.
+
+As built:
+
+* `TextFile` is the shared flat-file model (whole file as one string, `save()` / `saveOrCreate()`
+  guards as `PhotogenFile` has); `CssFile` adds only the `custom.css` name.  `site.env` should be
+  another subclass.
+* Line endings are normalized to `\n` in memory - Swing does that anyway - but the file's own
+  separator is restored on save, so a CRLF file stays CRLF.  An untouched open/close is byte-exact,
+  including the missing trailing newline on the real `donohoe/custom.css`.
+* **Deviation from passwords:** photogen *errors out* on a `settings.css` naming a file that isn't
+  there (`albums_config.go` - `css: file %q does not exist`), whereas a dangling `passwords:` is
+  tolerated.  So `getOrCreateCssFile()` deliberately does not set `settings.css`; `saveCssFile()`
+  adopts it only once the file is on disk.  Otherwise an unrelated Site Details save could persist a
+  dangling reference and break generation.
+* Also unlike passwords, an existing `custom.css` is loaded even when `settings.css` is unset - the
+  editor shows what's really there, and saving wires the setting up.
+* Emptying an existing file writes the empty file and keeps `css:` (an empty stylesheet is harmless;
+  deleting a user's file is not).
+* The editor is an external resizable non-modal window (`TextEditorPhase` -> `CssEditorPhase`),
+  modelled on `PhotogenEditorPhase`: one window per site, remembered size/position, Cancel / Save /
+  Save & Close / Close, and a discard guard on the window X and on app quit.  Internal dialogs are
+  `JInternalFrame`s pinned to `setResizable(false)`, and the engine has no modality for external
+  windows - so resizable and modal were mutually exclusive.
+* No line-number gutter (nothing like it exists in the codebase; these files are tiny).  Monospaced
+  via a new `TextEditor` style block rather than Java code.
+* Reveal button uses a new lucide `external-link` icon - `FOLDER_OPEN` already means "browse for a
+  folder".  It opens the containing folder; `Utils.openFolder` can't select a file, and the file may
+  not exist yet.
+
+---
+
+## Feature Design - site.env editor (**DONE**)
+
+Second `TextEditorPhase` subclass.  `deploy` sources `site.env` for its rsync / S3 / CloudFront
+settings, resolving `--site-env` first and `[config]/site.env` otherwise, and fails outright if the
+resolved file is missing (`ddphotos/bin/deploy-photos.sh`).  `ddphotos init` scaffolds one, so most
+sites have it; sites created another way had no way to make one from inside the app.
+
+As built:
+
+* `SiteEnvFile extends TextFile` - just the name.  No `albums.yaml` plumbing: nothing there points
+  at this file, so unlike `custom.css` there is no second file to keep in step.
+* `Site.getSiteEnvPath()` sits beside `getAlbumsFilePath()` and gives the default location.
+* Only entry point is a new optional button on `FlagDef.FilePickerField`: a `FlagDef.ExtraButton`
+  record (widget name + icon + `(context, site, value)` action).  `AbstractRunnerPanel` renders it,
+  pairing it with the chooser in a `DDPanel` so the row's `WrapLayout` can't wrap the button away
+  from its field.  `OptionFileChooser` was deliberately left alone - the shared GUI widget knows
+  nothing about this.
+* `TextEditorPhase.open()` now takes a fully-formed window name plus a caller-supplied params map,
+  since the window's identity is the resolved *file*, not the site: the default path keeps the plain
+  `site-env-editor-<siteid>` name, an override appends a hash of the path.  Key and window name have
+  to stay 1:1 - the engine builds one context per window name and the `OPEN` map is the only thing
+  stopping a duplicate.
+* A brand-new file starts empty rather than pre-seeded with `docker/init/site.env`'s commented
+  template - that content would have to be duplicated into `client.properties` and could drift.  The
+  keys are listed in the editor's instruction text instead.
+* Known and accepted: `--site-env`'s validator requires the file to exist, and `DDTextField` caches
+  validity, so hand-typing a path to a missing file leaves the field red until it is next touched -
+  creating the file through the editor won't clear it.  The common case is a blank field, where
+  nothing needs re-validating.
+
+---
 
 ## Feature Design - password.yaml
 

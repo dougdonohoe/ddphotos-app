@@ -1,9 +1,12 @@
 package com.donohoedigital.ddphotos.runner;
 
+import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.base.ApplicationError;
+import com.donohoedigital.ddphotos.config.Site;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.swing.Icon;
 import java.util.List;
 
 public sealed interface FlagDef permits FlagDef.Constant,
@@ -67,12 +70,35 @@ public sealed interface FlagDef permits FlagDef.Constant,
     }
 
     /**
+     * An optional extra button beside a {@link FilePickerField}'s browse button.
+     *
+     * @param buttonName widget name, which is what its label / help / tooltip are looked up under
+     *                   in client.properties
+     * @param icon       from {@link com.donohoedigital.gui.DDIconButtons}
+     * @param action     what to do with the field's current value when clicked
+     */
+    record ExtraButton(String buttonName, Icon icon, Action action) {
+        // explicitly public: nested types in a record default to package-private, unlike the
+        // members of the enclosing interface
+        public interface Action {
+            void perform(AppContext context, Site site, String value);
+        }
+    }
+
+    /**
      * Text field + browse button that opens a file chooser.
      * requiredFilename: if non-null, chosen file must have this exact name (e.g. "site.env").
      * Empty value is valid (flag omitted).
+     * extraButton: optional second button beside the browse button; null for none.
      */
     record FilePickerField(String name, String requiredFilename,
-                           FlagVisibility visibility) implements FlagDef {
+                           FlagVisibility visibility, ExtraButton extraButton) implements FlagDef {
+
+        /** Convenience constructor: no extra button. */
+        FilePickerField(String name, String requiredFilename, FlagVisibility visibility) {
+            this(name, requiredFilename, visibility, null);
+        }
+
         @Override
         public List<String> toArgs(String value) {
             return (value != null && !value.isBlank()) ? List.of(name, value) : List.of();

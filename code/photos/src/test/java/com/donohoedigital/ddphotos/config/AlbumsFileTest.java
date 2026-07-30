@@ -987,6 +987,144 @@ public class AlbumsFileTest {
                    albums.contains("passwords: passwords.yaml"));
     }
 
+    // ── css file tests ──────────────────────────────────────────────────────
+
+    @Test
+    public void resolveCssPath_defaultsFileName() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+
+        // Unset: still resolves, using the conventional name.
+        assertEquals(configDir.resolve("custom.css"), af.resolveCssPath());
+
+        af.getSettings().setCss("styles/site.css");
+        assertEquals(configDir.resolve("styles/site.css"), af.resolveCssPath());
+    }
+
+    @Test
+    public void resolveCssPath_absoluteAndUnknownConfigDir() {
+        AlbumsFile af = new AlbumsFile();
+        assertNull("no config dir and a relative name is unresolvable", af.resolveCssPath());
+
+        af.getSettings().setCss("/etc/ddphotos/custom.css");
+        assertEquals(Path.of("/etc/ddphotos/custom.css"), af.resolveCssPath());
+    }
+
+    /**
+     * Unlike the passwords file, a stylesheet at the default location is picked up even when
+     * settings.css is unset - the editor should show what is really there.
+     */
+    @Test
+    public void getCssFile_foundEvenWhenSettingUnset() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+
+        assertNull("nothing on disk yet", af.getCssFile());
+
+        Files.writeString(configDir.resolve("custom.css"), "a { color: red; }\n", StandardCharsets.UTF_8);
+        af.reloadCssFile();
+        CssFile css = af.getCssFile();
+        assertNotNull(css);
+        assertNull("loading must not touch the setting", af.getSettings().getCss());
+        assertEquals("a { color: red; }\n", css.getContent());
+        assertSame("subsequent calls return the cached instance", css, af.getCssFile());
+    }
+
+    @Test
+    public void getOrCreateCssFile_leavesSettingAlone() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+
+        CssFile css = af.getOrCreateCssFile();
+        assertNotNull(css);
+        assertFalse(css.existsOnDisk());
+        assertEquals(configDir.resolve("custom.css"), css.getPath());
+        assertSame(css, af.getOrCreateCssFile());
+        // photogen fails on a settings.css naming a file that isn't there, so the setting waits
+        // until the file exists.
+        assertNull(af.getSettings().getCss());
+        assertFalse(af.isCssSettingUnsaved());
+    }
+
+    @Test
+    public void getOrCreateCssFile_nullWithoutConfigDir() {
+        assertNull(new AlbumsFile().getOrCreateCssFile());
+    }
+
+    /**
+     * The editor flow for a site with no stylesheet: the setting only reaches albums.yaml once
+     * the file itself has been written.
+     */
+    @Test
+    public void saveCssFile_settingIsPersistedToAlbumsYamlOnlyOnceFileExists() throws Exception {
+        Path siteDir = tmp.newFolder("site").toPath();
+        Path configDir = Files.createDirectories(siteDir.resolve("config"));
+        Files.writeString(configDir.resolve("albums.yaml"), """
+                settings:
+                  id: my-photos
+                  site_name: My Photos
+
+                albums:
+                  - slug: uganda
+                    name: Uganda
+                    source: /tmp/uganda
+                """, StandardCharsets.UTF_8);
+
+        Site site = new Site("My Photos", siteDir.toString(), null);
+        AlbumsFile af = site.getOrCreateAlbumsFile();
+        assertNull("fixture must start with no css setting", af.getSettings().getCss());
+
+        // First open of the editor: the user types nothing, so nothing is written anywhere.
+        af.reloadCssFile();
+        CssFile css = af.getOrCreateCssFile();
+        assertNotNull(css);
+        af.saveCssFile();
+        assertFalse(Files.exists(configDir.resolve("custom.css")));
+        assertNull("a dangling settings.css would break photogen", af.getSettings().getCss());
+        assertFalse(af.isCssSettingUnsaved());
+
+        // Second open: the user actually writes a rule.
+        af.reloadCssFile();
+        css = af.getOrCreateCssFile();
+        css.setContent(".album-card { object-fit: contain; }");
+        af.saveCssFile();
+
+        assertEquals(".album-card { object-fit: contain; }\n",
+                     Files.readString(configDir.resolve("custom.css"), StandardCharsets.UTF_8));
+        assertEquals("custom.css", af.getSettings().getCss());
+        assertTrue(af.isCssSettingUnsaved());
+
+        site.saveAlbumsFile();
+        assertFalse("saving clears the flag", af.isCssSettingUnsaved());
+
+        String albums = Files.readString(configDir.resolve("albums.yaml"), StandardCharsets.UTF_8);
+        assertTrue("albums.yaml must record settings.css:\n" + albums,
+                   albums.contains("css: custom.css"));
+    }
+
+    /** An existing settings.css is left exactly as the user wrote it. */
+    @Test
+    public void saveCssFile_keepsExistingSettingUntouched() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        Files.writeString(configDir.resolve("site.css"), "a { color: red; }\n", StandardCharsets.UTF_8);
+
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(configDir);
+        af.getSettings().setCss("site.css");
+
+        CssFile css = af.getOrCreateCssFile();
+        css.setContent("a { color: blue; }\n");
+        af.saveCssFile();
+
+        assertEquals("a { color: blue; }\n",
+                     Files.readString(configDir.resolve("site.css"), StandardCharsets.UTF_8));
+        assertEquals("site.css", af.getSettings().getCss());
+        assertFalse("the setting was already there; albums.yaml is not dirty", af.isCssSettingUnsaved());
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private AlbumsFile loadFixture(String resourcePath) throws Exception {

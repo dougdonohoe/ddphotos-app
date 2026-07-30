@@ -71,9 +71,17 @@
 
 <p>
     DD Photos can also publish directly to your own web server (via <tt>rsync</tt>) or to Amazon S3
-    with CloudFront.  These options require a one-time setup: create a text file named <tt>site.env</tt>
+    with CloudFront.  These options require a one-time setup: a text file named <tt>site.env</tt>
     inside your <i>Config</i> folder containing your server or bucket details.  Once that file exists,
     you publish by running the <tt>deploy</tt> command, which figures out which method to use.
+</p>
+
+<p>
+    You can create and edit <tt>site.env</tt> without leaving DD Photos: on the <b>Deploy</b> tab,
+    click the pencil button beside <tt>--site-env</tt>.  That opens the file named in the
+    <tt>--site-env</tt> field, or your <tt>[config-folder]/site.env</tt> when the field is blank -
+    the same file <tt>deploy</tt> itself would use.  If it does not exist yet, it is created when
+    you save.
 </p>
 
 <p>
