@@ -6,6 +6,29 @@
 
 <h2>What's New?</h2>
 
+<!-- 1.0.0b8 -->
+<div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
+    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.0b8 - July 31st, 2026</span></strong>
+</div>
+<ul>
+    <li>Added editor for a site's custom stylesheet (<tt>custom.css</tt>), reached from the new
+        <b>Custom CSS...</b> button in the site details on the <tt>Config</tt> tab.  Rules you put
+        there are loaded after the built-in styles, so they override the defaults.</li>
+    <li>Added editor for deployment settings (<tt>site.env</tt>), reached from the pencil button
+        beside <tt>--site-env</tt> on the <tt>Deploy</tt> tab.  It edits the file named in that
+        field, or your <tt>[config-folder]/site.env</tt> when the field is blank, and creates the
+        file if it doesn't exist yet.</li>
+    <li>Both editors open in their own resizable window, showing the full path of the file being
+        edited and a button to reveal its folder in your file manager.</li>
+    <li>Installer downloads now name the platform, e.g. <tt>ddphotos_mac_1_0_0b8.dmg</tt>.</li>
+    <li>Clearer help text for Wrangler's <tt>--project-name</tt> and Surge's <tt>--domain</tt>,
+        which are names you pick rather than ones DD Photos knows.</li>
+    <li>Surge authentication is now checked with <tt>surge account whoami</tt>, matching current
+        Surge releases.</li>
+    <li>Fixed <tt>--domain</tt>, <tt>--project-name</tt> and <tt>--aws-profile</tt> being too
+        narrow to show a full value.</li>
+</ul>
+
 <!-- 1.0.0b7 -->
 <div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
     <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.0b7 - July 29th, 2026</span></strong>
