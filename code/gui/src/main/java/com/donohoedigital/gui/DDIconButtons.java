@@ -43,7 +43,7 @@ public class DDIconButtons
     public static void makeFolderIcon(DDButton btn) {
         btn.setIcon(FOLDER_OPEN);
         btn.setText(null);
-        btn.setPreferredSize(new Dimension(22, 22));
+        btn.setPreferredSize(new Dimension(28, 28));
     }
 
     private static FlatSVGIcon svgIcon(String path)
