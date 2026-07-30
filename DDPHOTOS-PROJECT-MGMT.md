@@ -12,7 +12,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
   * Custom `css` file (should exist, but is not required)
 * `site.env` editor
 
-* Generate release notes via claude / direct links in README.md to installers?
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
   a settings menu to win/linux)?  Would want to show size of cache.  
