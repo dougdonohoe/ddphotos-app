@@ -62,11 +62,11 @@ The remaining tabs are used to publish your site.  Use **Export** with **Wrangle
 ## Installation
 
 <!-- installers:begin (updated by tools/bin/buildall.pl -github) -->
-Download the latest release, **1.0.0b7**:
+Download the latest release, **1.0.0b8**:
 
-- **Mac**: [ddphotos_mac_1_0_0b7.dmg](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.0b7/ddphotos_mac_1_0_0b7.dmg)
-- **Windows**: [ddphotos_windows_1_0_0b7.exe](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.0b7/ddphotos_windows_1_0_0b7.exe)
-- **Linux**: [ddphotos_linux_1_0_0b7.sh](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.0b7/ddphotos_linux_1_0_0b7.sh)
+- **Mac**: [ddphotos_mac_1_0_0b8.dmg](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.0b8/ddphotos_mac_1_0_0b8.dmg)
+- **Windows**: [ddphotos_windows_1_0_0b8.exe](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.0b8/ddphotos_windows_1_0_0b8.exe)
+- **Linux**: [ddphotos_linux_1_0_0b8.sh](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.0b8/ddphotos_linux_1_0_0b8.sh)
 <!-- installers:end -->
 
 See [Releases](https://github.com/dougdonohoe/ddphotos-app/releases) for release notes,
