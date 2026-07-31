@@ -83,14 +83,14 @@ As built:
 * **Deviation from passwords:** photogen *errors out* on a `settings.css` naming a file that isn't
   there (`albums_config.go` - `css: file %q does not exist`), whereas a dangling `passwords:` is
   tolerated.  So `getOrCreateCssFile()` deliberately does not set `settings.css`; `saveCssFile()`
-  adopts it only once the file is on disk.  Otherwise an unrelated Site Details save could persist a
+  adopts it only once the file is on disk.  Otherwise, an unrelated Site Details save could persist a
   dangling reference and break generation.
 * Also unlike passwords, an existing `custom.css` is loaded even when `settings.css` is unset - the
   editor shows what's really there, and saving wires the setting up.
 * Emptying an existing file writes the empty file and keeps `css:` (an empty stylesheet is harmless;
   deleting a user's file is not).
 * The editor is an external resizable non-modal window (`TextEditorPhase` -> `CssEditorPhase`),
-  modelled on `PhotogenEditorPhase`: one window per site, remembered size/position, Cancel / Save /
+  modeled on `PhotogenEditorPhase`: one window per site, remembered size/position, Cancel / Save /
   Save & Close / Close, and a discard guard on the window X and on app quit.  Internal dialogs are
   `JInternalFrame`s pinned to `setResizable(false)`, and the engine has no modality for external
   windows - so resizable and modal were mutually exclusive.
@@ -208,7 +208,7 @@ TODO list above.
 
 As built:
 
-* `PasswordDialog` is dual-mode via `PARAM_ALBUM_SLUG` (null = site), modelled on `BaseDialog`.
+* `PasswordDialog` is dual-mode via `PARAM_ALBUM_SLUG` (null = site), modeled on `BaseDialog`.
   It reloads the passwords file on every open, and pre-generates a key for a brand-new file so
   the "key is required" validation can never be hit.
 * Passwords show in plain text - they are handed to visitors, and the YAML stores them in the
@@ -218,7 +218,7 @@ As built:
   saying the protection is inherited.
 * Creating the passwords file defaults `settings.passwords`, which lives in `albums.yaml`.
   `AlbumsFile.isPasswordsSettingUnsaved()` tracks that so the dialog knows to save `albums.yaml`
-  too - the in-memory value can't be used for this, since a cancelled create already set it.
+  too - the in-memory value can't be used for this, since a canceled create already set it.
 
 
 ## Feature Design - photogen.txt files
