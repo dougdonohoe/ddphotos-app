@@ -103,6 +103,20 @@ public class PhotosUtils {
         return escapeHtml(path + ": ") + saveErrorDetail(e);
     }
 
+    /** "do not show again" preference key for the post-save photogen reminder. */
+    private static final String NO_SHOW_PHOTOGEN_REMINDER = "save.photogen.reminder";
+
+    /**
+     * Reminds the user that a save only changes the config files on disk - the generated site
+     * doesn't move until {@code photogen} runs.  Call after a save that succeeded outright,
+     * once the UI is back in a settled state.
+     */
+    public static void showPhotogenReminder(AppContext context) {
+        EngineUtils.displayInformationDialog(context,
+                PropertyConfig.getMessage("msg.save.photogen.reminder"),
+                "msg.windowtitle.savePhotogen", NO_SHOW_PHOTOGEN_REMINDER, "cmdnoshow");
+    }
+
     public static Site openAddSiteDialog(AppContext context, SitesFile sitesFile) {
         return openAddSiteDialog(context, sitesFile, null);
     }

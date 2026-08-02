@@ -1,7 +1,6 @@
 package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.engine.AppContext;
-import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
@@ -127,19 +126,13 @@ abstract class EditableDetailPanel extends DDPanel {
     /** The context the shared dialogs (see {@link #showPhotogenReminder}) are opened in. */
     protected abstract AppContext getContext();
 
-    /** "do not show again" preference key for the post-save photogen reminder. */
-    private static final String NO_SHOW_PHOTOGEN_REMINDER = "save.photogen.reminder";
-
     /**
-     * Reminds the user that saving only changes {@code albums.yaml} - the generated site
-     * doesn't move until {@code photogen} runs.  Call at the end of a successful
-     * {@link #applyAndSave}, once the panel is back in read-only state, so the dialog sits
-     * over a settled UI.
+     * The shared post-save photogen reminder - see {@link PhotosUtils#showPhotogenReminder}.
+     * Call at the end of a successful {@link #applyAndSave}, once the panel is back in
+     * read-only state, so the dialog sits over a settled UI.
      */
     protected final void showPhotogenReminder() {
-        EngineUtils.displayInformationDialog(getContext(),
-                PropertyConfig.getMessage("msg.save.photogen.reminder"),
-                "msg.windowtitle.savePhotogen", NO_SHOW_PHOTOGEN_REMINDER, "cmdnoshow");
+        PhotosUtils.showPhotogenReminder(getContext());
     }
 
     /** Puts the registered fields (and the edit/save/cancel buttons) into read-only or editable state. */

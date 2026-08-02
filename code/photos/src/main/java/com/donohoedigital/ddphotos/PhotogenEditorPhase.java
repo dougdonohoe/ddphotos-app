@@ -672,6 +672,8 @@ public class PhotogenEditorPhase extends BasePhase {
             PhotosUtils.showSaveErrors(context_, errors);
             return false;
         }
+        // Save & Close shows this before the window goes away, so the reminder isn't missed.
+        PhotosUtils.showPhotogenReminder(context_);
         return true;
     }
 

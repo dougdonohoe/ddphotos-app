@@ -120,6 +120,12 @@ public abstract class TextEditorPhase extends BasePhase {
      */
     protected abstract boolean saveFile();
 
+    /**
+     * Whether a successful save should remind the user to run {@code photogen}.  True for files
+     * photogen reads (the stylesheet); false for those it never sees, like {@code site.env}.
+     */
+    protected boolean needsPhotogen() { return false; }
+
     protected TextFile getFile() { return file_; }
 
     // -------------------------------------------------------------------------
@@ -320,6 +326,8 @@ public abstract class TextEditorPhase extends BasePhase {
         }
         showPath();
         onDirtyChanged();
+        // Save & Close shows this before the window goes away, so the reminder isn't missed.
+        if (needsPhotogen()) PhotosUtils.showPhotogenReminder(context_);
         return true;
     }
 

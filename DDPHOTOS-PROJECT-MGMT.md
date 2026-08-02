@@ -8,6 +8,20 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
+* **Bug: photo filenames containing spaces break `photogen.txt`.**  The format is
+  `name [description]` split on the *first space*, on both sides: `PhotogenFile.parse`
+  (`trimmed.indexOf(' ')`) and `loadPhotoDescriptions` in
+  /Users/donohoe/work/ddphotos/pkg/photogen/album.go (`strings.SplitN(line, " ", 2)`).  Writing
+  mirrors it (`key + " " + description`), so a photo whose name has a space is written out and then
+  read back as a *different* key: the first word becomes the key and the rest of the filename becomes
+  part of the caption.  Every photo in the folder sharing a first word collapses onto that one key, so
+  the caption editor edits the wrong rows (duplicate-looking lines, edits landing on the wrong photo)
+  and photogen applies captions to the wrong photo or none at all.  Seen with
+  `/Users/donohoe/Dropbox/Photos/Exports/Chicago 2009`.
+  Fixing it is a **format change shared with the ddphotos repo** (see its `docs/PHOTOGEN.md`), and has
+  to stay back-compatible with existing files.  Options to weigh: quote the name when it contains a
+  space, use a tab separator, or a `name = caption` style separator.  Until it's fixed, the caption
+  editor could at least detect names with spaces and warn instead of silently mangling them.
 * Rework `init` project or give guidance on deleting the albums
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
