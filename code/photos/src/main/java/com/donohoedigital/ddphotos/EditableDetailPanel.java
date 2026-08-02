@@ -1,5 +1,6 @@
 package com.donohoedigital.ddphotos;
 
+import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
@@ -15,6 +16,12 @@ abstract class EditableDetailPanel extends DDPanel {
 
     protected static final String STYLE = "Options";
     protected static final String STYLE_ERROR = "OptionsError";
+
+    private final String sEditButtonName;
+
+    public EditableDetailPanel(String sEditButtonName) {
+        this.sEditButtonName = sEditButtonName;
+    }
 
     /** Combo key for the "no base" entry; its display text comes from {@code combobox.base.none}. */
     protected static final String NONE_BASE = "";
@@ -86,7 +93,7 @@ abstract class EditableDetailPanel extends DDPanel {
         scroll.setBorder(null);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
 
-        editBtn_   = new DDButton("editdetails", STYLE);
+        editBtn_   = new DDButton(sEditButtonName, STYLE);
         saveBtn_   = new DDButton("save",        STYLE);
         cancelBtn_ = new DDButton("cancel",      STYLE);
         editBtn_.addActionListener(_   -> enterEditMode());
@@ -115,6 +122,18 @@ abstract class EditableDetailPanel extends DDPanel {
     protected abstract void enterEditMode();
     protected abstract void applyAndSave();
     protected abstract void cancelEdit();
+
+    /** The context the shared dialogs (see {@link #showPhotogenReminder}) are opened in. */
+    protected abstract AppContext getContext();
+
+    /**
+     * The shared post-save photogen reminder - see {@link PhotosUtils#showPhotogenReminder}.
+     * Call at the end of a successful {@link #applyAndSave}, once the panel is back in
+     * read-only state, so the dialog sits over a settled UI.
+     */
+    protected final void showPhotogenReminder() {
+        PhotosUtils.showPhotogenReminder(getContext());
+    }
 
     /** Puts the registered fields (and the edit/save/cancel buttons) into read-only or editable state. */
     private void setReadOnly(boolean readOnly) {

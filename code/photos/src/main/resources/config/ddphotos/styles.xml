@@ -151,11 +151,11 @@
 	<color name="PhotosTabs.panel.bg" default="true"/>
 	<!-- PHOTOS TABS -->
 
-	<!-- PhotosMain -->
-	<color name="PhotosMain.htmlarea.fg" default="true"/>
-	<color name="PhotosMain.htmlarea.bg" copy="lightgrey"/>
-	 <font name="PhotosMain.htmlarea" fontname="SansSerif" pointsize="16"/>
-	<!-- PhotosMain -->
+	<!-- PhotosHelp -->
+	<color name="PhotosHelp.htmlarea.fg" copy="yellow" /><!-- orange r="255" g="127" b="0"-->
+	<color name="PhotosHelp.htmlarea.bg" r="125" g="125" b="125"/>
+	 <font name="PhotosHelp.htmlarea" fontname="SansSerif" pointsize="16"/>
+	<!-- PhotosHelp -->
 
 	<!-- Help -->
 	<color name="Help.htmlarea.fg" default="true"/>

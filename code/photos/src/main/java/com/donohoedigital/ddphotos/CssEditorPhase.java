@@ -78,4 +78,10 @@ public class CssEditorPhase extends TextEditorPhase {
         }
         return true;
     }
+
+    /** photogen copies the stylesheet into the generated site, so it has to run again. */
+    @Override
+    protected boolean needsPhotogen() {
+        return true;
+    }
 }

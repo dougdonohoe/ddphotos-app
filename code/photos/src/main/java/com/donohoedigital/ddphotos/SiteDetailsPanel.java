@@ -67,6 +67,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private DDHtmlArea heroWarningArea_;
 
     public SiteDetailsPanel(AppContext context, SiteBarPanel siteBar) {
+        super("editdetails.site");
         context_ = context;
         siteBar_ = siteBar;
         buildUI();
@@ -143,6 +144,11 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         panel.add(buildThemeRow());
 
         return panel;
+    }
+
+    @Override
+    protected AppContext getContext() {
+        return context_;
     }
 
     @Override
@@ -528,6 +534,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         originalSettings_ = null;
         setEditing(false);
         siteBar_.refreshCombo(currentSite_);
+        showPhotogenReminder();
     }
 
     // -------------------------------------------------------------------------

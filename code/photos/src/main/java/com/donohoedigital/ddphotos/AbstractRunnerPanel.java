@@ -41,6 +41,14 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
     protected static final String CONSOLE_BLUE_STYLE = "ConsoleBlue";
     protected static final String CONSOLE_BIG_STYLE = "ConsoleBig";
 
+    // Highlight flashed on the button the tour is waiting for - see setRunPulsing/setStopPulsing.
+    private static final int PULSE_INTERVAL_MS = 600;
+    private static final Color PULSE_COLOR = new Color(255, 213, 79);
+    // Pin hover/pressed too, so the highlight holds even with the mouse over the button.
+    private static final String PULSE_STYLE =
+            "hoverBackground: " + GuiUtils.hexColor(PULSE_COLOR) + ";" +
+            "pressedBackground: " + GuiUtils.hexColor(PULSE_COLOR);
+
     protected final AppContext context_;
 
     // Controls created in createUI()
@@ -68,6 +76,12 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
 
     // External gate (e.g. wizard validation) ANDed with the panel's own validity check.
     private boolean runAllowed_ = true;
+
+    // Set while a button is pulsing for the tour - see setPulsing().
+    // (Timer qualified: java.util.* is imported too)
+    private javax.swing.Timer pulseTimer_;
+    private DDButton pulseBtn_;
+    private Color pulseSavedBg_;
 
     protected AbstractRunnerPanel(AppContext context) {
         super(BorderFactory.createEmptyBorder(0, 0, 0, 0));
@@ -127,6 +141,7 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
     @Override
     public void removeNotify() {
         super.removeNotify();
+        clearPulse();
         PANELS.remove(this);
         AppEngine.getAppEngine().removeCloseListener(this);
     }
@@ -262,8 +277,7 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
         }
 
         CommandRunner runner = resolveRunner();
-        AlbumsFile siteAf = site.getAlbumsFile();
-        String siteId = (siteAf != null && siteAf.getSettings() != null) ? siteAf.getSettings().getId() : "";
+        String siteId = getSiteId();
 
         DDLabel cmdLabel = new DDLabel(runner.getPrefsKey(true), CONSOLE_BLUE_STYLE);
         cmdLabel.setText(runner.getBinary());
@@ -396,9 +410,26 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
         updateButtonState();
     }
 
+    /**
+     * The current site's id from <tt>albums.yaml</tt>, or "" if there isn't one yet. This is the
+     * <tt>DDPHOTOS_SITE_ID</tt> the <tt>ddphotos</tt> script derives from the same file, so it is
+     * also the name the commands echo (e.g. <tt>serve</tt>'s "Serving [id] at:" line).
+     */
+    public String getSiteId() {
+        Site site = getCurrentSite();
+        AlbumsFile af = site != null ? site.getAlbumsFile() : null;
+        return (af != null && af.getSettings() != null) ? af.getSettings().getId() : "";
+    }
+
+    /** True while this panel's command has a live process. */
+    public boolean isRunning() {
+        Process p = process_;
+        return p != null && p.isAlive();
+    }
+
     protected void updateButtonState() {
         if (runBtn_ == null) return; // UI not built yet
-        boolean running = process_ != null && process_.isAlive();
+        boolean running = isRunning();
         boolean textValid = textControls_.values().stream().allMatch(OptionText::isValidData);
         boolean filesValid = fileControls_.values().stream().allMatch(OptionFileChooser::isValidData);
         boolean comboValid = choiceControls_.values().stream().allMatch(OptionCombo::isValidData);
@@ -406,6 +437,51 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                 && textValid && comboValid && filesValid);
         stopBtn_.setEnabled(running);
         killBtn_.setEnabled(running);
+    }
+
+    /** Pulse the Run button while the guided tour waits for the user to start this command. */
+    public void pulseRunButton() {
+        pulse(runBtn_);
+    }
+
+    /** Pulse the Stop button while the guided tour waits for the user to stop a dev server. */
+    public void pulseStopButton() {
+        pulse(stopBtn_);
+    }
+
+    /**
+     * Flashes {@code btn} yellow so the user can find the button the tour is asking them to click.
+     * At most one button pulses at a time - starting a new one restores the previous. Only the
+     * background changes, so this never fights {@link #updateButtonState()}, which owns enablement.
+     */
+    private void pulse(DDButton btn) {
+        clearPulse();
+        if (btn == null) return; // UI not built yet
+
+        pulseBtn_ = btn;
+        pulseSavedBg_ = btn.getBackground();
+        highlight(btn, true);
+        pulseTimer_ = new javax.swing.Timer(PULSE_INTERVAL_MS,
+                _ -> highlight(btn, btn.getClientProperty("FlatLaf.style") == null));
+        pulseTimer_.start();
+    }
+
+    /** Stop any pulse and put the button it was on back the way it was. */
+    public void clearPulse() {
+        if (pulseTimer_ != null) {
+            pulseTimer_.stop();
+            pulseTimer_ = null;
+        }
+        if (pulseBtn_ != null) {
+            highlight(pulseBtn_, false);
+            pulseBtn_ = null;
+        }
+    }
+
+    private void highlight(DDButton btn, boolean on) {
+        // Plain (non-UIResource) color so FlatLaf's fill honors it, as DDComboBox does.
+        btn.setBackground(on ? new Color(PULSE_COLOR.getRGB()) : pulseSavedBg_);
+        btn.putClientProperty("FlatLaf.style", on ? PULSE_STYLE : null);
     }
 
     // ──────────────────────────────────────────────────────────────────────────────

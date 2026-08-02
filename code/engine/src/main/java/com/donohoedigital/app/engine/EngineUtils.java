@@ -8,6 +8,7 @@ package com.donohoedigital.app.engine;
 
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.app.config.*;
+import com.donohoedigital.gui.DialogType;
 import com.donohoedigital.gui.GuiUtils;
 
 import javax.swing.*;
@@ -68,7 +69,22 @@ public class EngineUtils
         return buttonpressed != null && buttonpressed.getName().equals("yes");
     }
 
-    
+    /**
+     * Same as above, but with the warning (orange) title bar rather than the standard one - for a
+     * question the user should stop and read rather than answer on autopilot.
+     */
+    public static boolean displayWarningConfirmationDialog(AppContext context,
+                                                           String sMsg,
+                                                           String sTitleKey,
+                                                           String sNoShowKey)
+    {
+        AppButton buttonpressed = displayConfirmationDialogCustom(context, "DisplayConfirmation",
+                        sMsg, sTitleKey, sNoShowKey, null, DialogType.WARN);
+
+        return buttonpressed != null && buttonpressed.getName().equals("yes");
+    }
+
+
     /**
      * confirmation dialog where button pressed is returned to allow for custom
      * buttons.  Should check for null
@@ -80,9 +96,26 @@ public class EngineUtils
                                                              String sNoShowKey,
                                                              String sNoShowCheckBoxName) // only used with cancelable timeout
     {
+        return displayConfirmationDialogCustom(context, sPhase, sMsg, sTitleKey, sNoShowKey,
+                                               sNoShowCheckBoxName, null);
+    }
+
+    /**
+     * As above, with the dialog type (title-bar color) overriding whatever the phase declares.
+     * Null leaves the phase's own setting alone.
+     */
+    private static AppButton displayConfirmationDialogCustom(AppContext context,
+                                                             String sPhase,
+                                                             String sMsg,
+                                                             String sTitleKey,
+                                                             String sNoShowKey,
+                                                             String sNoShowCheckBoxName, // only used with cancelable timeout
+                                                             DialogType type)
+    {
 
         TypedHashMap params = new TypedHashMap();
         if (sMsg != null) params.setString(DisplayMessage.PARAM_MESSAGE, sMsg);
+        if (type != null) params.setString(DialogPhase.PARAM_DIALOG_TYPE, type.name());
         setParams(sTitleKey, sNoShowKey, sNoShowCheckBoxName, params);
         Phase confirm = context.processPhaseNow(sPhase, params);
 

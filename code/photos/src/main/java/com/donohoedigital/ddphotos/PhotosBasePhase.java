@@ -41,7 +41,7 @@ public class PhotosBasePhase extends BasePhase {
     public static final String PARAM_RERUN_WIZARD = "rerun-wizard";
     public static final String PARAM_SELECT_SITE  = "select-site";
 
-    public static final String STYLE = "PhotosMain";
+    public static final String HELP_STYLE = "PhotosHelp";
 
     private final SitesFile sitesFile_;
 
@@ -64,7 +64,7 @@ public class PhotosBasePhase extends BasePhase {
         super.init(engine, context, phase);
         context_ = context;
 
-        base_ = new LogoWindowPanel("icon48", STYLE);
+        base_ = new LogoWindowPanel("icon48", HELP_STYLE);
         base_.setContentInsets(0, 0, 0, 0); // tabs run flush to the window edges
         helptext_ = base_.getHelpText();
 
@@ -127,7 +127,7 @@ public class PhotosBasePhase extends BasePhase {
         tabs_ = tabs;
         tabs.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_AREA_INSETS, new Insets(0, 10, 0, 0));
 
-        // Held for the tour, which selects these tabs and runs their commands (see TourController).
+        // Held for the tour, which selects these tabs and watches their commands (see TourController).
         ConfigTab configTab = new ConfigTab(context_, siteBar);
         CommandRunnerPanel photogenTab = new CommandRunnerPanel(siteBar, new PhotogenRunner(), context_);
         CommandRunnerPanel runTab = new CommandRunnerPanel(siteBar, new RunRunner(), context_);
