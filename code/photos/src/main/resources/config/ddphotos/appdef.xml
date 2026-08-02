@@ -260,6 +260,24 @@
         </paramlist>
     </phase>
 
+    <!-- A tour step that waits on the user doing something in the main window (clicking Run, then
+         Stop), so it has no Next button - the tour closes it itself.  No default-button either:
+         focus then stays on the main window, where the button they need to click is. -->
+    <phase name="TourWait" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.tour"/>
+        <param name="dialog-minwidth" intvalue="750"/>
+        <param name="dialog-modal" boolvalue="false"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="tourcancel"/>
+        <paramlist name="buttons">
+            <strvalue>tourcancel</strvalue>
+        </paramlist>
+    </phase>
+
     <phase name="TourEnd" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
         <param name="style" strvalue="DisplayMessage"/>
         <param name="dialog-style" strvalue="DisplayMessage"/>

@@ -127,7 +127,7 @@ public class PhotosBasePhase extends BasePhase {
         tabs_ = tabs;
         tabs.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_AREA_INSETS, new Insets(0, 10, 0, 0));
 
-        // Held for the tour, which selects these tabs and runs their commands (see TourController).
+        // Held for the tour, which selects these tabs and watches their commands (see TourController).
         ConfigTab configTab = new ConfigTab(context_, siteBar);
         CommandRunnerPanel photogenTab = new CommandRunnerPanel(siteBar, new PhotogenRunner(), context_);
         CommandRunnerPanel runTab = new CommandRunnerPanel(siteBar, new RunRunner(), context_);

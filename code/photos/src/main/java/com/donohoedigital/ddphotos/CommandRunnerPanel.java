@@ -25,8 +25,8 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
 
     private Site currentSite_;
 
-    // Set for the duration of a tour-driven run; notified true (advance) or false (stop tour).
-    private java.util.function.Consumer<Boolean> tourCallback_;
+    // Set while the tour is on this panel's step; notified as the user's run starts and ends.
+    private RunWatcher runWatcher_;
 
     public CommandRunnerPanel(SiteBarPanel siteBar, CommandRunner runner, AppContext context) {
         super(context);
@@ -83,20 +83,26 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
     // ──────────────────────────────────────────────────────────────────────────────
 
     /**
-     * Run this command as part of the guided tour. {@code onDone} is invoked with
-     * {@code true} when the command finished in a way the tour treats as success
-     * (exit code 0, or a user Stop for long-running dev servers), and {@code false}
-     * when it could not start or failed - so the tour can advance or stop accordingly.
+     * Observer of a user-driven run, so the guided tour can follow along rather than press Run
+     * itself. Only a run that actually launches is reported: if the command never starts (no site,
+     * Docker down, another command busy, a failed prerequisite) nothing fires and the tour simply
+     * keeps waiting for the user to try again.
      */
-    public void startTourRun(java.util.function.Consumer<Boolean> onDone) {
-        tourCallback_ = onDone;
-        onRun();
+    public interface RunWatcher {
+
+        /** The main command's process has started. */
+        void runStarted();
+
+        /**
+         * The process ended. {@code ok} is an exit code of 0, or a deliberate user Stop - which is
+         * how the long-running dev servers ({@code run}, {@code serve}) are meant to end.
+         */
+        void runFinished(boolean ok);
     }
 
-    private void fireTour(boolean advance) {
-        java.util.function.Consumer<Boolean> cb = tourCallback_;
-        tourCallback_ = null;
-        if (cb != null) cb.accept(advance);
+    /** Register the tour's observer for this command, or pass null to clear it. */
+    public void setRunWatcher(RunWatcher watcher) {
+        runWatcher_ = watcher;
     }
 
     @Override
@@ -106,7 +112,6 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
 
         if (currentSite_ == null) {
             console_.appendSystem(PropertyConfig.getMessage("msg.cmd.noSiteSelected"));
-            fireTour(false);
             return;
         }
 
@@ -114,7 +119,6 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             EngineUtils.displayWarningDialog(context_,
                     PropertyConfig.getMessage("msg.docker.required", runner_.getDisplayName()),
                     "msg.windowtitle.dockerRequired", null);
-            fireTour(false);
             return;
         }
 
@@ -122,7 +126,6 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
         String busy = running == null ? null : runner_.busyMessage(running);
         if (busy != null) {
             EngineUtils.displayWarningDialog(context_, busy, runner_.busyTitleKey(), null);
-            fireTour(false);
             return;
         }
 
@@ -147,7 +150,6 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             process_ = null;
             console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "prerequisite check", e.getMessage()));
             updateButtonState();
-            fireTour(false);
         }
     }
 
@@ -169,7 +171,6 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                     if (wasUserStop(code)) {
                         console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
                         updateButtonState();
-                        fireTour(false);
                         return;
                     }
                     switch (prereq.check(output, code)) {
@@ -209,7 +210,6 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
     private void handlePrerequisiteError(Prerequisite prereq, int exitCode) {
         console_.appendSystemError(prereq.errorMessage(exitCode));
         updateButtonState();
-        fireTour(false);
         String html = prereq.errorDialogMessage(exitCode);
         if (html != null) {
             EngineUtils.displayErrorDialog(context_, html, prereq.errorTitleKey(), null);
@@ -225,13 +225,11 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             }
             case Prerequisite.ShowDialog(String html, String titleKey) -> {
                 updateButtonState();
-                fireTour(false);
                 EngineUtils.displayWarningDialog(context_, html, titleKey, null);
             }
             case Prerequisite.ShowMessage(String message) -> {
                 console_.appendSystem(message);
                 updateButtonState();
-                fireTour(false);
             }
             case Prerequisite.ConfirmThenRun(String msgKey, String titleKey, List<String> cmd, Object[] msgArgs) -> {
                 console_.appendSystem(prereq.failedMessage());
@@ -240,7 +238,6 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                 boolean confirmed = EngineUtils.displayConfirmationDialog(context_, html, titleKey, null);
                 if (!confirmed) {
                     console_.appendSystem(PropertyConfig.getMessage("msg.cmd.aborted"));
-                    fireTour(false);
                     return;
                 }
                 runNext(userValues, next, cmd);
@@ -259,7 +256,6 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             process_ = null;
             console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "remediation", e.getMessage()));
             updateButtonState();
-            fireTour(false);
         }
     }
 
@@ -281,7 +277,6 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                     } else {
                         console_.appendSystem(PropertyConfig.getMessage("msg.cmd.failedExit", code));
                         updateButtonState();
-                        fireTour(false);
                     }
                 });
             } catch (InterruptedException e) {
@@ -302,18 +297,20 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
         try {
             process_ = runner_.launch(currentSite_, userValues);
             updateButtonState();
+            if (runWatcher_ != null) runWatcher_.runStarted();
             startReaders(process_, code -> {
+                RunWatcher watcher = runWatcher_;
+                // Feedback first: on a failure it is a modal dialog, and the tour's own dialog
+                // should not open behind it.
+                showCompletionFeedback(code, watcher != null);
                 // A user Stop on a long-running dev server (run/serve) counts as
                 // success for the tour: it's how the user advances those steps.
-                boolean wasTour = tourCallback_ != null;
-                fireTour(code == 0 || wasUserStop(code));
-                showCompletionFeedback(code, wasTour);
+                if (watcher != null) watcher.runFinished(code == 0 || wasUserStop(code));
             });
         } catch (IOException e) {
             process_ = null;
             console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "process", e.getMessage()));
             updateButtonState();
-            fireTour(false);
             if (runner_.showsFailureFeedback()) {
                 EngineUtils.displayErrorDialog(context_,
                         PropertyConfig.getMessage("msg.cmd.launchFailure",
