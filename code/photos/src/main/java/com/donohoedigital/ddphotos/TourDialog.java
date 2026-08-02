@@ -23,6 +23,13 @@ public class TourDialog extends DisplayMessage
     /** The Stop Tour button, on both phases that use this class. */
     static final String BUTTON_CANCEL = "tourcancel";
 
+    /**
+     * "do not show again" preference key for the confirmation.  Its own key rather than the
+     * {@code noshowconfirmation} checkbox name the phase declares - that name is shared by every
+     * confirmation dialog, so using it here would tie their hidden states together.
+     */
+    private static final String NO_SHOW_STOP_CONFIRM = "tour.stop.confirm";
+
     @Override
     public boolean processButton(AppButton button)
     {
@@ -41,6 +48,6 @@ public class TourDialog extends DisplayMessage
     {
         return EngineUtils.displayWarningConfirmationDialog(context_,
                 PropertyConfig.getMessage("msg.tour.confirm.stop"),
-                "msg.windowtitle.tourStop", "noshowconfirmation");
+                "msg.windowtitle.tourStop", NO_SHOW_STOP_CONFIRM);
     }
 }
