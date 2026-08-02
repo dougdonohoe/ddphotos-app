@@ -150,7 +150,9 @@ public class TourController {
                 running_ = false;
                 return;
             }
-            if (!"tournext".equals(name)) { running_ = false; return; } // Skip / window close
+            // Stop Tour / window close - already confirmed by TourDialog, so this result only
+            // arrives once the user has said yes.
+            if (!"tournext".equals(name)) { running_ = false; return; }
 
             runStep(i + 1);
         });
@@ -177,7 +179,7 @@ public class TourController {
 
         runner.pulseRunButton();
         Phase dialog = showDialog(step.phase(), step.msgKey(), _ -> {
-            // Only Cancel (or the window close) can resolve this dialog - a run resolves it via
+            // Only Stop Tour (or the window close) can resolve this dialog - a run resolves it via
             // the watcher below, which dismisses it without a result.
             endStep(runner);
         });
@@ -231,7 +233,10 @@ public class TourController {
         });
     }
 
-    /** The user canceled (or closed) a command step's dialog - stop watching and end the tour. */
+    /**
+     * The user confirmed Stop Tour (or the window close) on a command step - stop watching and end
+     * the tour.  {@link TourDialog} has already asked; a vetoed press never gets this far.
+     */
     private void endStep(CommandRunnerPanel runner) {
         runner.setRunWatcher(null);
         runner.clearPulse();

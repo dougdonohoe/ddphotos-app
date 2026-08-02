@@ -243,7 +243,7 @@
         </paramlist>
     </phase>
 
-    <phase name="TourStep" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+    <phase name="TourStep" class="com.donohoedigital.ddphotos.TourDialog" transient="true">
         <param name="style" strvalue="DisplayMessage"/>
         <param name="dialog-style" strvalue="DisplayMessage"/>
         <param name="dialog-background-image" strvalue="dialog-background"/>
@@ -263,7 +263,7 @@
     <!-- A tour step that waits on the user doing something in the main window (clicking Run, then
          Stop), so it has no Next button - the tour closes it itself.  No default-button either:
          focus then stays on the main window, where the button they need to click is. -->
-    <phase name="TourWait" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+    <phase name="TourWait" class="com.donohoedigital.ddphotos.TourDialog" transient="true">
         <param name="style" strvalue="DisplayMessage"/>
         <param name="dialog-style" strvalue="DisplayMessage"/>
         <param name="dialog-background-image" strvalue="dialog-background"/>
