@@ -41,6 +41,6 @@ public class TourDialog extends DisplayMessage
     {
         return EngineUtils.displayWarningConfirmationDialog(context_,
                 PropertyConfig.getMessage("msg.tour.confirm.stop"),
-                "msg.windowtitle.tourStop", null);
+                "msg.windowtitle.tourStop", "noshowconfirmation");
     }
 }
