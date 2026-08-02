@@ -147,6 +147,11 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     }
 
     @Override
+    protected AppContext getContext() {
+        return context_;
+    }
+
+    @Override
     protected void openPasswordDialog() {
         if (currentSite_ == null) return;
         TypedHashMap params = new TypedHashMap();
@@ -529,6 +534,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         originalSettings_ = null;
         setEditing(false);
         siteBar_.refreshCombo(currentSite_);
+        showPhotogenReminder();
     }
 
     // -------------------------------------------------------------------------

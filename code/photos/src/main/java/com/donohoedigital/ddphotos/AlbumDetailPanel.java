@@ -1,5 +1,6 @@
 package com.donohoedigital.ddphotos;
 
+import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
@@ -123,6 +124,11 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         panel.add(manualSort_);
 
         return panel;
+    }
+
+    @Override
+    protected AppContext getContext() {
+        return albumsList_.getContext();
     }
 
     @Override
@@ -391,6 +397,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         setEditing(false);
 
         if (onSavedCallback_ != null) onSavedCallback_.run();
+
+        showPhotogenReminder();
     }
 
     // -------------------------------------------------------------------------
