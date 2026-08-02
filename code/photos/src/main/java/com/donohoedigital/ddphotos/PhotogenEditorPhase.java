@@ -524,7 +524,12 @@ public class PhotogenEditorPhase extends BasePhase {
         // Decoded image, or the "no preview" camera-off placeholder when it can't be read (e.g. HEIC,
         // which ImageIO can't decode) — mirrors PhotoPreviewPanel.  Runs on Thumbs' shared pool.
         thumbJobs_.add(Thumbs.loadAsyncForDisplay(label, path, thumbW_, thumbH_, null,
-                img -> label.setIcon(img != null ? thumbIcon(label, img) : placeholderIcon())));
+                img -> {
+            label.setIcon(img != null ? thumbIcon(label, img) : placeholderIcon());
+            if (img == null) {
+                label.setToolTipText(PropertyConfig.getMessage("msg.nothumb.tooltip", path.getFileName().toString()));
+            }
+        }));
         return label;
     }
 

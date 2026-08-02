@@ -8,7 +8,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* Tooltip/help on thumb-not-available icon
 * Rework `init` project or give guidance on deleting the albums
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
