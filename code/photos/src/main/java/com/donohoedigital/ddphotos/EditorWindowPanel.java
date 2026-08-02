@@ -16,7 +16,7 @@ import javax.swing.*;
 class EditorWindowPanel extends LogoWindowPanel {
 
     EditorWindowPanel(JComponent topBar) {
-        super("icon48", PhotosBasePhase.STYLE);
+        super("icon48", PhotosBasePhase.HELP_STYLE);
         setTopComponent(topBar);
         setCenterBackground(StylesConfig.getColor("app.panel.bg"));
         setContentInsets(10, 10, 5, 10);

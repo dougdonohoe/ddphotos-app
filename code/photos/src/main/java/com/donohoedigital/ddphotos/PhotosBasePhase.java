@@ -41,7 +41,7 @@ public class PhotosBasePhase extends BasePhase {
     public static final String PARAM_RERUN_WIZARD = "rerun-wizard";
     public static final String PARAM_SELECT_SITE  = "select-site";
 
-    public static final String STYLE = "PhotosMain";
+    public static final String HELP_STYLE = "PhotosHelp";
 
     private final SitesFile sitesFile_;
 
@@ -64,7 +64,7 @@ public class PhotosBasePhase extends BasePhase {
         super.init(engine, context, phase);
         context_ = context;
 
-        base_ = new LogoWindowPanel("icon48", STYLE);
+        base_ = new LogoWindowPanel("icon48", HELP_STYLE);
         base_.setContentInsets(0, 0, 0, 0); // tabs run flush to the window edges
         helptext_ = base_.getHelpText();
 

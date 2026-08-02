@@ -8,8 +8,8 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* `descriptions.txt` editor? Or deprecate this?
-
+* Tour - keep up a dialog reminding to stop Run/Serve
+* Rework `init` project or give guidance on deleting the albums
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
   a settings menu to win/linux)?  Would want to show size of cache.  
@@ -19,6 +19,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * Undo support - Still open: reverting `albums.yaml` / `passwords.yaml` /
   `photogen.txt` to a previous on-disk version - backup files somewhere in config?
 
+* `descriptions.txt` editor? Or is this just an advanced feature?
 * Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
   to generate a larger thumb (max) and scale that down.  Also, maybe use photogen-generated files
   if they exist (grid).

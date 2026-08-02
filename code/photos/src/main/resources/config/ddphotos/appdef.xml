@@ -35,7 +35,7 @@
         <param name="window-multi" boolvalue="false"/>
         <param name="window-resize" boolvalue="true"/>
         <param name="style" strvalue="Support"/>
-        <param name="help-style" strvalue="PhotosMain"/>
+        <param name="help-style" strvalue="PhotosHelp"/>
         <param name="bevel-style" strvalue=""/>
         <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
         <param name="dialog-help-name" strvalue="empty"/>
