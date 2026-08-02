@@ -16,6 +16,12 @@ abstract class EditableDetailPanel extends DDPanel {
     protected static final String STYLE = "Options";
     protected static final String STYLE_ERROR = "OptionsError";
 
+    private final String sEditButtonName;
+
+    public EditableDetailPanel(String sEditButtonName) {
+        this.sEditButtonName = sEditButtonName;
+    }
+
     /** Combo key for the "no base" entry; its display text comes from {@code combobox.base.none}. */
     protected static final String NONE_BASE = "";
 
@@ -86,7 +92,7 @@ abstract class EditableDetailPanel extends DDPanel {
         scroll.setBorder(null);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
 
-        editBtn_   = new DDButton("editdetails", STYLE);
+        editBtn_   = new DDButton(sEditButtonName, STYLE);
         saveBtn_   = new DDButton("save",        STYLE);
         cancelBtn_ = new DDButton("cancel",      STYLE);
         editBtn_.addActionListener(_   -> enterEditMode());

@@ -63,6 +63,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     // -------------------------------------------------------------------------
 
     public AlbumDetailPanel(AlbumsListPanel albumsList) {
+        super("editdetails.album");
         albumsList_ = albumsList;
         baseElement_ = createBaseElement("albumbase", baseKeys_, baseDisplays_);
         buildUI();

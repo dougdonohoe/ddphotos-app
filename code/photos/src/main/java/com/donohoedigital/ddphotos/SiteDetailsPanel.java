@@ -67,6 +67,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private DDHtmlArea heroWarningArea_;
 
     public SiteDetailsPanel(AppContext context, SiteBarPanel siteBar) {
+        super("editdetails.site");
         context_ = context;
         siteBar_ = siteBar;
         buildUI();
