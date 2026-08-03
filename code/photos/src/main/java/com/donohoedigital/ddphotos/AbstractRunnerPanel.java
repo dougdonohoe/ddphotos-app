@@ -5,6 +5,7 @@ import com.donohoedigital.app.engine.AppEngine;
 import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.ApplicationError;
 import com.donohoedigital.base.TypedHashMap;
+import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
@@ -19,6 +20,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntConsumer;
 
 /**
@@ -73,6 +75,10 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
     // code results as a deliberate stop rather than a failure. The exit code alone is unreliable:
     // a forced terminate yields 1 on Windows, not the 137/143 of a Unix SIGKILL/SIGTERM.
     private volatile boolean userStopped_;
+    // Latches on the first preview URL a run announces, so a dev server that restarts and reprints
+    // its banner doesn't open a second browser tab. Atomic because stdout and stderr are pumped on
+    // two threads, either of which could carry the line.
+    private final AtomicBoolean autoOpened_ = new AtomicBoolean();
 
     // External gate (e.g. wizard validation) ANDed with the panel's own validity check.
     private boolean runAllowed_ = true;
@@ -510,9 +516,10 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
      */
     protected void startReaders(Process p, IntConsumer onComplete) {
         userStopped_ = false;
+        autoOpened_.set(false);
         long startNanos = System.nanoTime();
-        Thread out = new Thread(() -> console_.pumpStream(p.getInputStream(), false));
-        Thread err = new Thread(() -> console_.pumpStream(p.getErrorStream(), true));
+        Thread out = new Thread(() -> console_.pumpStream(p.getInputStream(), false, this::maybeAutoOpen));
+        Thread err = new Thread(() -> console_.pumpStream(p.getErrorStream(), true, this::maybeAutoOpen));
         Thread mon = new Thread(() -> {
             try {
                 int code = p.waitFor();
@@ -537,6 +544,42 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
         out.start();
         err.start();
         mon.start();
+    }
+
+    /**
+     * Opens the preview URL the running command just announced - see
+     * {@link CommandRunner#autoOpenUrl}. Only the main command's output is watched (prerequisite
+     * checks and remediation commands keep the plain pump), and only the first match of a run is
+     * acted on, so a dev server that restarts and reprints its banner does not open a second tab.
+     *
+     * <p>Called on a pump thread, and hands off to yet another: {@link Utils#openURL} blocks while
+     * the OS starts a browser, and {@code serve} deliberately waits before opening - neither may
+     * stall the thread feeding the console.
+     */
+    private void maybeAutoOpen(String line) {
+        CommandRunner runner = activeRunner_;
+        if (runner == null) return;
+        String url = runner.autoOpenUrl(line);
+        if (url == null || !autoOpened_.compareAndSet(false, true)) return;
+
+        SwingUtilities.invokeLater(() ->
+                console_.appendSystem(PropertyConfig.getMessage("msg.cmd.openingBrowser", url)));
+
+        long delay = runner.autoOpenDelayMs();
+        Thread t = new Thread(() -> {
+            if (delay > 0) {
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            // The user can stop the server inside that window - don't open a page for a dead one.
+            if (!userStopped_) Utils.openURL(url);
+        }, "auto-open-url");
+        t.setDaemon(true);
+        t.start();
     }
 
     /**

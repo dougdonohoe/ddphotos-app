@@ -62,6 +62,24 @@ public abstract class CommandRunner {
     public Prerequisite getPrerequisite(Site site, Map<String, String> userValues) { return null; }
 
     /**
+     * Inspect one ANSI-stripped line of the main command's output and return a URL to open in the
+     * user's browser, or null for the vast majority of lines. Only the first non-null result of a
+     * run is acted on - see {@code AbstractRunnerPanel.maybeAutoOpen}. Called once per output line
+     * on a stream-pump thread (not the EDT), so it must be cheap and free of side effects.
+     *
+     * <p>Only the long-running preview servers ({@code run}, {@code serve}) override this, and they
+     * match the one fixed line each prints. Matching loosely here would launch a browser at a URL
+     * that merely appeared in an error message.
+     */
+    public String autoOpenUrl(String line) { return null; }
+
+    /**
+     * How long to wait before opening {@link #autoOpenUrl}'s URL, for a server that announces
+     * itself before it is actually listening.
+     */
+    public long autoOpenDelayMs() { return 0; }
+
+    /**
      * Message to show instead of running, when another command ({@code runningDisplayName}) is
      * already running; null (the default) means this command may run alongside others.
      */

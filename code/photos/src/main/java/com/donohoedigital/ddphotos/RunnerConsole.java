@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -231,11 +232,22 @@ public class RunnerConsole extends JPanel {
     // ──────────────────────────────────────────────────────────────────────────────
 
     public void pumpStream(InputStream is, boolean stderr) {
+        pumpStream(is, stderr, null);
+    }
+
+    /**
+     * As {@link #pumpStream(InputStream, boolean)}, but also hands each ANSI-stripped line (without
+     * its newline) to {@code lineObserver} - used to spot the preview-server URL a command
+     * announces. The observer is called on this pump thread, after the console append has been
+     * queued, so anything it queues of its own lands in the console in the order it happened.
+     */
+    public void pumpStream(InputStream is, boolean stderr, Consumer<String> lineObserver) {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
-                String text = PhotosUtils.stripAnsi(line) + "\n";
-                SwingUtilities.invokeLater(() -> appendOutput(text, stderr));
+                String stripped = PhotosUtils.stripAnsi(line);
+                SwingUtilities.invokeLater(() -> appendOutput(stripped + "\n", stderr));
+                if (lineObserver != null) lineObserver.accept(stripped);
             }
         } catch (IOException e) {
             // normal on process exit
