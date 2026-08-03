@@ -142,7 +142,6 @@ The core architecture of DD Photos was adapted from the
 which is licensed under the [GNU General Public License v3.0↗](https://www.gnu.org/licenses/gpl-3.0.html) (GPL v3).
 
 DD Photos incorporates other open source code, primarily as Maven dependencies 
-(see the `pom.xml` files) but also as bundled resources such as fonts.  These are 
-explained in 
+(see the `pom.xml` files).  These are explained in 
 [code/photos/src/main/resources/config/ddphotos/help/credits.html](code/photos/src/main/resources/config/ddphotos/help/credits.html) and the licenses 
 mentioned therein can be found in the `docs/license` directory.
