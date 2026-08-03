@@ -23,8 +23,10 @@ import java.util.Set;
  * (see {@code ddphotos/pkg/photogen/album.go} {@code loadPhotoDescriptions} and
  * {@code util.go} {@code scanLines}).  Each significant line is
  * {@code key [description]}, where {@code key} is a photo basename (with or without an
- * image extension) or a subfolder name.  Blank lines and lines beginning with {@code #}
- * are ignored by the generator but preserved here.
+ * image extension) or a subfolder name.  A key containing a space is double-quoted
+ * ({@code "Chicago 2009.jpg" A cool trip}); one that doesn't is written bare, as before.
+ * There is no escape for a literal quote inside a key, so such a name isn't representable.
+ * Blank lines and lines beginning with {@code #} are ignored by the generator but preserved here.
  *
  * <p>This class mirrors {@link SitesFile}'s shape: the constructor stores the target only,
  * {@link #load()} is a non-throwing wrapper returning {@code this}, and {@link #save()}
@@ -240,12 +242,36 @@ public class PhotogenFile {
             } else if (trimmed.startsWith("#")) {
                 lines_.add(Line.raw(Kind.COMMENT, raw));
             } else {
-                int sp = trimmed.indexOf(' ');
-                String key = sp < 0 ? trimmed : trimmed.substring(0, sp);
-                String desc = sp < 0 ? "" : trimmed.substring(sp + 1);
-                lines_.add(Line.parsedEntry(raw, key, desc));
+                lines_.add(parseEntry(raw, trimmed));
             }
         }
+    }
+
+    /**
+     * Splits one entry line into key and description, mirroring the Go generator's
+     * {@code parsePhotogenLine}.  The key runs to the first space, so a key containing spaces
+     * has to be double-quoted:
+     *
+     * <pre>
+     * "Doug and Cindy Chicago.jpg" A cool trip to Chicago
+     * doug-and-cindy-chicago.jpg A cool trip to Chicago
+     * </pre>
+     *
+     * A line that opens with a quote but never closes it falls back to the unquoted split, so a
+     * stray quote can't swallow the rest of the line.
+     */
+    private static Line parseEntry(String raw, String trimmed) {
+        if (trimmed.startsWith("\"")) {
+            int close = trimmed.indexOf('"', 1);
+            if (close >= 0) {
+                return Line.parsedEntry(raw, trimmed.substring(1, close),
+                                        trimmed.substring(close + 1).strip());
+            }
+        }
+        int sp = trimmed.indexOf(' ');
+        String key = sp < 0 ? trimmed : trimmed.substring(0, sp);
+        String desc = sp < 0 ? "" : trimmed.substring(sp + 1).strip();
+        return Line.parsedEntry(raw, key, desc);
     }
 
     private enum Kind { BLANK, COMMENT, ENTRY }
@@ -282,7 +308,9 @@ public class PhotogenFile {
 
         String render() {
             if (kind != Kind.ENTRY || raw != null) return raw;
-            return description == null || description.isEmpty() ? key : key + " " + description;
+            // Only quote when needed, so files without spaces in their names read as they always have.
+            String name = key.indexOf(' ') < 0 ? key : "\"" + key + "\"";
+            return description == null || description.isEmpty() ? name : name + " " + description;
         }
     }
 }

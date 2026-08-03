@@ -75,6 +75,59 @@ public class PhotogenFileTest {
         assertEquals("", pf.getCaption("subfolder"));
     }
 
+    // ── quoted-name tests ───────────────────────────────────────────────────
+
+    @Test
+    public void getCaption_quotedNameWithSpaces() throws Exception {
+        Path dir = write("\"Chicago 2009 001.jpg\" Millennium Park.\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertEquals(List.of("Chicago 2009 001.jpg"), pf.getEntryKeys());
+        assertEquals("Millennium Park.", pf.getCaption("Chicago 2009 001.jpg"));
+        assertEquals("Millennium Park.", pf.getCaption("chicago 2009 001")); // ext/case-insensitive
+    }
+
+    @Test
+    public void getCaption_quotedNameWithNoCaption() throws Exception {
+        Path dir = write("\"Chicago 2009\"\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertTrue(pf.hasEntry("Chicago 2009"));
+        assertEquals("", pf.getCaption("Chicago 2009"));
+    }
+
+    @Test
+    public void parse_unterminatedQuoteFallsBackToFirstSpaceSplit() throws Exception {
+        Path dir = write("\"Chicago 2009.jpg A caption.\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertEquals(List.of("\"Chicago"), pf.getEntryKeys());
+        assertEquals("2009.jpg A caption.", pf.getCaption("\"Chicago"));
+    }
+
+    @Test
+    public void setCaption_quotesOnlyNamesContainingSpaces() throws Exception {
+        Path dir = write("img_1 One\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        pf.setCaption("Chicago 2009 001.jpg", "Millennium Park.");
+        pf.setCaption("img_2", "Two");
+        pf.setCaption("Chicago 2009 002.jpg", ""); // no caption
+        pf.save();
+        assertEquals("""
+                     img_1 One
+                     "Chicago 2009 001.jpg" Millennium Park.
+                     img_2 Two
+                     "Chicago 2009 002.jpg"
+                     """, read(dir));
+    }
+
+    @Test
+    public void quotedEntry_survivesEditRoundTrip() throws Exception {
+        Path dir = write("\"Chicago 2009 001.jpg\" Millennium Park.\n\"Chicago 2009 002.jpg\" The Bean.\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        pf.setCaption("chicago 2009 002", "Cloud Gate.");
+        pf.save();
+        assertEquals("\"Chicago 2009 001.jpg\" Millennium Park.\n\"Chicago 2009 002.jpg\" Cloud Gate.\n",
+                     read(dir));
+    }
+
     // ── mutation tests ──────────────────────────────────────────────────────
 
     @Test
