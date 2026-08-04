@@ -16,6 +16,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # No build products here, so the checks needing installers (and the comparison
+      # against the published GitHub release) skip themselves - see README-DEV.md
+      - name: Test release logic
+        shell: bash
+        run: tools/bin/test-buildall.pl
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:

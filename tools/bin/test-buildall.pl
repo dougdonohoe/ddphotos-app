@@ -10,8 +10,13 @@
 # the subs being driven by globals ($DEVDIR, $INSTALLERDIR, $VERSION_FILE, ...).  If either
 # changes, fix this script.
 #
-# Not covered here: checkNotBehind() and confirm(), which talk to the network and to
-# stdin and call exit() directly - use 'buildall -full -github-dryrun' for those.
+# Not covered here: checkNotBehind(), confirm() and pullOriginalDir(), which talk to the
+# network and to stdin and call exit() directly - use 'buildall -full -github-dryrun' for
+# those.  pullOriginalDir()'s decision logic is covered via pullPlan().
+#
+# Everything that needs a local build - or 'gh', which releaseNotes() uses for the
+# changelog link - sits behind $haveBuild, so a bare checkout (CI, or just a tree that has
+# never been built) skips those and still runs the rest offline.
 #
 # Usage:  test-buildall.pl
 #
@@ -54,7 +59,13 @@ print("  repo:     $DEVDIR\n");
 print("  version:  $VERSION ($VERSION_FILE)\n");
 print("  builds:   $INSTALLERDIR\n\n");
 
-$haveBuild = (-f "$INSTALLERDIR/md5sums.txt");
+# Some checks need a local build of *this* version, which there often isn't: -dev builds
+# are occasional and CI never has one.  md5sums.txt is the last thing an installer build
+# writes, so it is the sentinel - matched the same way releaseNotes() does, since a bare
+# "1_0_0" also appears in a left-over "1_0_0b7" build.
+$md5file = "$INSTALLERDIR/md5sums.txt";
+$haveBuild = (-f $md5file) && slurpFile($md5file) =~ /_\Q$VERSION_FILE\E\./;
+$noBuild = "no local $VERSION build in $INSTALLERDIR - run 'buildall -dev' first";
 
 #####
 ##### Tests
@@ -71,7 +82,7 @@ ok("releaseNotesName", releaseNotesName() eq "release_notes_${VERSION_FILE}.md",
 # --- releaseNotes
 if (!$haveBuild)
 {
-	skip("releaseNotes", "no $INSTALLERDIR/md5sums.txt - run 'buildall -dev' first");
+	skip("releaseNotes", $noBuild);
 }
 else
 {
@@ -104,7 +115,8 @@ ok("releaseNotes dies on unknown version",
 
 if ($haveBuild && @versions > 1)
 {
-	# an older version has a whatsnew entry but won't be in this build's md5sums.txt
+	# an older version has a whatsnew entry but won't be in this build's md5sums.txt.
+	# Also guards the substring trap: "1_0_0" must not be satisfied by a "1_0_0b7" build.
 	$old = $versions[1];
 	$saved = $VERSION_FILE;
 	$VERSION_FILE = $old =~ s/\./_/gr;
@@ -115,7 +127,7 @@ if ($haveBuild && @versions > 1)
 # --- checkInstallers
 if (!$haveBuild)
 {
-	skip("checkInstallers", "no build in $INSTALLERDIR");
+	skip("checkInstallers", $noBuild);
 }
 else
 {
@@ -156,6 +168,41 @@ $realReadme = slurpFile("$DEVDIR/README.md");
 	writeFile("$tmp/README.md", "no markers here\n");
 	ok("updateReadme dies without markers",
 	   !eval { updateReadme("9.9.9z9", 1); 1 } && $@ =~ /Could not find the installers/, $@);
+}
+
+# --- pullPlan (the -github post-release pull back into the dev tree)
+{
+	# not a repo at all
+	local $ORIGDIR = tempdir(CLEANUP => 1);
+	($ok, $detail) = pullPlan();
+	ok("pullPlan skips a non-repo", !$ok && $detail =~ /not a git repository/, $detail);
+}
+
+{
+	# run from the build clone, so there is nothing to pull back
+	local $ORIGDIR = $DEVDIR;
+	($ok, $detail) = pullPlan();
+	ok("pullPlan skips the build clone", !$ok && $detail =~ /build clone/, $detail);
+}
+
+{
+	# a throwaway repo standing in for the dev tree, with one commit so HEAD resolves
+	$repo = tempdir(CLEANUP => 1);
+	$git = "git -C $repo -c user.email=t\@t -c user.name=t";
+	`git init -q -b notmain $repo 2>&1`;
+	`$git commit -q --allow-empty -m init 2>&1`;
+	mkdir("$repo/sub");
+
+	# ORIGDIR is a subdir, to prove the plan reports the work tree root
+	local $ORIGDIR = "$repo/sub";
+
+	($ok, $detail) = pullPlan();
+	ok("pullPlan skips a non-main branch", !$ok && $detail =~ /is on 'notmain', not main/, $detail);
+
+	`$git branch -m notmain main 2>&1`;
+	($ok, $detail) = pullPlan();
+	ok("pullPlan pulls a dev tree on main", $ok, $detail);
+	ok("pullPlan reports the work tree root", $detail eq gitTopLevel($repo), $detail);
 }
 
 #####

@@ -10,6 +10,12 @@
 # options: see below
 #
 
+use Cwd;
+
+# where the script was invoked from, captured before anything cd()s away - see
+# pullOriginalDir()
+$ORIGDIR = getcwd();
+
 $OSTYPE=$^O;
 # mac?
 if ($OSTYPE =~ "darwin.*")
@@ -349,10 +355,16 @@ sub build
 			# check the README markers now, since we stop before rewriting them
 			updateReadme($VERSION, 1);
 
+			# report the same pull decision the real run would make, skip reason and all
+			my($pullok, $pulldetail) = pullPlan();
+
 			print("\nDRY RUN - would run:\n\n    $cmd\n");
 			print("\nDRY RUN - would then point the README.md installer links at $VERSION,\n");
-			print("show the diff, and commit/push it.  No release was created and\n");
-			print("README.md was not touched (only $INSTALLERDIR/$notesfile was written).\n\n");
+			print("show the diff, and commit/push it.  It would then " .
+			      ($pullok ? "run 'git pull --tags' in $pulldetail"
+			               : "skip the git pull ($pulldetail)") . ".\n");
+			print("No release was created and README.md was not touched\n");
+			print("(only $INSTALLERDIR/$notesfile was written).\n\n");
 			exit(0);
 		}
 
@@ -367,13 +379,19 @@ sub build
 		runIndented("git add README.md", $indent);
 		runIndented("git commit -m 'Update README installer links for $VERSION'", $indent);
 		runIndented("git push", $indent);
+
+		# everything above happened in the build clone, so bring the tag and the README
+		# commit back to wherever this was run from
+		pullOriginalDir();
 	}
 }
 
-# run given command and indent output, and optionally filter lines
+# run given command and indent output, and optionally filter lines.  A non-zero exit
+# normally aborts the build; $warnonly downgrades that to a warning, for steps that run
+# after the release has already been published.
 sub runIndented
 {
-	my($command, $indent, $filter) = @_;
+	my($command, $indent, $filter, $warnonly) = @_;
     print("\n" . $indent . "Running '$command'...\n");
 	open (OUTPUT, "$command 2>&1 |") || die "can't open $!";
 	while (<OUTPUT>)
@@ -384,9 +402,14 @@ sub runIndented
 	close OUTPUT;
 	my $exit_code = $? >> 8;
 	if ($exit_code != 0) {
-		print("\n*** Error (exit code $exit_code) running '$command'\n\n");
-		exit($exit_code);
+		if ($warnonly) {
+			print("\n*** Warning (exit code $exit_code) running '$command'\n\n");
+		} else {
+			print("\n*** Error (exit code $exit_code) running '$command'\n\n");
+			exit($exit_code);
+		}
 	}
+	return $exit_code;
 }
 
 # set VERSION and VERSION_FILE (assumes mvn has been run)
@@ -475,6 +498,66 @@ sub checkNotBehind
 	}
 }
 
+# top of the git work tree containing $dir, or empty when $dir isn't in one
+sub gitTopLevel
+{
+	my($dir) = @_;
+
+	my $top = `git -C '$dir' rev-parse --show-toplevel 2>/dev/null`;
+	chop $top;
+
+	return $top;
+}
+
+# current branch name of the repo containing $dir ("HEAD" when detached)
+sub gitBranch
+{
+	my($dir) = @_;
+
+	my $branch = `git -C '$dir' rev-parse --abbrev-ref HEAD 2>/dev/null`;
+	chop $branch;
+
+	return $branch;
+}
+
+# Whether pullOriginalDir() should pull, as ($ok, $detail): the work tree to pull when
+# $ok, otherwise the reason it is being skipped.  Split out from the pull itself so
+# -github-dryrun can rehearse the same decision without touching anything.
+sub pullPlan
+{
+	my $top = gitTopLevel($ORIGDIR);
+
+	return (0, "$ORIGDIR is not a git repository") if (!$top);
+
+	# with -dev (or if run from the build clone itself) the release was made right here,
+	# so there is nothing to pull back
+	return (0, "it ran from the build clone $top") if ($top eq gitTopLevel($DEVDIR));
+
+	my $branch = gitBranch($ORIGDIR);
+	return (0, "$top is on '$branch', not main") if ($branch ne "main");
+
+	return (1, $top);
+}
+
+# -github does its git work in the build clone, so the dev tree this was launched from
+# never sees the new tag or the README commit.  Pull them over, when that is safe to do.
+sub pullOriginalDir
+{
+	my($ok, $detail) = pullPlan();
+
+	if (!$ok)
+	{
+		print("\n" . $indent . "Skipping git pull: $detail.\n");
+		return;
+	}
+
+	cd($ORIGDIR);
+
+	# only a warning if this fails: the release is published and the README is pushed, so
+	# a dirty or diverged dev tree shouldn't make a good release look like a broken build
+	runIndented("git pull --tags --progress", $indent, undef, 1);
+}
+
 # build markdown release notes for $version from the whatsnew.html entry of the same
 # version, assuming the format used since 1.0.0b1
 sub releaseNotes
@@ -521,9 +604,11 @@ sub releaseNotes
 	my $md5file = "$INSTALLERDIR/md5sums.txt";
 	die "$md5file not found - run 'buildall.pl -full' first" if (! -f $md5file);
 
+	# match the "_<version>." out of the installer names rather than the bare version:
+	# a plain "1_0_0" is also a substring of a left-over "1_0_0b7" build
 	my $md5 = slurp($md5file);
 	die "$md5file has no $verfile entries (stale?) - re-run 'buildall.pl -full'"
-		if ($md5 !~ /\Q$verfile\E/);
+		if ($md5 !~ /_\Q$verfile\E\./);
 	$notes .= "\n" . $md5;
 
 	return $notes;
