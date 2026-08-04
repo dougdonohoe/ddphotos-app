@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.prefs.Preferences;
 
@@ -376,6 +377,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         if (site == null || af == null || currentEntry_ == null) return;
 
         AlbumEntry updated = entryFromFields();
+        String oldSlug = currentEntry_.getSlug();
         currentEntry_.setSlug(updated.getSlug());
         currentEntry_.setName(updated.getName());
         currentEntry_.setDescription(updated.getDescription());
@@ -391,6 +393,13 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             logger.error("Failed to save albums file: {}", site.getAlbumsFilePath(), e);
             PhotosUtils.showSaveError(albumsList_.getContext(), site.getAlbumsFilePath(), e);
             return;
+        }
+
+        // Only once albums.yaml is safely written, and before setEditing() re-reads the
+        // passwords file for the lock icon.
+        if (!Objects.equals(oldSlug, currentEntry_.getSlug())) {
+            PhotosUtils.renameAlbumPassword(albumsList_.getContext(), af,
+                                            oldSlug, currentEntry_.getSlug());
         }
 
         originalEntry_ = null;

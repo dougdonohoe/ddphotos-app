@@ -11,6 +11,7 @@ import org.snakeyaml.engine.v2.exceptions.YamlEngineException;
 import org.snakeyaml.engine.v2.nodes.MappingNode;
 import org.snakeyaml.engine.v2.nodes.Node;
 import org.snakeyaml.engine.v2.nodes.NodeTuple;
+import org.snakeyaml.engine.v2.nodes.ScalarNode;
 import org.snakeyaml.engine.v2.nodes.Tag;
 
 import java.io.IOException;
@@ -155,13 +156,15 @@ public class PasswordsFile {
         validate();
         logger.info("save {}", path_);
 
+        MappingNode node = rootNode_ != null ? rootNode_ : buildRootNode();
+        syncToNode(node);
+
         String yaml;
-        if (rootNode_ == null && isEmpty()) {
-            // Nothing to say; don't turn an empty file into "{}".
+        // Nothing to say; don't turn an emptied file into "{}".  The check has to come after
+        // the sync, since that is what drops the last key when the model has been cleared out.
+        if (node.getValue().isEmpty()) {
             yaml = "";
         } else {
-            MappingNode node = rootNode_ != null ? rootNode_ : buildRootNode();
-            syncToNode(node);
             DumpSettings ds = DumpSettings.builder()
                     .setDumpComments(true)
                     .setIndent(2)
@@ -171,8 +174,8 @@ public class PasswordsFile {
             StringStreamWriter sw = new StringStreamWriter();
             new Dump(ds).dumpNode(node, sw);
             yaml = sw.toString();
-            if (rootNode_ == null) rootNode_ = node;
         }
+        if (rootNode_ == null) rootNode_ = node;
 
         try {
             AtomicWrite.writeString(path_, yaml);
@@ -315,6 +318,52 @@ public class PasswordsFile {
     /** Removes an album's entry, so it falls back to the site password (if any). */
     public void removeAlbum(String slug) {
         if (slug != null) albums_.remove(slug);
+    }
+
+    /**
+     * Re-keys an album's entry after a slug rename, so its password follows the album instead of
+     * being stranded under the old slug.  A no-op when the album has no entry of its own.  An
+     * entry already sitting under {@code newSlug} — a leftover in a hand-edited file — is
+     * replaced, since the renamed album now owns that slug.
+     */
+    public void renameAlbum(String oldSlug, String newSlug) {
+        if (isBlank(oldSlug) || isBlank(newSlug) || oldSlug.equals(newSlug)) return;
+        if (!albums_.containsKey(oldSlug)) return;
+
+        // Rebuild rather than remove/put, so the entry keeps its place in file order.
+        Map<String, PasswordEntry> renamed = new LinkedHashMap<>();
+        for (Map.Entry<String, PasswordEntry> e : albums_.entrySet()) {
+            if (e.getKey().equals(newSlug)) continue;   // superseded by the renamed entry
+            renamed.put(e.getKey().equals(oldSlug) ? newSlug : e.getKey(), e.getValue());
+        }
+        albums_.clear();
+        albums_.putAll(renamed);
+
+        renameAlbumNodeKey(oldSlug, newSlug);
+    }
+
+    /**
+     * Renames an existing {@code albums:} tuple's key in place, keeping its position, comments
+     * and value node.  Leaving it to {@link #syncAlbums} instead would prune the old tuple and
+     * append a fresh one at the end of the block, losing both.
+     */
+    private void renameAlbumNodeKey(String oldSlug, String newSlug) {
+        if (rootNode_ == null) return;
+        MappingNode albumsNode = getMappingNode(rootNode_, "albums");
+        if (albumsNode == null) return;
+
+        removeKey(albumsNode, newSlug);
+        int idx = findTupleIndex(albumsNode, oldSlug);
+        if (idx < 0) return;
+
+        NodeTuple tuple = albumsNode.getValue().get(idx);
+        if (!(tuple.getKeyNode() instanceof ScalarNode oldKey)) return;
+
+        ScalarNode newKey = new ScalarNode(oldKey.getTag(), newSlug, oldKey.getScalarStyle());
+        newKey.setBlockComments(oldKey.getBlockComments());
+        newKey.setInLineComments(oldKey.getInLineComments());
+        newKey.setEndComments(oldKey.getEndComments());
+        albumsNode.getValue().set(idx, new NodeTuple(newKey, tuple.getValueNode()));
     }
 
     // ── validation ──────────────────────────────────────────────────────────

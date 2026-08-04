@@ -56,6 +56,20 @@ public class PasswordsFileTest {
                 hint: A big brown ape
             """;
 
+    /** An albums block with a comment on the first entry, so renames can be shown to keep layout. */
+    private static final String SAMPLE_COMMENTED_ALBUMS =
+            """
+            key: ddphotos-sample-key-all
+
+            albums:
+              # The gorilla trip
+              uganda:
+                password: gorilla
+                hint: A big brown ape
+              antarctica:
+                password: penguin
+            """;
+
     /** Matches infra/photos/manly-man/passwords.yaml: no comments, no albums block. */
     private static final String SAMPLE_SITE_ONLY =
             """
@@ -375,6 +389,69 @@ public class PasswordsFileTest {
         assertFalse(pf.isSiteProtected());
         assertNull(pf.getSite());
         assertFalse("albums with no entry lose protection too", pf.isAlbumProtected("nepal"));
+    }
+
+    /**
+     * Deleting the only album from a file with nothing else in it leaves an empty node tree -
+     * which SnakeYAML would happily dump as "{}".
+     */
+    @Test
+    public void removeAlbum_emptiedFileIsBlankNotBraces() throws Exception {
+        Path f = write("albums:\n  uganda:\n    password: gorilla\n");
+        PasswordsFile pf = new PasswordsFile(f).load();
+        pf.removeAlbum("uganda");
+        pf.save();
+
+        assertEquals("an emptied file must not become \"{}\"", "", read(f));
+    }
+
+    // ── rename tests ────────────────────────────────────────────────────────
+
+    @Test
+    public void renameAlbum_keepsPositionAndComments() throws Exception {
+        Path f = write(SAMPLE_COMMENTED_ALBUMS);
+        PasswordsFile pf = new PasswordsFile(f).load();
+        pf.renameAlbum("uganda", "uganda-2024");
+        pf.save();
+
+        assertEquals("only the key changes - position, comment and value block stay put",
+                SAMPLE_COMMENTED_ALBUMS.replace("  uganda:", "  uganda-2024:"), read(f));
+
+        PasswordsFile reloaded = new PasswordsFile(f).load();
+        assertEquals("[uganda-2024, antarctica]", reloaded.getAlbumSlugs().toString());
+        assertEquals("gorilla", reloaded.getAlbumPassword("uganda-2024"));
+        assertEquals("A big brown ape", reloaded.getAlbumHint("uganda-2024"));
+        assertFalse(reloaded.hasAlbumEntry("uganda"));
+    }
+
+    @Test
+    public void renameAlbum_noOpCases() throws Exception {
+        Path f = write(SAMPLE_ALL);
+        PasswordsFile pf = new PasswordsFile(f).load();
+        pf.renameAlbum("uganda", "uganda");   // same slug
+        pf.renameAlbum("uganda", "   ");      // blank target
+        pf.renameAlbum(null, "nepal");
+        pf.renameAlbum("nepal", "tibet");     // album has no entry of its own
+        pf.save();
+
+        assertEquals(SAMPLE_ALL, read(f));
+    }
+
+    /** A hand-edited file can already hold an entry under the new slug; the renamed one wins. */
+    @Test
+    public void renameAlbum_replacesExistingTargetEntry() throws Exception {
+        Path f = write(SAMPLE_ALL);
+        PasswordsFile pf = new PasswordsFile(f).load();
+        pf.renameAlbum("uganda", "antarctica");
+        pf.save();
+
+        PasswordsFile reloaded = new PasswordsFile(f).load();
+        assertEquals("[antarctica]", reloaded.getAlbumSlugs().toString());
+        assertEquals("gorilla", reloaded.getAlbumPassword("antarctica"));
+
+        String saved = read(f);
+        assertEquals("the block must not end up with two antarctica keys",
+                saved.indexOf("antarctica:"), saved.lastIndexOf("antarctica:"));
     }
 
     // ── key tests ───────────────────────────────────────────────────────────

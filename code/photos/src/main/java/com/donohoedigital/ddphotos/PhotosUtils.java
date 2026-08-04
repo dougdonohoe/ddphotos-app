@@ -5,9 +5,14 @@ import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.config.PropertyConfig;
+import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.FileErrors;
+import com.donohoedigital.ddphotos.config.PasswordsFile;
+import com.donohoedigital.ddphotos.config.PasswordsFileException;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -16,6 +21,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class PhotosUtils {
+
+    private static final Logger logger = LogManager.getLogger(PhotosUtils.class);
 
     /** Path to the private ddphotos wrapper script installed by the New User wizard. */
     public static Path scriptPath() {
@@ -101,6 +108,58 @@ public class PhotosUtils {
     /** One line for {@link #showSaveErrors}. */
     public static String saveErrorLine(Object path, Throwable e) {
         return escapeHtml(path + ": ") + saveErrorDetail(e);
+    }
+
+    // -------------------------------------------------------------------------
+    // Passwords file upkeep
+    // -------------------------------------------------------------------------
+
+    /**
+     * Drops a deleted album's entry from {@code passwords.yaml}.  Entries there are keyed by
+     * slug and nothing else ties one to an album, so an entry left behind outlives the album -
+     * and would silently protect (and rename the photos of) a future album that reuses the slug.
+     */
+    public static void removeAlbumPassword(AppContext context, AlbumsFile af, String slug) {
+        PasswordsFile pf = freshPasswordsFile(af, slug);
+        if (pf == null) return;
+        pf.removeAlbum(slug);
+        savePasswords(context, af);
+    }
+
+    /**
+     * Moves an album's {@code passwords.yaml} entry to its new slug, so a rename doesn't strand
+     * the password under the old key and quietly leave the album unprotected.
+     */
+    public static void renameAlbumPassword(AppContext context, AlbumsFile af,
+                                           String oldSlug, String newSlug) {
+        PasswordsFile pf = freshPasswordsFile(af, oldSlug);
+        if (pf == null) return;
+        pf.renameAlbum(oldSlug, newSlug);
+        savePasswords(context, af);
+    }
+
+    /**
+     * Re-reads the site's passwords file - as {@code PasswordDialog} does, so we never write back
+     * stale data - and returns it only when the album actually has an entry of its own.  There is
+     * nothing to change, and so nothing to save, otherwise.
+     *
+     * <p>Deliberately not {@code getOrCreatePasswordsFile()}: a site with no passwords file must
+     * not gain one (nor a defaulted {@code settings.passwords}) as a side effect of an album edit.
+     */
+    private static PasswordsFile freshPasswordsFile(AlbumsFile af, String slug) {
+        if (af == null || slug == null) return null;
+        af.reloadPasswordsFile();
+        PasswordsFile pf = af.getPasswordsFile();
+        return pf != null && pf.hasAlbumEntry(slug) ? pf : null;
+    }
+
+    private static void savePasswords(AppContext context, AlbumsFile af) {
+        try {
+            af.savePasswordsFile();
+        } catch (PasswordsFileException e) {
+            logger.error("Failed to save passwords file: {}", af.resolvePasswordsPath(), e);
+            showSaveError(context, af.resolvePasswordsPath(), e);
+        }
     }
 
     /** "do not show again" preference key for the post-save photogen reminder. */

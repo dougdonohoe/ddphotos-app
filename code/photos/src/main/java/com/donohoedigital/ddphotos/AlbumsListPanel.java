@@ -190,6 +190,8 @@ public class AlbumsListPanel extends DDPanel {
         suppressSelectionChange_ = false;
 
         saveAlbumsFile();
+        // Before notifying listeners, so the detail panel's lock icon reads the updated file.
+        PhotosUtils.removeAlbumPassword(context_, af, selected.getSlug());
         notifySelectionListeners(list_.getSelectedValue());
         updateButtons();
     }
