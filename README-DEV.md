@@ -444,9 +444,12 @@ assuming a `-full` run already produced and validated the installers.
 4. Rewrites the installer links in `README.md` between the
    `<!-- installers:begin ... -->` / `<!-- installers:end -->` markers, shows the diff,
    and asks before committing and pushing.
-
-The README edit happens in the build clone, so after, do a `git pull` in this working tree
-to pick up both the new tag and the README change.
+5. Runs `git pull --tags` in the directory you launched `buildall` from, so this working
+   tree picks up the new tag and the README commit that were made in the build clone.
+   That last step is skipped, with a note saying why, if you didn't run from a git repo,
+   if that repo isn't on `main`, or if you ran from the build clone itself (`-dev`).  A
+   failure there is only a warning - the release is already published at that point, so a
+   dirty working tree won't be reported as a broken build.
 
 **Do not hand-edit the marked block in `README.md`** - anything inside those markers is
 regenerated.  Put wording you want kept outside them.
@@ -462,9 +465,16 @@ tools/bin/test-buildall.pl
 
 It reads the real `whatsnew.html` and `README.md`, works on a throwaway copy of the README,
 and verifies (among other things) that the generated notes for an already-released version
-match what is published on GitHub.  Checks needing a local build are skipped if
-`installer/builds/md5sums.txt` is absent, so run `buildall -dev` first for full coverage.
-Exits non-zero on failure.
+match what is published on GitHub.  Exits non-zero on failure.
+
+Checks needing a local build of the *current* version are skipped otherwise, so run
+`buildall -dev` first for full coverage.  A build left over from an earlier version counts
+as no build - `installer/builds/md5sums.txt` has to name this version, which is also what
+stops `-github` publishing notes with someone else's checksums.
+
+CI runs it too (`.github/workflows/ci.yml`).  There is never a build there, so only the
+offline subset runs - the `gh` comparison against the published release needs a local
+`buildall -dev`.
 
 Because `buildall.pl` can't be loaded without running a build, the test slices the
 subroutine definitions out of the source text and evals them.  That makes it sensitive to
