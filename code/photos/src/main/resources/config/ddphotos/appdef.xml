@@ -137,6 +137,43 @@
         </paramlist>
     </phase>
 
+    <!-- Close rather than Cancel/Save: the Option widgets on this dialog write their preference
+         as they are clicked, so there is nothing left to save (or to take back). -->
+    <phase name="PublishSettingsDialog" class="com.donohoedigital.ddphotos.PublishSettingsDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.PublishSettingsDialog"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="close"/>
+        <!-- Close, not Publish, is the default: Enter on this dialog should not start uploading
+             a site.  Publishing is deliberate enough to be worth the click. -->
+        <param name="default-button" strvalue="close"/>
+        <paramlist name="buttons">
+            <strvalue>close</strvalue>
+            <strvalue>publishnow</strvalue>
+        </paramlist>
+    </phase>
+
+    <!-- Up for the duration of one publish step.  Modal: the steps feed each other, so nothing
+         else should be going on while they run - the tab behind it still shows the output.  Stop
+         is the only button, since the step ends when the command does (PublishController closes
+         this itself).  No default-button, so a stray Enter can't end a publish run. -->
+    <phase name="PublishStep" class="com.donohoedigital.ddphotos.PublishStepDialog" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.publish"/>
+        <param name="dialog-minwidth" intvalue="600"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="publishstop"/>
+        <paramlist name="buttons">
+            <strvalue>publishstop</strvalue>
+        </paramlist>
+    </phase>
+
     <phase name="DisplayInfoMessage" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
         <param name="style" strvalue="DisplayMessage"/>
         <param name="dialog-style" strvalue="DisplayMessage"/>

@@ -58,6 +58,13 @@ public abstract class CommandRunner {
     /** Return true to show a failure dialog on non-zero, non-stop exit codes. Defaults to showsCompletionFeedback(). */
     public boolean showsFailureFeedback() { return showsCompletionFeedback(); }
 
+    /**
+     * Return true if this command is the last step of publishing a site ({@code deploy},
+     * {@code wrangler}, {@code surge}) - the point at which the Publish menu is worth pointing
+     * out.  See {@code CommandRunnerPanel.maybeOfferPublish}.
+     */
+    public boolean isPublishTarget() { return false; }
+
     /** Return a prerequisite check to run before the main command, or null if none. */
     public Prerequisite getPrerequisite(Site site, Map<String, String> userValues) { return null; }
 

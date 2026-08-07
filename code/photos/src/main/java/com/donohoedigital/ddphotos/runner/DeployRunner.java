@@ -24,6 +24,9 @@ public class DeployRunner extends DdphotosRunner {
     public boolean showsCompletionFeedback() { return true; }
 
     @Override
+    public boolean isPublishTarget() { return true; }
+
+    @Override
     protected List<FlagDef> wrapperFlagDefs(Site site) {
         List<FlagDef> defs = new ArrayList<>(super.wrapperFlagDefs(site));
         defs.add(new FlagDef.FilePickerField("--site-env", "site.env", EDITABLE,

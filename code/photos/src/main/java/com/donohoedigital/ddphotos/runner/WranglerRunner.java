@@ -42,6 +42,9 @@ public class WranglerRunner extends DdphotosRunner {
     public boolean showsCompletionFeedback() { return true; }
 
     @Override
+    public boolean isPublishTarget() { return true; }
+
+    @Override
     protected List<FlagDef> subCommandFlagDefs(Site site) {
         return List.of(
             new FlagDef.Constant("pages", VIEW_ONLY),

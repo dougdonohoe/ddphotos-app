@@ -35,6 +35,94 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 # Parking Lot
 
+## Feature Design - automate publishing (**DONE**)
+
+To publish a site after editing, one must run `photogen`, then `build` and then one of:
+ * `deploy`
+ * `export` followed by `wrangler` or by `surge`
+
+I'd like a way to automate (or "script" in dev speak) this process.  
+
+I envision a new menu, Publish (after Edit), with a "Settings (site display name)..." item 
+and a "Publish (site display name)..." item, both of which are grayed out if
+no sites exist.  The Publish ... item is grayed out until settings is configured.
+This menu will need to listen to site selection changes.  Publish has a short
+cut Cmd/Ctrl-P and settings is Shift-Cmd/Ctrl-P (need to change the debug Screenshot 
+item to Cmd-R and update the dev readme)
+
+Settings is a dialog window that chooses which commands to run.  It has checkboxes
+for Photogen and Build, and a radio for Deploy and Export, and if Export is chosen,
+a radio for Wrangler and Surge.  This uses OptionRadio and OptionBoolean,
+as the choice of
+what to do is largely tied to the site, so just like each site's
+ddphotos flags are remembered (see src/main/java/com/donohoedigital/ddphotos/AbstractRunnerPanel.java:313+),
+the settings chosen for scripting will need to be remembered.  Since it
+is site specific, the instructions area should say 'Publish settings for (site display name)'.
+That is to say this dialog should match styles of other dialogs e.g., AlbumDialog, SiteDialog.
+
+When running publish, it behaves similar to the
+src/main/java/com/donohoedigital/ddphotos/TourController.java, and we should
+re-use/refactor any appropriate code.  It has a dialog that says what is happening,
+with a "Stop" button.  Based on the checkboxes/radios chosen, it simply opens
+the related tab, clicks Run, waits for success/fail, and moves on to the next
+tab.  This assumes the tab has already run at some point in the past and uses
+the stored settings.  On error, it just says so and says try again when whatever
+error has been resolved.  At end of last step, it shows "Publish succeeded" message.
+
+To make user aware of this feature, after a successful Deploy, Wrangler or Surge
+step, show an information dialog (with do-not-show checkbox) saying to the
+effect "You can automate the Photogen-Build-Xxxx process via the Publish -> Settings
+and Publish menu options."
+
+As built:
+
+* `PublishSettings` is the per-site model (a record plus the prefs plumbing).  `steps()` is the
+  whole sequencing rule and is unit tested; the two radio groups store an enum **ordinal**, which
+  is what `OptionRadio` persists, so those enums can only be appended to (there's a test pinning
+  that).
+* **Deviation:** the settings dialog has a single **Close** button, not Cancel/Save.  `OptionBoolean`
+  / `OptionRadio` write to prefs inside `actionPerformed`, so by the time a Cancel could be pressed
+  the choice is already stored - a Cancel would have had to snapshot and roll back the prefs to
+  mean anything.  Closing the dialog at all is also what sets the `publish.configured` flag that
+  un-greys the Publish item.
+* That dialog's second button, **Publish**, is a shortcut past the menu.  It doesn't publish
+  itself - it just resolves as the dialog's result, and `doPublishSettings` starts the run once
+  the dialog is gone, so the settings window isn't left sitting under the run's own dialogs.
+  **Close** stays the default button: Enter should not start uploading a site.
+* `PublishController` is `TourController` restructured around who presses Run: it calls the new
+  `CommandRunnerPanel.startRun()` and advances on exit 0.  `startRun()` checks the Run button's
+  own enabled state first - that button is the *only* guard `onRun()` has against an invalid flag.
+* **The step dialog is modal**, and that shapes the controller.  A modal `processPhaseNow` blocks
+  in a `SecondaryLoop` until the dialog is removed, so the run has to be started *before* the
+  dialog goes up, and `start()` is a plain loop rather than a chain of callbacks - the watcher only
+  records how the step ended and closes the dialog, which returns control to `runStep`.  Each
+  step's loop exits before the next one starts, so they never nest more than one deep.
+* Closing that dialog needs a handle to it, which `processPhaseNow` won't hand back until it is
+  already gone - hence `PublishStepDialog`, whose `opened()` gives the controller one.  That fires
+  from `internalFrameOpened`, inside `_showDialog` and so before `beginModal()`; nothing the
+  controller waits on can be dispatched before then, since it all arrives on the EDT.
+* `RunWatcher` grew two default methods.  `runAborted()` covers every path where nothing launches
+  (no site, Docker down, another command busy, an unusable flag, a failed/unevaluable prerequisite
+  - `wrangler`/`surge` have login checks that can end in a dialog); without it publish would wait
+  forever on a step that never started.  `suppressFailureDialog()` keeps the panel's own failure
+  popup from stacking under publish's.
+* Stop ends the run *and* stops the command (`AbstractRunnerPanel.stopRun()`).  Under a modal
+  dialog the user can't reach the tab's own Stop button, so leaving a deploy running that they
+  can't get at would be worse than stopping it.  It ends quietly - no dialog tells them what they
+  just did.  Same for the one remaining way a command can be stopped mid-step: quitting the app,
+  where `okayToClose()` stops it (`wasStoppedByUser()` keeps that from reading as a step that
+  passed and marching into the next one during shutdown).
+* An internal modal dialog blocks the mouse but not menu accelerators, so `Cmd-P` /
+  `Shift-Cmd-P` would still fire during a run.  Both items are disabled for the duration instead
+  (a disabled item doesn't fire its accelerator) - the controller calls back into
+  `refreshPublishMenus` as a run starts and ends.
+* The Publish menu items are re-labelled and re-enabled from a site listener.  On a Mac every
+  window gets its own copy of the menu bar, so the menus are tracked as `WeakReference<DDMenu>` -
+  a closed window's menu must not keep that window alive - and are also refreshed as they open.
+* Help: a "Publishing in one step" section in `help/deployment.html`.
+
+---
+
 ## Feature Design - custom.css and flat-file text editor (**DONE**)
 
 Editing a `custom.css` file, which is used to specify custom CSS rules.

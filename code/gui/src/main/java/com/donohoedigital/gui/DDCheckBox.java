@@ -53,7 +53,7 @@ public class DDCheckBox extends JCheckBox implements DDHasLabelComponent, DDVali
      */
     private void applyIconStyle()
     {
-        GuiUtils.applyFlatIconStyle(this, cCheckColor_, bDisplayOnly_);
+        GuiUtils.applyFlatIconStyle(this, cCheckColor_, !isEnabled() || bDisplayOnly_);
     }
 
     /**
@@ -86,6 +86,12 @@ public class DDCheckBox extends JCheckBox implements DDHasLabelComponent, DDVali
     }
 
     private boolean bDisplayOnly_ = false;
+
+    @Override
+    public void setEnabled(boolean b) {
+        super.setEnabled(b);
+        applyIconStyle();
+    }
 
     public void setDisplayOnly(boolean b)
     {

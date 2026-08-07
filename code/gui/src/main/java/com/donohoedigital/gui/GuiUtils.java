@@ -504,7 +504,7 @@ public class GuiUtils
         String fg = hexColor(iconC);
         String bg = hexColor(c.getBackground());
         // Dot/checkmark color: full strength normally, dimmed toward the background when display-only.
-        String mark = displayOnly ? hexColor(blend(iconC, c.getBackground(), 0.4f)) : fg;
+        String mark = displayOnly ? hexColor(blend(iconC, c.getBackground(), 0.6f)) : fg;
 
         List<String> style = new ArrayList<>(List.of(
                 "icon.background:" + bg,

@@ -340,7 +340,7 @@ settings.debug.screenshots.path=/Users/donohoe/work/ddphotos-app/images/screensh
 settings.debug.screenshots.shadow=true
 ```
 
-With those set, _Help → Take screenshot..._ (or `Cmd-P`) captures the current window to
+With those set, _Help → Take screenshot..._ (or `Cmd-R`) captures the current window to
 `settings.debug.screenshots.path`.  The filename is chosen automatically from what is
 showing: the current step when the startup wizard is up (e.g. `wizard-docker.png`),
 otherwise the selected tab in the main screen (e.g. `config.png`, `photogen.png`).

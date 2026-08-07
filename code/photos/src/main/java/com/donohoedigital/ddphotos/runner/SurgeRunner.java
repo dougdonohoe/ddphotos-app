@@ -35,6 +35,9 @@ public class SurgeRunner extends DdphotosRunner {
     public boolean showsCompletionFeedback() { return true; }
 
     @Override
+    public boolean isPublishTarget() { return true; }
+
+    @Override
     protected List<FlagDef> subCommandFlagDefs(Site site) {
         return List.of(
             new FlagDef.ValidatedTextField("--domain", DOMAIN_PATTERN, EDITABLE, 300),

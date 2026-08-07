@@ -15,7 +15,8 @@ import java.util.List;
 
 /**
  * Tabbed runner panel: drives a single {@link CommandRunner} against the site selected in the
- * shared {@link SiteBarPanel}, with prerequisite handling, Docker checks and guided-tour support.
+ * shared {@link SiteBarPanel}, with prerequisite handling, Docker checks and the {@link RunWatcher}
+ * hook the guided tour and {@link PublishController} follow a run through.
  * The control row, flag rows, console and process plumbing live in {@link AbstractRunnerPanel}.
  */
 public class CommandRunnerPanel extends AbstractRunnerPanel {
@@ -83,10 +84,8 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
     // ──────────────────────────────────────────────────────────────────────────────
 
     /**
-     * Observer of a user-driven run, so the guided tour can follow along rather than press Run
-     * itself. Only a run that actually launches is reported: if the command never starts (no site,
-     * Docker down, another command busy, a failed prerequisite) nothing fires and the tour simply
-     * keeps waiting for the user to try again.
+     * Observer of a run, so the guided tour can follow along rather than press Run itself, and so
+     * {@link PublishController} can chain one command into the next.
      */
     public interface RunWatcher {
 
@@ -98,11 +97,58 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
          * how the long-running dev servers ({@code run}, {@code serve}) are meant to end.
          */
         void runFinished(boolean ok);
+
+        /**
+         * The run ended before the main command ever started - no site, Docker down, another
+         * command busy, an unusable flag, or a prerequisite that failed or could not be evaluated.
+         * The reason has already been put in front of the user (console line or dialog).
+         *
+         * <p>The tour ignores this and keeps waiting for the user to try again; publish, which
+         * pressed Run itself, has to stop.
+         */
+        default void runAborted() {}
+
+        /**
+         * True to suppress this panel's own "command failed" dialog, for a watcher that reports
+         * the failure itself and would otherwise stack a second dialog on top of it.
+         */
+        default boolean suppressFailureDialog() { return false; }
     }
 
-    /** Register the tour's observer for this command, or pass null to clear it. */
+    /** Register the tour's or publish's observer for this command, or pass null to clear it. */
     public void setRunWatcher(RunWatcher watcher) {
         runWatcher_ = watcher;
+    }
+
+    /**
+     * Starts this tab's command exactly as the Run button does, for {@link PublishController}.
+     * The button's own enabled state is the only guard {@link #onRun} has - an invalid flag (a
+     * missing export dir, a blank project name) merely disables it - so that has to be checked
+     * here rather than launching a command the user could not have launched by hand.
+     */
+    public void startRun() {
+        // Some flag choices are derived from the filesystem (the uploaders' export dir, which
+        // the export step we may have just run creates), so re-read them before judging validity.
+        rebuildFlagsRow();
+        updateButtonState();
+        if (runBtn_ == null || !runBtn_.isEnabled()) {
+            console_.appendSystemError(PropertyConfig.getMessage("msg.publish.cannotRun",
+                                                                 runner_.getDisplayName()));
+            notifyAborted();
+            return;
+        }
+        onRun();
+    }
+
+    /** This tab's command as the console names it (e.g. "ddphotos build"). */
+    public String getRunnerDisplayName() {
+        return runner_.getDisplayName();
+    }
+
+    /** Tells the watcher (if any) that nothing was launched. */
+    private void notifyAborted() {
+        RunWatcher watcher = runWatcher_;
+        if (watcher != null) watcher.runAborted();
     }
 
     @Override
@@ -112,6 +158,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
 
         if (currentSite_ == null) {
             console_.appendSystem(PropertyConfig.getMessage("msg.cmd.noSiteSelected"));
+            notifyAborted();
             return;
         }
 
@@ -119,6 +166,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             EngineUtils.displayWarningDialog(context_,
                     PropertyConfig.getMessage("msg.docker.required", runner_.getDisplayName()),
                     "msg.windowtitle.dockerRequired", null);
+            notifyAborted();
             return;
         }
 
@@ -126,6 +174,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
         String busy = running == null ? null : runner_.busyMessage(running);
         if (busy != null) {
             EngineUtils.displayWarningDialog(context_, busy, runner_.busyTitleKey(), null);
+            notifyAborted();
             return;
         }
 
@@ -150,6 +199,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             process_ = null;
             console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "prerequisite check", e.getMessage()));
             updateButtonState();
+            notifyAborted();
         }
     }
 
@@ -171,6 +221,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                     if (wasUserStop(code)) {
                         console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
                         updateButtonState();
+                        notifyAborted();
                         return;
                     }
                     switch (prereq.check(output, code)) {
@@ -214,6 +265,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
         if (html != null) {
             EngineUtils.displayErrorDialog(context_, html, prereq.errorTitleKey(), null);
         }
+        notifyAborted();
     }
 
     private void handlePrerequisiteFailure(Prerequisite prereq, Map<String, String> userValues) {
@@ -226,10 +278,12 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             case Prerequisite.ShowDialog(String html, String titleKey) -> {
                 updateButtonState();
                 EngineUtils.displayWarningDialog(context_, html, titleKey, null);
+                notifyAborted();
             }
             case Prerequisite.ShowMessage(String message) -> {
                 console_.appendSystem(message);
                 updateButtonState();
+                notifyAborted();
             }
             case Prerequisite.ConfirmThenRun(String msgKey, String titleKey, List<String> cmd, Object[] msgArgs) -> {
                 console_.appendSystem(prereq.failedMessage());
@@ -238,6 +292,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                 boolean confirmed = EngineUtils.displayConfirmationDialog(context_, html, titleKey, null);
                 if (!confirmed) {
                     console_.appendSystem(PropertyConfig.getMessage("msg.cmd.aborted"));
+                    notifyAborted();
                     return;
                 }
                 runNext(userValues, next, cmd);
@@ -256,6 +311,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             process_ = null;
             console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "remediation", e.getMessage()));
             updateButtonState();
+            notifyAborted();
         }
     }
 
@@ -277,6 +333,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                     } else {
                         console_.appendSystem(PropertyConfig.getMessage("msg.cmd.failedExit", code));
                         updateButtonState();
+                        notifyAborted();
                     }
                 });
             } catch (InterruptedException e) {
@@ -302,7 +359,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                 RunWatcher watcher = runWatcher_;
                 // Feedback first: on a failure it is a modal dialog, and the tour's own dialog
                 // should not open behind it.
-                showCompletionFeedback(code, watcher != null);
+                showCompletionFeedback(code, watcher);
                 // A user Stop on a long-running dev server (run/serve) counts as
                 // success for the tour: it's how the user advances those steps.
                 if (watcher != null) watcher.runFinished(code == 0 || wasUserStop(code));
@@ -311,33 +368,56 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             process_ = null;
             console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "process", e.getMessage()));
             updateButtonState();
-            if (runner_.showsFailureFeedback()) {
+            if (runner_.showsFailureFeedback() && !suppressesFailureDialog()) {
                 EngineUtils.displayErrorDialog(context_,
                         PropertyConfig.getMessage("msg.cmd.launchFailure",
                                                    runner_.getDisplayName(), e.getMessage()),
                         "msg.windowtitle.cmdFailure",
                         "cmd.failure." + runner_.getPrefsKey(true), "cmdnoshow");
             }
+            notifyAborted();
         }
     }
 
-    private void showCompletionFeedback(int code, boolean wasTour) {
+    private void showCompletionFeedback(int code, RunWatcher watcher) {
         if (wasUserStop(code)) return;
         String displayName = runner_.getDisplayName();
         String noShowKey = runner_.getPrefsKey(true);
-        // During the tour the next tour dialog is the acknowledgment, so skip the
-        // standard success popup (failures still surface so the user can read them).
-        if (code == 0 && wasTour) return;
+        // While the tour or a publish run is driving this panel, their own dialog is the
+        // acknowledgment, so skip the standard success popup.
+        if (code == 0 && watcher != null) return;
         if (code == 0 && runner_.showsSuccessFeedback()) {
             EngineUtils.displayInformationDialog(context_,
                     PropertyConfig.getMessage("msg.cmd.success", displayName),
                     "msg.windowtitle.cmdSuccess",
                     "cmd.success." + noShowKey, "cmdnoshow");
-        } else if (code != 0 && runner_.showsFailureFeedback()) {
+            maybeOfferPublish();
+        } else if (code != 0 && runner_.showsFailureFeedback()
+                   && !(watcher != null && watcher.suppressFailureDialog())) {
             EngineUtils.displayErrorDialog(context_,
                     PropertyConfig.getMessage("msg.cmd.failure", displayName, code),
                     "msg.windowtitle.cmdFailure",
                     "cmd.failure." + noShowKey, "cmdnoshow");
         }
+    }
+
+    private boolean suppressesFailureDialog() {
+        RunWatcher watcher = runWatcher_;
+        return watcher != null && watcher.suppressFailureDialog();
+    }
+
+    /**
+     * Points out the Publish menu after a hand-run publishing step, since nothing else in the UI
+     * hints that the photogen-build-deploy sequence can be run in one go.  Only after the step
+     * that ends a publish ({@code deploy} / {@code wrangler} / {@code surge}) - by then the user
+     * has just done the whole sequence by hand - and only until they set publishing up for this
+     * site (or tick the do-not-show box).
+     */
+    private void maybeOfferPublish() {
+        if (!runner_.isPublishTarget() || PublishSettings.isConfigured(currentSite_)) return;
+        EngineUtils.displayInformationDialog(context_,
+                PropertyConfig.getMessage("msg.publish.offer"),
+                "msg.windowtitle.publishOffer",
+                "publish.offer", "cmdnoshow");
     }
 }
