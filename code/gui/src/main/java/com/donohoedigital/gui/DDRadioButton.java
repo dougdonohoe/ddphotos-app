@@ -63,10 +63,16 @@ public class DDRadioButton extends JRadioButton implements DDHasLabelComponent, 
      */
     private void applyIconStyle()
     {
-        GuiUtils.applyFlatIconStyle(this, cDotColor_, bDisplayOnly_);
+        GuiUtils.applyFlatIconStyle(this, cDotColor_, !isEnabled() || bDisplayOnly_);
     }
 
     private boolean bDisplayOnly_ = false;
+
+    @Override
+    public void setEnabled(boolean b) {
+        super.setEnabled(b);
+        applyIconStyle();
+    }
 
     /**
      * Display-only mode: the radio looks normal (enabled) but is not
