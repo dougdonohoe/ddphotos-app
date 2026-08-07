@@ -433,6 +433,24 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
         return p != null && p.isAlive();
     }
 
+    /**
+     * True if the last run ended because the user pressed Stop or Kill.  The exit code alone
+     * can't be trusted for this (see {@link #userStopped_}), and a publish run has to tell a
+     * command the user stopped apart from one that finished on its own.
+     */
+    public boolean wasStoppedByUser() {
+        return userStopped_;
+    }
+
+    /**
+     * Stops this panel's command as its Stop button would.  The publish dialog is modal, so the
+     * user cannot reach that button while a step runs - pressing Stop there has to stop the
+     * command through here instead.
+     */
+    public void stopRun() {
+        onStop();
+    }
+
     protected void updateButtonState() {
         if (runBtn_ == null) return; // UI not built yet
         boolean running = isRunning();

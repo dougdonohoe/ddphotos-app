@@ -294,6 +294,10 @@
 	<color name="OptionsDialog.checkbox.check" copy="black"/>
 	<color name="OptionsDialog.checkbox.bg" default="true"/>
 	 <font name="OptionsDialog.checkbox" fontname="SansSerif" pointsize="14"/>
+	<color name="OptionsDialog.radio.fg" copy="black"/>
+	<color name="OptionsDialog.radio.dot" copy="black"/>
+	<color name="OptionsDialog.radio.bg" default="true"/>
+	 <font name="OptionsDialog.radio" fontname="SansSerif" pointsize="14"/>
 	<color name="OptionsDialog.label.fg" copy="black"/>
 	<color name="OptionsDialog.label.bg" copy="black"/>
 	 <font name="OptionsDialog.label" fontname="SansSerif" pointsize="18" bold="true"/>
