@@ -47,6 +47,27 @@
           </descriptorRefs>
         </configuration>
       </plugin>
+
+      <!-- Run the app with 'mvn exec:exec' - the same JVM options the ddphotos-app
+           script uses, but without needing bash (see README-DEV.md). -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.5.1</version>
+        <configuration>
+          <executable>${java.home}/bin/java</executable>
+          <arguments>
+            <argument>-Dfile.encoding=UTF-8</argument>
+            <argument>-Dsun.java2d.noddraw=true</argument>
+            <argument>--enable-native-access=ALL-UNNAMED</argument>
+            <argument>-Xms32m</argument>
+            <argument>-Xmx256m</argument>
+            <argument>-classpath</argument>
+            <classpath/>
+            <argument>com.donohoedigital.ddphotos.PhotosMain</argument>
+          </arguments>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

@@ -5,17 +5,14 @@
 Welcome to the DD Photos Desktop Application source code. This page tells you (hopefully)
 everything you need to know to run the DD Photos app.
 
-## Mac vs. Linux vs. Windows (a note from Doug)
+Development happens on **Mac, Linux, or Windows via WSL2** - all three are the same Unix
+environment as far as this repo is concerned, so there is one set of instructions below.
 
-These instructions are admittedly Mac-centric, largely because that is what I have used
-for the last 15 years.  I've done cursory testing on Linux (see Appendix A for testing tips
-on Ubuntu from Docker/Mac).
-
-I just started using Windows for development again after a very long time, so apologies to 
-Windows developers for the lack of instructions.  I have managed to get things working with
-both IntelliJ and using WSL, and plan on updating these docs soon.
-
-Feel free to submit a PR with any changes to these docs that would help Linux or Windows users.
+Windows developers should use [WSL2](#windows-via-wsl2).  Running the build natively on
+Windows (PowerShell, no WSL) is possible and is covered in
+[Appendix E](#appendix-e-native-windows-and-powershell), but it is a secondary path used
+mainly for testing how the app behaves for Windows users - not a fully supported
+development environment.
 
 ## Prerequisites
 
@@ -24,7 +21,6 @@ Required software:
 * Java 25 - [See Adoptium↗](https://adoptium.net/temurin/releases/?os=any&package=jdk&version=25)
 * Maven 3 - [See Apache Maven↗](https://maven.apache.org/install.html)
 * Docker - [See Docker↗](https://docs.docker.com/engine/install/)
-* Git for Windows - [See Git for Windows↗](https://git-scm.com/download/win) (Windows only)
 
 Both `java` and `mvn` must be on your `PATH`.
 
@@ -39,7 +35,9 @@ you are in the root of this repository.
 source ddphotos.rc
 ```
 
-## Mac Installs
+## Platform Setup
+
+### Mac
 
 [Brew↗](https://brew.sh/) is useful to install Java and Maven:
 
@@ -47,25 +45,117 @@ source ddphotos.rc
 brew install temurin@25 maven
 ```
 
-## Compile Code
+### Linux (Ubuntu/Debian)
 
-To compile the code and create the `.jar` and `.war` files,
-use maven.  This version skips the tests, which you can
-run separately (see below).
-
-```shell
-mvn-package-notests
-```
-
-After you have run this, any of the scripts discussed below should just work.
-
-## DD Photos
-
-To run the desktop tool, either run `PhotosMain` in IntelliJ or use the script:
+Ubuntu's own repositories lag behind on JDK versions, so install Java 25 from the
+[Adoptium apt repository↗](https://adoptium.net/installation/linux/):
 
 ```shell
-ddphotos-app
+sudo apt install -y wget apt-transport-https gpg
+
+wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public \
+  | gpg --dearmor | sudo tee /usr/share/keyrings/adoptium.gpg > /dev/null
+
+echo "deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb \
+$(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" \
+  | sudo tee /etc/apt/sources.list.d/adoptium.list
+
+sudo apt update
+sudo apt install -y temurin-25-jdk maven
 ```
+
+For Docker on Linux, either Docker Desktop or just the Docker Engine will do.
+
+### Windows via WSL2
+
+[WSL2↗](https://learn.microsoft.com/en-us/windows/wsl/install) runs a real Ubuntu on your
+Windows machine, which makes Windows development identical to Linux development - same
+shell, same scripts, same commands as the rest of this document.  Modern WSL includes
+**WSLg**, so DD Photos opens as an ordinary window on your Windows desktop with no X
+server to configure.
+
+From PowerShell, install WSL and Ubuntu:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+Reboot if prompted, then open the Ubuntu terminal and follow the
+[Linux (Ubuntu/Debian)](#linux-ubuntudebian) instructions above to install Java and Maven.
+
+Two Windows-side details:
+
+* Install [Docker Desktop↗](https://www.docker.com/products/docker-desktop/) on **Windows**,
+  not inside WSL.  Then, in **Settings → Resources → WSL Integration**, enable integration
+  for your Ubuntu distro so the `docker` command works inside WSL.
+* **Clone the repo into the WSL filesystem** (e.g. `~/work/ddphotos-app`), not under
+  `/mnt/c`.  Reaching the Windows drive from WSL goes over a slow filesystem bridge - the
+  same warm build took **64s** from `/mnt/c` versus **2.4s** from `~/work`.  Windows tools
+  can still reach the WSL copy via `\\wsl$\Ubuntu\home\<user>\work` if needed.
+
+Verify WSLg is working with `echo $DISPLAY` (it should print something like `:0`).
+
+## Build and Run
+
+Run these **from the root of this repository**.  The Maven reactor lives in `code/`, which
+is why each command passes `-f code/pom.xml`.
+
+```shell
+# build, skipping tests
+mvn -f code/pom.xml package -DskipTests=true
+
+# build and run the unit tests
+mvn -f code/pom.xml test -Dskip.unit.tests=false
+```
+
+Unit tests are skipped by default, which is why running them takes
+`-Dskip.unit.tests=false` rather than just `test`.
+
+### Running DD Photos
+
+Running the app takes two steps.  First install the modules it depends on into your local
+Maven repository:
+
+```shell
+mvn -f code/pom.xml install -DskipTests=true -pl .,common,gui,engine,photos
+```
+
+Then launch it:
+
+```shell
+mvn -f code/pom.xml -pl photos exec:exec
+```
+
+The `exec:exec` goal is configured in `code/photos/pom.xml` and launches
+`com.donohoedigital.ddphotos.PhotosMain` with the same JVM options the `ddphotos-app`
+script uses.
+
+A few notes:
+
+* The leading `.` in `-pl .,common,gui,engine,photos` is the parent `all` POM.  Leave it
+  out and the build fails with *"Could not find artifact com.donohoedigital:all:pom:1.0"*,
+  because `photos` cannot resolve its parent.
+* `exec:exec` does not compile anything.  It runs `photos` from
+  `code/photos/target/classes` but picks up `common`, `gui` and `engine` as jars from your
+  local Maven repository.  So after editing `photos` you need a `package` first, and after
+  editing any of the other three you need to re-run the `install` above.
+* `installer` and `zydeco` are left out on purpose: `installer` is only used when building
+  the Install4j installer, and `zydeco` is an experimental scratch module.
+* Under WSL2, the window opens on your Windows desktop via WSLg - nothing else to set up.
+
+### Shell script shortcuts
+
+`ddphotos.rc` defines shorter aliases for the above and puts `tools/bin` on your `PATH`:
+
+```shell
+source ddphotos.rc
+
+mvn-package-notests   # build, skipping tests
+mvn-test              # build and run unit tests
+ddphotos-app          # run the app
+```
+
+Sourcing the file also runs some sanity checks on your Java and Maven versions.
 
 ## Development
 
@@ -79,13 +169,25 @@ the `code/pom.xml` file and prompt you to load it:
 Go to _File → Project Structure... → Project Settings → Project → SDK_ and
 set to Java 25 (you may need to add it (_+ Add SDK_) as a new SDK if not already there).
 
-## Run Tests
+To run the app from the IDE, run `PhotosMain` directly.
 
-To build code and run unit tests, use `mvn-test`.
+**NOTE**: add `--enable-native-access=ALL-UNNAMED` to the *VM options* of the run
+configuration.  Without it, the first time a dialog opens, Java 25 prints:
 
-```shell
-mvn-test
 ```
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.formdev.flatlaf.util.NativeLibrary in an unnamed module (file:/C:/Users/xboxl/.m2/repository/com/formdev/flatlaf/3.7.2/flatlaf-3.7.2.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+```
+
+FlatLaf loads a native library the first time it puts up a dialog, which is why the warning
+appears then rather than at startup.  The `runjava` script and the `exec:exec` goal already
+pass this flag, so IntelliJ run configurations are the only place it needs setting by hand.
+
+On Windows, use IntelliJ's
+[WSL support↗](https://www.jetbrains.com/help/idea/how-to-use-wsl-development-environment-in-product.html)
+to open the checkout living inside WSL (`\\wsl$\Ubuntu\...`).
 
 ## Code Notes
 
@@ -99,9 +201,13 @@ means the later modules are dependent on one or more of the earlier modules.
 
 * `common` - core functionality including configuration, logging, XML, properties, various utils
 * `gui` - GUI infrastructure extending Java Swing
+* `installer` - custom installer logic (e.g., cleanup); only used when building the Install4j installer
 * `engine` - core app engine and utilities
 * `photos` - DD Photos application
-* `installer` - custom installer logic (e.g., cleanup)
+* `zydeco` - experimental scratch module, not part of the app
+
+The four that matter for building and running DD Photos are `common`, `gui`, `engine` and
+`photos`, which is why they are the ones listed in the `-pl` commands above.
 
 ### Properties Files
 
@@ -174,48 +280,74 @@ An alternative to using the installers found in [Releases](https://github.com/do
 is to distribute an all-in-one `.jar` file by doing this:
 
 ```shell
-mvn-install-notests
-cd code/photos
-mvn package assembly:single -DskipTests=true
+mvn -f code/pom.xml install -DskipTests=true
+mvn -f code/photos/pom.xml package assembly:single -DskipTests=true
 ```
 
 This creates a `photos-1.0-jar-with-dependencies.jar` in the `target` directory.  You can then
 distribute this `.jar` file and run it like so:
 
 ```shell
-java --enable-native-access=ALL-UNNAMED -jar target/photos-1.0-jar-with-dependencies.jar
+java --enable-native-access=ALL-UNNAMED -jar code/photos/target/photos-1.0-jar-with-dependencies.jar
 ```
 
 For Mac users, if you also distribute the `logo/icons/ddphotos-logo/ddphotos-logo.icns` file,
 you can get a dock icon:
 
 ```shell
-java -Xdock:icon=ddphotos-logo.icns --enable-native-access=ALL-UNNAMED -jar photos-1.0-jar-with-dependencies.jar
+java -Xdock:icon=ddphotos-logo.icns --enable-native-access=ALL-UNNAMED -jar code/photos/photos-1.0-jar-with-dependencies.jar
 ```
 
 ### Preferences
 
-Preferences set in the app are saved using Java Preferences API, which on a Mac can be found
-in `com.donohoedigital.ddphotos1.plist`.  To view the contents of this file:
+Preferences set in the app are saved using the Java Preferences API, under the
+`com/donohoedigital/ddphotos1` node.  Where that actually lives is up to the JDK and
+differs per platform:
 
-```shell
-cd ~/Library/Preferences
-plutil -convert xml1 com.donohoedigital.ddphotos1.plist -o -
-```
+| Platform    | Location                                                                         |
+|-------------|----------------------------------------------------------------------------------|
+| Mac         | `~/Library/Preferences/com.donohoedigital.ddphotos1.plist`                       |
+| Linux / WSL | `~/.java/.userPrefs/com/donohoedigital/ddphotos1/` (a tree of `prefs.xml` files) |
+| Windows     | Registry key `HKCU\Software\JavaSoft\Prefs\com\donohoedigital\ddphotos1`         |
 
 Default values for items are set in
-`code/photos/src/main/resources/config/ddphotos/client.properties`, and actual values
-set by the user are stored in the `.plist` file.
+`code/photos/src/main/resources/config/ddphotos/client.properties`; actual values set by
+the user are stored in the platform location above.
 
-You can clear all preferences via the `File -> Reset Preferences` menu item.
-If you want to completely remove all preferences, on a Mac, you need to delete the `.plist` file
-**AND** restart the `cfprefsd` service, which can keep preferences values in
-memory.
+To view the current contents:
 
 ```shell
+# Mac
+plutil -convert xml1 ~/Library/Preferences/com.donohoedigital.ddphotos1.plist -o -
+
+# Linux / WSL
+cat ~/.java/.userPrefs/com/donohoedigital/ddphotos1/prefs.xml
+```
+
+```powershell
+# Windows
+Get-ChildItem -Recurse 'HKCU:\Software\JavaSoft\Prefs\com\donohoedigital\ddphotos1'
+```
+
+Note that on Linux and Windows the node names are escaped by the JDK (mixed-case names get
+encoded), so some of the directory and key names look like line noise.  That is expected.
+
+You can clear all preferences via the `File -> Reset Preferences` menu item.  To remove
+them completely:
+
+```shell
+# Mac - must also restart cfprefsd, which caches preferences in memory
 cd ~/Library/Preferences
 rm -f com.donohoedigital.ddphotos1.plist
 killall -u $USER cfprefsd
+
+# Linux / WSL
+rm -rf ~/.java/.userPrefs/com/donohoedigital/ddphotos1
+```
+
+```powershell
+# Windows
+Remove-Item -Recurse 'HKCU:\Software\JavaSoft\Prefs\com\donohoedigital\ddphotos1'
 ```
 
 ### Classpath and Dependency Tree
@@ -229,7 +361,7 @@ module, like `code/photos`.
 
 ```shell
 # Need to "install" to get proper trees when doing it in sub-tree (for reasons I'm not clear on)
-mvn-install-no-tests
+mvn -f code/pom.xml install -DskipTests=true
 
 # cd to a module
 cd code/photos
@@ -305,7 +437,12 @@ You can run GitHub actions locally using the [act↗](https://nektosact.com/) to
 To install `act`:
 
 ```shell
+# Mac
 brew install act
+
+# Linux / WSL - there is no apt package
+curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh \
+  | sudo bash -s -- -b /usr/local/bin
 ```
 
 The `act-ddphotos-app` alias uses a custom Docker image you need to build once:
@@ -379,6 +516,10 @@ logo/generate-icons.sh
 ```
 
 This requires Inkscape and ImageMagick (`brew install inkscape imagemagick`).
+
+Both this and `create-screenshots-gif.sh` call the `magick` command, so they need
+**ImageMagick 7** - version 6 only provides `convert`.  These are Mac-side workflows, so
+there is nothing to set up on Linux or Windows.
 
 ### Distributing icons and screenshots
 
@@ -492,3 +633,93 @@ check for those.
   with no arguments to list them all.
 * Installer file names come from the `mediaFileName` attribute on each media set in
   `ddphotos.install4j` and must stay in step with the `@PLATFORMS` table in `buildall.pl`.
+
+## Appendix E: Native Windows and PowerShell
+
+Everything above assumes a Unix shell - Mac, Linux, or Windows via
+[WSL2](#windows-via-wsl2), which is the recommended way to develop on Windows.
+
+This appendix covers building and running **natively on Windows**, from PowerShell, with no
+WSL involved.  The reason to do this is to exercise the app the way Windows users actually
+experience it - native file dialogs, DPI scaling, the registry-backed preferences, Git Bash
+invocation of the `ddphotos` script.  It is a testing environment, not a fully supported
+development one; see [Known gaps](#known-gaps) at the end.
+
+### Setup
+
+Install the JDK by downloading the **Temurin 25 `.msi`** from
+[adoptium.net↗](https://adoptium.net/temurin/releases/?version=25) and running it - accept
+the defaults, and let it set `JAVA_HOME` and update your `PATH`.  If you prefer the command
+line, `winget` installs the same package:
+
+```powershell
+winget install EclipseAdoptium.Temurin.25.JDK
+```
+
+Note that a bare `winget install java` does *not* get you a JDK 25 - the package ID above is
+what pins the version.
+
+Also install:
+
+* [Docker Desktop↗](https://www.docker.com/products/docker-desktop/)
+* [Git for Windows↗](https://git-scm.com/download/win) - the `ddphotos` command-line tool is
+  a Bash script, so the app runs it through **Git Bash** (`bash.exe`).  This is required to
+  *use* the app, not just to build it.  Accepting all the installer defaults is fine.
+
+**Maven does not need to be installed.**  There is no `winget` package for Apache Maven, so
+this repo ships the [Maven Wrapper↗](https://maven.apache.org/wrapper/) as `mvn.cmd` in the
+repo root.  Invoke it as `.\mvn` and it behaves like a normal `mvn`, downloading a
+known-good Maven on first use and caching it under `~/.m2/wrapper`.  (Mac and Linux
+developers install Maven normally and ignore this file.)
+
+Clone the repo onto your Windows drive, e.g. `C:\Users\<user>\work\ddphotos-app`.
+
+> **Use a separate clone from your WSL one.**  Each build writes platform-specific paths
+> into `code/*/target/classpath.txt`, so building in one environment leaves the other's
+> `tools/bin` scripts broken until you rebuild.
+
+### Build and run
+
+The commands mirror [Build and Run](#build-and-run), with `.\mvn` in place of `mvn`:
+
+```powershell
+# build, skipping tests
+.\mvn -f code/pom.xml package -DskipTests=true
+
+# install the modules the app depends on
+.\mvn -f code/pom.xml install -DskipTests=true -pl .,common,gui,engine,photos
+
+# launch DD Photos
+.\mvn -f code/pom.xml -pl photos exec:exec
+```
+
+Forward slashes in `-f code/pom.xml` are fine - PowerShell passes the argument through
+untouched, and both Windows and Java accept `/` in paths.
+
+### PowerShell quirks worth knowing
+
+* **Quote `-D` arguments containing dots.**  PowerShell splits an unquoted
+  `-Dskip.unit.tests=false` at the first `.`, handing Maven a stray `.unit.tests=false` and
+  failing with *"Unknown lifecycle phase"*.  Quote it:
+
+  ```powershell
+  .\mvn -f code/pom.xml test '-Dskip.unit.tests=false'
+  ```
+
+  `-DskipTests=true` has no dot, so it is fine unquoted.
+* `./mvn` also works in PowerShell - `PATHEXT` contains `.CMD`, so the extensionless name
+  resolves to `mvn.cmd`.  The old `cmd.exe` prompt is the exception: it rejects `./` with
+  *"'.' is not recognized as an internal or external command"*, so use `.\mvn` there.
+* The `ddphotos.rc` aliases and the `tools/bin` scripts (`ddphotos-app`, `runjava`,
+  `buildall`) are Bash, so they do not work in PowerShell.  Run them from Git Bash if you
+  need them - `runjava` already handles the Windows classpath separator.
+
+### Known gaps
+
+* **The unit tests do not pass natively.**  `AlbumsFileTest` assumes Unix absolute paths and
+  `/` separators; `AtomicWriteTest` needs POSIX file permissions and symlink creation, which
+  Windows either does not support or refuses without elevation.  Run tests from WSL, Mac or
+  Linux - CI runs them on Linux.
+* Building installers and running GitHub Actions locally are not exercised here; see
+  [Appendix B](#appendix-b-running-github-actions-locally) and
+  [Appendix D](#appendix-d-releasing-a-new-version), both of which assume a Unix shell.
