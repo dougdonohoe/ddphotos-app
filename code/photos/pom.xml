@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
+  <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
@@ -41,6 +41,12 @@
             <manifest>
               <mainClass>com.donohoedigital.ddphotos.PhotosMain</mainClass>
             </manifest>
+            <manifestEntries>
+              <!-- Dependencies (log4j-api, flatlaf) ship META-INF/versions/9 classes.
+                   Without this, the merged jar silently falls back to their Java 8
+                   versions - log4j's StackLocator then can't find the calling class. -->
+              <Multi-Release>true</Multi-Release>
+            </manifestEntries>
           </archive>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
