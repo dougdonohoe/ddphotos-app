@@ -37,6 +37,7 @@ public class Support extends BasePhase {
 
         base_ = new LogoWindowPanel("icon48", phase_.getString(EngineConstants.PARAM_HELP_STYLE, null));
         base_.setTopComponent(new DDLabel("supportwindow", STYLE));
+        base_.setContentInsets(0, 0, 0, 0); // the gray area runs flush to the window edges
 
         // the buttons sit below the gray area, on the window's white background, so the contents
         // are a transparent wrapper rather than the gray panel itself
@@ -46,6 +47,8 @@ public class Support extends BasePhase {
         DDPanel middlebase = new DDPanel();
         middlebase.setBackground(StylesConfig.getColor("app.panel.bg"));
         middlebase.setOpaque(true);
+        // inside the gray panel, so the gray paints edge to edge behind the gap
+        middlebase.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
         content.add(middlebase, BorderLayout.CENTER);
 
         DDHtmlArea info = new DDHtmlArea("support", STYLE);
