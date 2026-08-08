@@ -15,9 +15,15 @@ import static org.junit.Assert.assertTrue;
  * Covers {@link DDUndoManager}'s grouping rules - the part that turns Swing's one-edit-per-keystroke
  * stream into undo steps a person would recognize.
  *
- * <p>Uses a bare {@link JTextArea} and the plain constructor rather than
+ * <p>Uses a bare {@link JTextArea} and the test constructor rather than
  * {@link DDUndoManager#install}, so nothing here needs the styles config a real DD widget loads.
  * Edits are made straight against the document, which is what typing ends up doing anyway.
+ *
+ * <p>Grouping is driven by a fake clock the test advances by hand, never by sleeping.  Real
+ * elapsed time would make every "these collapse into one undo" assertion a race: the edits have
+ * to land within 700ms of each other (100ms for the replace case), and a GC pause or a busy
+ * machine is enough to blow that and split the run.  With the clock under test control the rules
+ * are asserted exactly, and the suite does not spend seconds asleep.
  */
 public class DDUndoManagerTest
 {
@@ -31,12 +37,16 @@ public class DDUndoManagerTest
     private Document doc_;
     private DDUndoManager undo_;
 
+    /** "Now" as far as the manager under test is concerned; only ever moved by {@link #advance}. */
+    private long now_;
+
     @Before
     public void setUp()
     {
         text_ = new JTextArea();
         doc_ = text_.getDocument();
-        undo_ = new DDUndoManager(text_);
+        now_ = 0;
+        undo_ = new DDUndoManager(text_, () -> now_);
     }
 
     private void type(String s) throws BadLocationException
@@ -44,16 +54,10 @@ public class DDUndoManagerTest
         doc_.insertString(doc_.getLength(), s, null);
     }
 
-    private void pause(long millis)
+    /** Move the clock forward, standing in for the user pausing before their next keystroke. */
+    private void advance(long millis)
     {
-        try
-        {
-            Thread.sleep(millis);
-        }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
-        }
+        now_ += millis;
     }
 
     @Test
@@ -73,7 +77,7 @@ public class DDUndoManagerTest
     public void pauseStartsANewUndo() throws BadLocationException
     {
         type("Sunset");
-        pause(PAUSE);
+        advance(PAUSE);
         type(" over Lake");
 
         undo_.undo();
@@ -98,7 +102,7 @@ public class DDUndoManagerTest
     public void backspaceRunIsOneUndo() throws BadLocationException
     {
         type("Sunset");
-        pause(PAUSE);
+        advance(PAUSE);
 
         // backspace three times: each removal walks the caret back one
         doc_.remove(5, 1);
@@ -114,9 +118,9 @@ public class DDUndoManagerTest
     public void deletingThenTypingLaterAreSeparateUndos() throws BadLocationException
     {
         type("Sunset");
-        pause(PAUSE);
+        advance(PAUSE);
         doc_.remove(3, 3);
-        pause(BLIP); // past the replace-selection window, so this is a deliberate second action
+        advance(BLIP); // past the replace-selection window, so this is a deliberate second action
         type("day");
         assertEquals("Sunday", text_.getText());
 
@@ -130,7 +134,7 @@ public class DDUndoManagerTest
     public void typingOverASelectionIsOneUndo() throws BadLocationException
     {
         type("Sunset");
-        pause(PAUSE);
+        advance(PAUSE);
 
         // what AbstractDocument.replace() does for replaceSelection/paste: remove then insert
         doc_.remove(3, 3);
@@ -145,7 +149,7 @@ public class DDUndoManagerTest
     public void redoRestoresAnUndoneRun() throws BadLocationException
     {
         type("Sunset");
-        pause(PAUSE);
+        advance(PAUSE);
         type(" over Lake");
 
         undo_.undo();
