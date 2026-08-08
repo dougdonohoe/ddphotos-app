@@ -716,8 +716,8 @@ untouched, and both Windows and Java accept `/` in paths.
 
 ### Known gaps
 
-* **16 tests are skipped, not run.**  The suite passes on Windows, but these are skipped via
-  `Assume.assumeFalse(..., Utils.ISWINDOWS)` because they assert Unix-only behaviour:
+* **16 tests are skipped.**  The suite passes on Windows, but these are skipped via
+  `Assume.assumeFalse(..., Utils.ISWINDOWS)` because they assert Unix-only behavior:
   `AtomicWriteTest` needs POSIX file permissions and symlink creation (which Windows either
   does not support or refuses without elevation), and `AlbumsFileTest` and
   `PathValidationTest` use Unix absolute paths like `/Users/example/photos`, which are not
