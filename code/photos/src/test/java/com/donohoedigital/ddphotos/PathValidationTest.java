@@ -2,7 +2,9 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.ddphotos.PathValidation.PathStatus;
 import com.donohoedigital.ddphotos.PathValidation.Severity;
+import com.donohoedigital.base.Utils;
 import org.junit.Rule;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
@@ -69,6 +71,7 @@ public class PathValidationTest {
 
     @Test
     public void baseSelected_absolute_mustBeRelative() {
+        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
         PathStatus s = evaluateUnderBase("/abs/path", base, true, false, "source");
         assertWarn(s, "msg.warn.source.must.be.relative");
         assertNull(s.resolved());
@@ -112,6 +115,7 @@ public class PathValidationTest {
 
     @Test
     public void noBase_absoluteMissing_warns() {
+        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
         PathStatus s = evaluateUnderBase("/no/such/path", null, false, false, "source");
         assertWarn(s, "msg.warn.source.not.found");
     }

@@ -1,5 +1,6 @@
 package com.donohoedigital.ddphotos.config;
 
+import com.donohoedigital.base.Utils;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -658,6 +659,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveBasePath_absolutePath() {
+        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
         AlbumsFile af = new AlbumsFile();
         af.getBases().put("t7", "/Volumes/T7/Photos");
         assertEquals(Path.of("/Volumes/T7/Photos"), af.resolveBasePath("t7"));
@@ -699,6 +701,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveSourcePath_absolutePath() {
+        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
         AlbumsFile af = new AlbumsFile();
         assertEquals(
                 Path.of("/Users/example/photos/2024"),
@@ -707,6 +710,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveSourcePath_relativeWithAbsoluteBase() {
+        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
         AlbumsFile af = new AlbumsFile();
         af.getBases().put("t7", "/Volumes/T7/Photos");
         assertEquals(
@@ -763,6 +767,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveCoverPath_resolved() {
+        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
         AlbumsFile af = new AlbumsFile();
         af.getBases().put("t7", "/Volumes/T7/Photos");
         AlbumEntry a = albumWith("a", "t7", "2024-Trip");
@@ -798,6 +803,7 @@ public class AlbumsFileTest {
 
     @Test
     public void toRelativeBasePath_withinSiteDir() throws Exception {
+        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
         File siteDir = tmp.newFolder("site");
         File sourceDir = new File(siteDir, "sample/source");
         assertTrue(sourceDir.mkdirs());
@@ -884,6 +890,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolvePasswordsPath_absoluteAndUnknownConfigDir() {
+        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
         AlbumsFile af = new AlbumsFile();
         assertNull("no config dir and a relative name is unresolvable", af.resolvePasswordsPath());
 
@@ -1004,6 +1011,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveCssPath_absoluteAndUnknownConfigDir() {
+        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
         AlbumsFile af = new AlbumsFile();
         assertNull("no config dir and a relative name is unresolvable", af.resolveCssPath());
 

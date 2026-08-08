@@ -716,10 +716,13 @@ untouched, and both Windows and Java accept `/` in paths.
 
 ### Known gaps
 
-* **The unit tests do not pass natively.**  `AlbumsFileTest` assumes Unix absolute paths and
-  `/` separators; `AtomicWriteTest` needs POSIX file permissions and symlink creation, which
-  Windows either does not support or refuses without elevation.  Run tests from WSL, Mac or
-  Linux - CI runs them on Linux.
+* **16 tests are skipped, not run.**  The suite passes on Windows, but these are skipped via
+  `Assume.assumeFalse(..., Utils.ISWINDOWS)` because they assert Unix-only behaviour:
+  `AtomicWriteTest` needs POSIX file permissions and symlink creation (which Windows either
+  does not support or refuses without elevation), and `AlbumsFileTest` and
+  `PathValidationTest` use Unix absolute paths like `/Users/example/photos`, which are not
+  absolute on Windows.  Surefire reports them as skipped with the reason attached.  Full
+  coverage only comes from a WSL, Mac or Linux run - which is what CI does.
 * Building installers and running GitHub Actions locally are not exercised here; see
   [Appendix B](#appendix-b-running-github-actions-locally) and
   [Appendix D](#appendix-d-releasing-a-new-version), both of which assume a Unix shell.
