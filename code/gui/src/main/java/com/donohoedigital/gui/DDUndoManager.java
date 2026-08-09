@@ -23,6 +23,7 @@ import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.util.function.LongSupplier;
 
 /**
  * Undo/redo for a single text widget.  Swing gives us the raw machinery - every
@@ -66,6 +67,15 @@ public class DDUndoManager extends UndoManager implements UndoableEditListener
 
     private final JTextComponent text_;
 
+    /**
+     * Where the grouping rules read "now" from, in milliseconds.  Monotonic rather than
+     * {@link System#currentTimeMillis} so a wall-clock adjustment - an NTP step, or the guest
+     * clock resyncing after a host suspend, which is routine under WSL - cannot make a typing
+     * run look like it paused and split it in two.  Only differences are ever used, so the
+     * arbitrary origin of {@link System#nanoTime} does not matter.
+     */
+    private final LongSupplier clock_;
+
     // the group being accumulated, and what would let the next edit join it
     private CompoundEdit group_;
     private boolean groupInsert_;
@@ -83,7 +93,18 @@ public class DDUndoManager extends UndoManager implements UndoableEditListener
      */
     public DDUndoManager(JTextComponent text)
     {
+        this(text, () -> System.nanoTime() / 1_000_000L);
+    }
+
+    /**
+     * Visible for testing: drives the grouping rules from the supplied clock instead of elapsed
+     * real time, so a test can assert what does and does not collapse into one undo step by
+     * advancing the clock rather than sleeping.
+     */
+    DDUndoManager(JTextComponent text, LongSupplier clock)
+    {
         text_ = text;
+        clock_ = clock;
         setLimit(EDIT_LIMIT);
 
         Document doc = text.getDocument();
@@ -200,7 +221,7 @@ public class DDUndoManager extends UndoManager implements UndoableEditListener
 
             groupInsert_ = insert;
             groupEnd_ = insert ? offset + length : offset; // where this edit left the caret
-            groupMillis_ = System.currentTimeMillis();
+            groupMillis_ = clock_.getAsLong();
             return;
         }
 
@@ -217,7 +238,7 @@ public class DDUndoManager extends UndoManager implements UndoableEditListener
     {
         if (group_ == null) return false;
 
-        long elapsed = System.currentTimeMillis() - groupMillis_;
+        long elapsed = clock_.getAsLong() - groupMillis_;
         if (elapsed >= GROUP_PAUSE_MILLIS) return false;
 
         if (groupInsert_ != insert)

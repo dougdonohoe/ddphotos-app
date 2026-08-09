@@ -1,5 +1,7 @@
 package com.donohoedigital.ddphotos.config;
 
+import com.donohoedigital.base.Utils;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -69,6 +71,7 @@ public class AtomicWriteTest {
 
     @Test
     public void aFailedWriteLeavesTheOriginalIntact() throws IOException {
+        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
         Path dir = tmp.newFolder("config").toPath();
         Path target = dir.resolve("albums.yaml");
         Files.writeString(target, "the original\n");
@@ -96,6 +99,7 @@ public class AtomicWriteTest {
 
     @Test
     public void readOnlyTargetIsRefusedRatherThanReplaced() throws IOException {
+        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
         Path target = tmp.newFile("albums.yaml").toPath();
         Files.writeString(target, "the original\n");
         Files.setPosixFilePermissions(target, PosixFilePermissions.fromString("r--r--r--"));
@@ -116,6 +120,7 @@ public class AtomicWriteTest {
 
     @Test
     public void writesThroughASymlinkRatherThanReplacingIt() throws IOException {
+        Assume.assumeFalse("creating symlinks on Windows requires elevation or Developer Mode", Utils.ISWINDOWS);
         Path real = tmp.newFolder("shared").toPath().resolve("passwords.yaml");
         Files.writeString(real, "key: abc\n");
         Path link = tmp.newFolder("config").toPath().resolve("passwords.yaml");
@@ -129,6 +134,7 @@ public class AtomicWriteTest {
 
     @Test
     public void followsASymlinkToAFileThatDoesNotExistYet() throws IOException {
+        Assume.assumeFalse("creating symlinks on Windows requires elevation or Developer Mode", Utils.ISWINDOWS);
         Path real = tmp.newFolder("shared").toPath().resolve("passwords.yaml");
         Path link = tmp.newFolder("config").toPath().resolve("passwords.yaml");
         Files.createSymbolicLink(link, real);
@@ -141,6 +147,7 @@ public class AtomicWriteTest {
 
     @Test
     public void followsARelativeSymlink() throws IOException {
+        Assume.assumeFalse("creating symlinks on Windows requires elevation or Developer Mode", Utils.ISWINDOWS);
         Path dir = tmp.newFolder("config").toPath();
         Path real = dir.resolve("passwords-real.yaml");
         Files.writeString(real, "key: abc\n");
@@ -157,6 +164,7 @@ public class AtomicWriteTest {
 
     @Test
     public void preservesTheTargetsPermissions() throws IOException {
+        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
         Path target = tmp.newFile("passwords.yaml").toPath();
         Files.writeString(target, "key: abc\n");
         Set<PosixFilePermission> locked = PosixFilePermissions.fromString("rw-------");
@@ -171,6 +179,7 @@ public class AtomicWriteTest {
 
     @Test
     public void aNewFileIsReadableLikeAnyOtherNewFile() throws IOException {
+        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
         Path target = tmp.getRoot().toPath().resolve("albums.yaml");
         AtomicWrite.writeString(target, "a: 1\n");
 

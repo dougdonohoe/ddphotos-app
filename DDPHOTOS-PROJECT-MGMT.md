@@ -13,7 +13,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
   a settings menu to win/linux)?  Would want to show size of cache.  
 * Another possible thing in a Settings dialog could be image name used in install (currently we can override this
   via a debug setting, but someone with a forked ddphotos might want to use their own)
-* Windows - WSL and PowerShell docs
 * Undo support - Still open: reverting `albums.yaml` / `passwords.yaml` /
   `photogen.txt` to a previous on-disk version - backup files somewhere in config?
 
