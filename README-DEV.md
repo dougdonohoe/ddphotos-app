@@ -295,7 +295,7 @@ For Mac users, if you also distribute the `logo/icons/ddphotos-logo/ddphotos-log
 you can get a dock icon:
 
 ```shell
-java -Xdock:icon=ddphotos-logo.icns --enable-native-access=ALL-UNNAMED -jar code/photos/photos-1.0-jar-with-dependencies.jar
+java -Xdock:icon=logo/icons/ddphotos-logo/ddphotos-logo.icns --enable-native-access=ALL-UNNAMED -jar code/photos/target/photos-1.0-jar-with-dependencies.jar
 ```
 
 ### Preferences
