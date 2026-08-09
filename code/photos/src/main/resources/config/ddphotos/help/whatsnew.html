@@ -6,17 +6,39 @@
 
 <h2>What's New?</h2>
 
+<!-- 1.0.3 -->
+<div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
+    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.3 - TBD</span></strong>
+</div>
+<ul>
+    <li>The <b>Publish</b> menu is now the <b>Run</b> menu, since it does more than publish.  Its
+        two publishing items are unchanged, apart from <b>Settings...</b> being spelled out as
+        <b>Publish Settings...</b>.</li>
+    <li>New <b>Run &rarr; Photogen...</b> item, on <b>Cmd-G</b> (<b>Ctrl-G</b> on Windows and
+        Linux).  It switches to the <b>Photogen</b> tab and clicks <b>Run</b> for you - handy
+        given how often <tt>photogen</tt> is rerun after editing a site, an album or your
+        captions.</li>
+    <li>A tab running a command now shows a green lightning bolt, so you can see that
+        <tt>run</tt> or <tt>serve</tt> is still up, or watch a publish run move from tab to
+        tab.</li>
+    <li>Menu items now gray out when they can't be used.  <b>Rerun Setup Wizard...</b>,
+        <b>Rerun Tour...</b> and the whole <b>Run</b> menu stay out of the way while the setup
+        wizard, the guided tour or a publish run is in progress, rather than interrupting the
+        one you are in the middle of.</li>
+</ul>
+
 <!-- 1.0.2 -->
 <div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
     <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.2 - August 7th, 2026</span></strong>
 </div>
 <ul>
-    <li>New <b>Publish</b> menu that publishes a site in one go, instead of running each command
-        yourself.  Use <b>Publish &rarr; Settings...</b> to say what publishing this site means:
+    <li>New <b>Run</b> menu (called <b>Publish</b> at the time) that publishes a site in one go,
+        instead of running each command yourself.  Use
+        <b>Run &rarr; Publish Settings...</b> to say what publishing this site means:
         whether it starts with <tt>photogen</tt> and <tt>build</tt>, and whether it finishes with
         <tt>deploy</tt> or with <tt>export</tt> followed by <tt>wrangler</tt> or <tt>surge</tt>.
         Each site remembers its own choice, so they can each publish their own way.</li>
-    <li><b>Publish &rarr; Publish...</b> then runs those commands one after another, showing you
+    <li><b>Run &rarr; Publish...</b> then runs those commands one after another, showing you
         each tab as it goes.  Every step uses the settings you last used on its own tab, so set
         those up there first.  If a step fails, publishing stops on that tab so you can see what
         happened, and you can publish again once it is sorted out.</li>
@@ -50,7 +72,7 @@
     <li>After saving site settings, album settings, photo captions or your custom stylesheet,
         DD Photos reminds you to rerun <tt>photogen</tt> to see the changes.  The reminder has a
         <b>don't show this again</b> option.</li>
-    <li>The mouse-over help at the bottom of the window is now yellow on grey, so it is easier to
+    <li>The mouse-over help at the bottom of the window is now yellow on gray, so it is easier to
         notice.</li>
     <li>The <b>Edit</b> buttons on the <tt>Config</tt> tab are now labeled <b>Edit Site</b> and
         <b>Edit Album</b>, making it clear which side you are editing.</li>
