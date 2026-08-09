@@ -23,10 +23,10 @@ public final class PhotosTabIcons {
 
     // Nudged down: centered on the label's box the glyphs read as sitting high, since the text
     // beside them carries more of its weight below the middle.
-    private static final int NUDGE_DOWN = 2;
+    private static final int NUDGE_DOWN = 1;
 
     // On top of the look and feel's own icon-text gap, which is tight at this size.
-    private static final int GAP_RIGHT = 2;
+    private static final int GAP_RIGHT = 3;
 
     // Fixed rather than themed: on a running tab the color is the message. Matches the green
     // DockerStatusPanel uses for a running daemon.
