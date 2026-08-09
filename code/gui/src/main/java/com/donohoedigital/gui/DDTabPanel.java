@@ -90,6 +90,16 @@ public abstract class DDTabPanel extends DDPanel implements AncestorListener
     }
 
     /**
+     * Change the icon shown on this panel's tab, for a subclass marking its own state (see
+     * AbstractRunnerPanel, which flags a running command).  Pass {@link #getIcon()} to put the
+     * tab back the way it was added.  A no-op until the panel has been added to a tabbed pane.
+     */
+    public void setTabIcon(Icon icon)
+    {
+        if (tabPane_ != null) tabPane_.setIconAt(nTabNum_, icon);
+    }
+
+    /**
      * Do valid check (which sets error icon appropriately),
      * and return whether tab contents is valid
      */

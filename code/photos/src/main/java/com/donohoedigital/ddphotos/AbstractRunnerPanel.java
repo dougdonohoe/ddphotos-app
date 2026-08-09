@@ -83,6 +83,10 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
     // External gate (e.g. wizard validation) ANDed with the panel's own validity check.
     private boolean runAllowed_ = true;
 
+    // What the tab marker is currently showing, so updateTabIcon only touches the tab on a change
+    // - updateButtonState runs on every keystroke in a flag field.
+    private boolean tabMarked_;
+
     // Set while a button is pulsing for the tour - see setPulsing().
     // (Timer qualified: java.util.* is imported too)
     private javax.swing.Timer pulseTimer_;
@@ -452,6 +456,10 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
     }
 
     protected void updateButtonState() {
+        // Ahead of the guard below: the marker belongs to the tab, which exists whether
+        // this panel has built its controls yet.
+        updateTabIcon();
+
         if (runBtn_ == null) return; // UI not built yet
         boolean running = isRunning();
         boolean textValid = textControls_.values().stream().allMatch(OptionText::isValidData);
@@ -461,6 +469,19 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                 && textValid && comboValid && filesValid);
         stopBtn_.setEnabled(running);
         killBtn_.setEnabled(running);
+    }
+
+    /**
+     * Flags a running command on this panel's tab.  Puts back the icon the tab was added with
+     * rather than clearing it - both lamps are the same size, so the strip never shuffles
+     * sideways as commands start and end (see {@link PhotosTabIcons}).  The wizard's runner has
+     * no tab pane, and {@code setTabIcon} is a no-op there.
+     */
+    private void updateTabIcon() {
+        boolean running = isRunning();
+        if (running == tabMarked_) return;
+        tabMarked_ = running;
+        setTabIcon(running ? PhotosTabIcons.RUNNING : getIcon());
     }
 
     /** Pulse the Run button while the guided tour waits for the user to start this command. */
