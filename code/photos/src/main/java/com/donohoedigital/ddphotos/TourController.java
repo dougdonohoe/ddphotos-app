@@ -70,15 +70,21 @@ public class TourController {
     private final OptionTabbedPane tabs_;
     private final List<Step> steps_;
 
+    // Re-labels and re-enables the menus, whose stateful items are disabled for the duration
+    // of a tour - the tour drives the tabs, so nothing else may take them over meanwhile.
+    private final Runnable menuRefresh_;
+
     // True while a tour is being offered or walked through; the dialogs are now non-modal,
     // so nothing else stops start()/startFromMenu() from launching a second, overlapping tour.
     private boolean running_;
 
     public TourController(AppContext context, OptionTabbedPane tabs, Component configTab,
                           Component deployTab, CommandRunnerPanel photogen, CommandRunnerPanel run,
-                          CommandRunnerPanel build, CommandRunnerPanel serve) {
+                          CommandRunnerPanel build, CommandRunnerPanel serve,
+                          Runnable menuRefresh) {
         context_ = context;
         tabs_ = tabs;
+        menuRefresh_ = menuRefresh;
         steps_ = List.of(
                 Step.narrate("TourStep", "msg.tour.overview", configTab),
                 Step.command("msg.tour.photogen", photogen, "msg.tour.photogen.running"),
@@ -104,12 +110,12 @@ public class TourController {
      */
     public void start() {
         if (running_) return;
-        running_ = true;
+        setRunning(true);
         showDialog("TourWelcome", "msg.tour.welcome", button -> {
             if (button != null && "tourstart".equals(button.getName())) {
                 runStep(0);
             } else {
-                running_ = false;   // declined or closed - never entered the walkthrough
+                setRunning(false);   // declined or closed - never entered the walkthrough
             }
         });
     }
@@ -117,8 +123,22 @@ public class TourController {
     /** Replay the tour from the first step, bypassing the Welcome opt-out gate. */
     public void startFromMenu() {
         if (running_) return;
-        running_ = true;
+        setRunning(true);
         runStep(0);
+    }
+
+    /** True while the tour is being offered or walked through. */
+    public boolean isRunning() {
+        return running_;
+    }
+
+    /**
+     * The one place the flag changes, so the menus are told every time.  They have to be pushed
+     * rather than worked out as a menu opens: an accelerator fires with no menu ever shown.
+     */
+    private void setRunning(boolean running) {
+        running_ = running;
+        menuRefresh_.run();
     }
 
     private void runStep(int i) {
@@ -147,12 +167,12 @@ public class TourController {
                 // Ran to completion ([Done] on TourEnd): suppress the Welcome offer on future
                 // launches, the same as if the user had checked the opt-out box.
                 DialogPhase.setDialogHidden(NO_SHOW_KEY, true);
-                running_ = false;
+                setRunning(false);
                 return;
             }
             // Stop Tour / window close - already confirmed by TourDialog, so this result only
             // arrives once the user has said yes.
-            if (!"tournext".equals(name)) { running_ = false; return; }
+            if (!"tournext".equals(name)) { setRunning(false); return; }
 
             runStep(i + 1);
         });
@@ -240,7 +260,7 @@ public class TourController {
     private void endStep(CommandRunnerPanel runner) {
         runner.setRunWatcher(null);
         runner.clearPulse();
-        running_ = false;
+        setRunning(false);
     }
 
     /**

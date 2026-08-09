@@ -61,16 +61,22 @@ public class PhotosBasePhase extends BasePhase {
     private OptionTabbedPane tabs_;
     private WizardPanel wizardPanel_;
 
-    // Held so the Publish menu can name and enable its items for whichever site is selected.
+    // True while the wizard owns the window instead of the tabs - see buildWizardUI.
+    private boolean wizardUp_;
+
+    // Held so the Run menu can name and enable its items for whichever site is selected.
     private SiteBarPanel siteBar_;
 
+    // Held so Run -> Photogen... can select that tab and press its Run button.
+    private CommandRunnerPanel photogenTab_;
+
     /**
-     * Every Publish menu built so far.  There is one per window on a Mac (see {@link #init}) and
-     * they all have to be re-labeled and re-enabled when the selected site changes, but a closed
-     * window's menu must not keep that window alive - hence the weak references, dropped as they
-     * are found cleared in {@link #refreshPublishMenus}.
+     * Every menu whose items {@link #refreshMenu} governs, built so far.  There is one set per
+     * window on a Mac (see {@link #init}) and they all have to be re-labeled and re-enabled when
+     * the app's state changes, but a closed window's menu must not keep that window alive - hence
+     * the weak references, dropped as they are found cleared in {@link #refreshMenus}.
      */
-    private final List<WeakReference<DDMenu>> publishMenus_ = new ArrayList<>();
+    private final List<WeakReference<DDMenu>> menus_ = new ArrayList<>();
 
     public PhotosBasePhase() {
         Path sitesFilePath = AppConfigUtils.getSaveDir().toPath().resolve("sites.yaml");
@@ -130,12 +136,20 @@ public class PhotosBasePhase extends BasePhase {
         // the wizard fills the window on its own (it sets its own welcome help message)
         base_.setTopBarVisible(false);
         base_.setCenterComponent(wrapper);
+
+        // The menu bar is built in init(), before start() has decided wizard or tabs, so the
+        // wizard's rules can only be applied from here.
+        wizardUp_ = true;
+        refreshMenus();
     }
 
     private void buildRegularUI(Site selectSite) {
-        // set explicitly: finishing the wizard re-enters this phase, which may reuse the instance
-        // (and its hidden logo strip) rather than building a fresh one
+        // all set explicitly: finishing the wizard re-enters this phase, which may reuse the
+        // instance (and its hidden logo strip, and the wizard it has just finished with) rather
+        // than building a fresh one
         base_.setTopBarVisible(true);
+        wizardUp_ = false;
+        wizardPanel_ = null;
 
         SiteBarPanel siteBar = new SiteBarPanel(context_, sitesFile_, selectSite);
         siteBar_ = siteBar;
@@ -149,6 +163,7 @@ public class PhotosBasePhase extends BasePhase {
         // Held for the tour, which selects these tabs and watches their commands (see TourController).
         ConfigTab configTab = new ConfigTab(context_, siteBar);
         CommandRunnerPanel photogenTab = new CommandRunnerPanel(siteBar, new PhotogenRunner(), context_);
+        photogenTab_ = photogenTab;
         CommandRunnerPanel runTab = new CommandRunnerPanel(siteBar, new RunRunner(), context_);
         CommandRunnerPanel buildTab = new CommandRunnerPanel(siteBar, new BuildRunner(), context_);
         CommandRunnerPanel serveTab = new CommandRunnerPanel(siteBar, new ServeRunner(), context_);
@@ -170,7 +185,7 @@ public class PhotosBasePhase extends BasePhase {
         tabs.addTab("msg.tab.upgrade", null, null, new CommandRunnerPanel(siteBar, new UpgradeRunner(), context_));
 
         tourController_ = new TourController(context_, tabs, configTab, deployTab,
-                photogenTab, runTab, buildTab, serveTab);
+                photogenTab, runTab, buildTab, serveTab, this::refreshMenus);
 
         Map<PublishSettings.Step, CommandRunnerPanel> publishPanels =
                 new EnumMap<>(PublishSettings.Step.class);
@@ -181,13 +196,13 @@ public class PhotosBasePhase extends BasePhase {
         publishPanels.put(PublishSettings.Step.WRANGLER, wranglerTab);
         publishPanels.put(PublishSettings.Step.SURGE, surgeTab);
         publishController_ = new PublishController(context_, tabs, siteBar, publishPanels,
-                this::refreshPublishMenus);
+                this::refreshMenus);
 
-        // The Publish menu names the selected site and is disabled without one.  Menus already
+        // The Run menu items name the selected site and are disabled without one.  Menus already
         // built (the main window's, from init()) are refreshed here too - they were built before
         // there was a site bar to ask.
-        siteBar.addSiteListener(_ -> refreshPublishMenus());
-        refreshPublishMenus();
+        siteBar.addSiteListener(_ -> refreshMenus());
+        refreshMenus();
 
         // If no selected site (site.yaml deleted, or not created yet), don't restore to previous selected tab,
         // as only the Config tab can handle no sites)
@@ -214,9 +229,27 @@ public class PhotosBasePhase extends BasePhase {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(buildFileMenu());
         menuBar.add(buildEditMenu());
-        menuBar.add(buildPublishMenu());
+        menuBar.add(buildRunMenu());
         menuBar.add(buildHelpMenu());
         return menuBar;
+    }
+
+    /**
+     * A menu whose items {@link #refreshMenu} governs.  Tracked so a state change elsewhere can
+     * reach it (there is a copy per window on a Mac), and refreshed again as it opens - the
+     * selected site's name can change under us, and pushed refreshes are one-way.
+     */
+    private DDMenu trackedMenu(String name) {
+        DDMenu menu = new DDMenu(name);
+        menus_.add(new WeakReference<>(menu));
+        menu.addMenuListener(new MenuListener() {
+            public void menuSelected(MenuEvent e) { refreshMenu(menu); }
+
+            public void menuDeselected(MenuEvent e) {}
+
+            public void menuCanceled(MenuEvent e) {}
+        });
+        return menu;
     }
 
     /**
@@ -233,7 +266,7 @@ public class PhotosBasePhase extends BasePhase {
     }
 
     private JMenu buildFileMenu() {
-        DDMenu menu = new DDMenu("file");
+        DDMenu menu = trackedMenu("file");
 
         DDMenuItem rerunWizard = new DDMenuItem("rerunwizard");
         rerunWizard.addActionListener(mainWindowAction(this::doRerunWizard));
@@ -259,6 +292,7 @@ public class PhotosBasePhase extends BasePhase {
             menu.add(quit);
         }
 
+        refreshMenu(menu);
         return menu;
     }
 
@@ -312,12 +346,20 @@ public class PhotosBasePhase extends BasePhase {
     }
 
     /**
-     * The Publish menu: set up which commands publishing this site runs, and run them.  Both
-     * items name the selected site and are disabled without one; Publish additionally waits until
-     * the settings have been opened (see {@link PublishSettings#isConfigured}).
+     * The Run menu: run this site's most-repeated command, {@code photogen}, and set up and run
+     * the whole publishing sequence.  Every item names the selected site and is disabled without
+     * one; Publish additionally waits until the settings have been opened (see
+     * {@link PublishSettings#isConfigured}).
      */
-    private JMenu buildPublishMenu() {
-        DDMenu menu = new DDMenu("publish");
+    private JMenu buildRunMenu() {
+        DDMenu menu = trackedMenu("run");
+
+        DDMenuItem photogen = new DDMenuItem("photogen");
+        photogen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, GuiUtils.MENU_SHORTCUT_MASK));
+        photogen.addActionListener(mainWindowAction(this::doPhotogen));
+        menu.add(photogen);
+
+        menu.addSeparator();
 
         DDMenuItem settings = new DDMenuItem("publishsettings");
         settings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P,
@@ -330,52 +372,99 @@ public class PhotosBasePhase extends BasePhase {
         publish.addActionListener(mainWindowAction(this::doPublish));
         menu.add(publish);
 
-        // Refreshed as the site changes (see buildRegularUI), and again as the menu opens - the
-        // site's name can change under us, and on a Mac this menu may belong to another window.
-        publishMenus_.add(new WeakReference<>(menu));
-        menu.addMenuListener(new MenuListener() {
-            public void menuSelected(MenuEvent e) { refreshPublishMenu(menu); }
-
-            public void menuDeselected(MenuEvent e) {}
-
-            public void menuCanceled(MenuEvent e) {}
-        });
-        refreshPublishMenu(menu);
-
+        refreshMenu(menu);
         return menu;
     }
 
-    /** Re-labels and re-enables every live Publish menu, forgetting those whose window is gone. */
-    private void refreshPublishMenus() {
-        publishMenus_.removeIf(ref -> {
+    // -------------------------------------------------------------------------
+    // Which menu items make sense right now
+    // -------------------------------------------------------------------------
+
+    /** Re-labels and re-enables every live menu, forgetting those whose window is gone. */
+    private void refreshMenus() {
+        menus_.removeIf(ref -> {
             DDMenu menu = ref.get();
             if (menu == null) return true;
-            refreshPublishMenu(menu);
+            refreshMenu(menu);
             return false;
         });
     }
 
-    private void refreshPublishMenu(DDMenu menu) {
+    /**
+     * The rules for every item whose availability depends on what the app is doing.  Items not
+     * named here - Reset Preferences, Quit, Help, Support, About - are always available.
+     */
+    private void refreshMenu(DDMenu menu) {
         Site site = siteBar_ != null ? siteBar_.getSelectedSite() : null;
-        String name = site != null ? site.getDisplayName() : "";
-        // A publish run has the app to itself. Its dialogs are modal, but that blocks the mouse
-        // only - a menu accelerator would still fire, so both items are disabled outright while
-        // one runs (a disabled item doesn't fire its accelerator, as the Edit menu notes).
-        boolean publishing = publishController_ != null && publishController_.isRunning();
+
+        // Nothing that rebuilds or drives the main UI may start while one of these owns it: the
+        // wizard replaces the tabs, the tour walks the user through them, and a publish run
+        // presses their Run buttons in turn. A publish run's dialogs are modal, but that blocks
+        // the mouse only - a menu accelerator would still fire, so the items are disabled
+        // outright (a disabled item doesn't fire its accelerator, as the Edit menu notes).
+        boolean busy = wizardUp_
+                || (tourController_ != null && tourController_.isRunning())
+                || (publishController_ != null && publishController_.isRunning());
 
         for (int i = 0; i < menu.getItemCount(); i++) {
-            if (menu.getItem(i) instanceof DDMenuItem item) {
-                // Both items name the site they act on - "Publish (Manly Man)..." - falling back
-                // to a bare label when there is none (the wizard, or every site removed).
-                if (site != null) {
-                    GuiManager.setLabelAsMessage(item, name);
-                } else {
-                    item.setText(PropertyConfig.getMessage("menuitem." + item.getName() + ".nosite"));
+            if (!(menu.getItem(i) instanceof DDMenuItem item)) continue; // separators
+            switch (item.getName()) {
+                case "rerunwizard", "reruntour" -> item.setEnabled(!busy);
+                case "photogen" -> {
+                    setSiteLabel(item, site);
+                    // Off mid-run too: the tab's Run button is disabled then, and startRun()
+                    // reports that as an invalid flag rather than as the "already running" it is.
+                    item.setEnabled(!busy && site != null
+                            && photogenTab_ != null && !photogenTab_.isRunning());
                 }
-                item.setEnabled(site != null && !publishing
-                        && (!"publishrun".equals(item.getName()) || PublishSettings.isConfigured(site)));
+                case "publishsettings" -> {
+                    setSiteLabel(item, site);
+                    item.setEnabled(!busy && site != null);
+                }
+                case "publishrun" -> {
+                    setSiteLabel(item, site);
+                    item.setEnabled(!busy && PublishSettings.isConfigured(site));
+                }
+                default -> { }
             }
         }
+    }
+
+    /**
+     * Run menu items name the site they act on - "Publish (Manly Man)..." - falling back to a
+     * bare label when there is none (the wizard, or every site removed).
+     */
+    private static void setSiteLabel(DDMenuItem item, Site site) {
+        if (site != null) {
+            GuiManager.setLabelAsMessage(item, site.getDisplayName());
+        } else {
+            item.setText(PropertyConfig.getMessage("menuitem." + item.getName() + ".nosite"));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Run menu actions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Selects the Photogen tab and presses its Run button, the same way a publish step does (see
+     * {@link PublishController}) - {@code photogen} is rerun after every config, album or caption
+     * change, so it is worth a keystroke.
+     */
+    private void doPhotogen() {
+        if (tabs_ == null || photogenTab_ == null) return;
+
+        tabs_.setSelectedComponent(photogenTab_);
+        // The tab's UI is built lazily, and we are about to press its Run button. Harmless if the
+        // selection above already triggered it - initUI() only builds once.
+        photogenTab_.initUI();
+
+        // Already running: the menu item is disabled for this, but the accelerator can arrive
+        // between refreshes. The tab is now in front with its Run button disabled, which says it
+        // better than startRun()'s "a required value is missing or invalid" console line would.
+        if (photogenTab_.isRunning()) return;
+
+        photogenTab_.startRun();
     }
 
     private void doPublishSettings() {
@@ -387,7 +476,7 @@ public class PhotosBasePhase extends BasePhase {
         // Modal, so this returns only once the dialog is gone and its result is in.
         Phase settings = context_.processPhaseNow("PublishSettingsDialog", params);
         // Closing the dialog is what enables the Publish item.
-        refreshPublishMenus();
+        refreshMenus();
 
         // Its Publish button is a shortcut past the menu - run it now that the dialog is out of
         // the way, so the publish dialogs have the screen to themselves.
@@ -402,7 +491,7 @@ public class PhotosBasePhase extends BasePhase {
     }
 
     private JMenu buildHelpMenu() {
-        DDMenu menu = new DDMenu("help");
+        DDMenu menu = trackedMenu("help");
 
         // Mac has About item under main app menu; see BaseApp.setupMac
         if (!Utils.ISMAC) {
@@ -436,7 +525,7 @@ public class PhotosBasePhase extends BasePhase {
             boom.addActionListener(_ ->  { throw new RuntimeException("BOOM!"); });
             menu.add(boom);
 
-            // Cmd/Ctrl-R: Cmd-P is the Publish menu's, and this one is debug-only.
+            // Cmd/Ctrl-R: the Run menu has Cmd-P and Cmd-G, and this one is debug-only.
             JMenuItem ss = new JMenuItem("Take screenshot...");
             ss.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, GuiUtils.MENU_SHORTCUT_MASK));
             ss.addActionListener(mainWindowAction(() -> context_.screenshot(screenshotName())));
@@ -452,6 +541,7 @@ public class PhotosBasePhase extends BasePhase {
             menu.add(display);
         }
 
+        refreshMenu(menu);
         return menu;
     }
 
