@@ -4,6 +4,7 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.Supplier;
 
 /**
  * Icon buttons from <a href="https://lucide.dev/icons/">lucide.dev/icons</a>
@@ -75,6 +76,18 @@ public class DDIconButtons
     {
         FlatSVGIcon icon = base.derive(size, size);
         icon.setColorFilter(new FlatSVGIcon.ColorFilter(_ -> color));
+        return icon;
+    }
+
+    /**
+     * Same, in a color resolved on every paint rather than once - for an icon that has to follow
+     * something changing underneath it, such as whether the row it sits in is selected.  The
+     * color filter runs per paint, so the supplier is free to look at live state.
+     */
+    public static FlatSVGIcon svgIcon(FlatSVGIcon base, int size, Supplier<Color> color)
+    {
+        FlatSVGIcon icon = base.derive(size, size);
+        icon.setColorFilter(new FlatSVGIcon.ColorFilter(_ -> color.get()));
         return icon;
     }
 

@@ -173,19 +173,20 @@ public class PhotosBasePhase extends BasePhase {
         CommandRunnerPanel wranglerTab = new CommandRunnerPanel(siteBar, new WranglerRunner(), context_);
         CommandRunnerPanel surgeTab = new CommandRunnerPanel(siteBar, new SurgeRunner(), context_);
 
-        // Every command tab is added with the idle lamp, which the panel swaps for a green bolt
-        // while its command runs - see PhotosTabIcons.
-        Icon idle = PhotosTabIcons.IDLE;
-        tabs.addTab("msg.tab.config", PhotosTabIcons.CONFIG, null, configTab);
-        tabs.addTab("msg.tab.photogen", idle, null, photogenTab);
-        tabs.addTab("msg.tab.run", idle, null, runTab);
-        tabs.addTab("msg.tab.build", idle, null, buildTab);
-        tabs.addTab("msg.tab.serve", idle, null, serveTab);
-        tabs.addTab("msg.tab.deploy", idle, null, deployTab);
-        tabs.addTab("msg.tab.export", idle, null, exportTab);
-        tabs.addTab("msg.tab.wrangler", idle, null, wranglerTab);
-        tabs.addTab("msg.tab.surge", idle, null, surgeTab);
-        tabs.addTab("msg.tab.upgrade", idle, null, new CommandRunnerPanel(siteBar, new UpgradeRunner(), context_));
+        // Every command tab is added with its own idle lamp, which the panel swaps for a green
+        // bolt while its command runs - see PhotosTabIcons. The lamps are per-tab because they
+        // brighten on the selected tab, which each one has to work out for itself.
+        CommandRunnerPanel upgradeTab = new CommandRunnerPanel(siteBar, new UpgradeRunner(), context_);
+        tabs.addTab("msg.tab.config", PhotosTabIcons.config(configTab), null, configTab);
+        tabs.addTab("msg.tab.photogen", PhotosTabIcons.idle(photogenTab), null, photogenTab);
+        tabs.addTab("msg.tab.run", PhotosTabIcons.idle(runTab), null, runTab);
+        tabs.addTab("msg.tab.build", PhotosTabIcons.idle(buildTab), null, buildTab);
+        tabs.addTab("msg.tab.serve", PhotosTabIcons.idle(serveTab), null, serveTab);
+        tabs.addTab("msg.tab.deploy", PhotosTabIcons.idle(deployTab), null, deployTab);
+        tabs.addTab("msg.tab.export", PhotosTabIcons.idle(exportTab), null, exportTab);
+        tabs.addTab("msg.tab.wrangler", PhotosTabIcons.idle(wranglerTab), null, wranglerTab);
+        tabs.addTab("msg.tab.surge", PhotosTabIcons.idle(surgeTab), null, surgeTab);
+        tabs.addTab("msg.tab.upgrade", PhotosTabIcons.idle(upgradeTab), null, upgradeTab);
 
         tourController_ = new TourController(context_, tabs, configTab, deployTab,
                 photogenTab, runTab, buildTab, serveTab, this::refreshMenus);
