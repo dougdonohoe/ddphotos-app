@@ -123,6 +123,23 @@
         </paramlist>
     </phase>
 
+    <!-- The photo chooser sizes itself from the app window, so dialog-maxwidth is turned off
+         (0) to keep DialogBackground from squeezing it back down to the 750 default. -->
+    <phase name="PhotoChooser" class="com.donohoedigital.ddphotos.PhotoChooserDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-maxwidth" intvalue="0"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.PhotoChooser"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <param name="default-button" strvalue="choose"/>
+        <paramlist name="buttons">
+            <strvalue>cancel</strvalue>
+            <strvalue>choose</strvalue>
+        </paramlist>
+    </phase>
+
     <phase name="PasswordDialog" class="com.donohoedigital.ddphotos.PasswordDialog" transient="true">
         <param name="style" strvalue="OptionsDialog"/>
         <param name="dialog-background-image" strvalue="dialog-background"/>

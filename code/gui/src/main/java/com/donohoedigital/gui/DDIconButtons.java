@@ -26,6 +26,7 @@ public class DDIconButtons
     public static final FlatSVGIcon FOLDER_OPEN   = svgIcon("icons/folder-open.svg");
     public static final FlatSVGIcon ARROW_LEFT    = svgIcon("icons/arrow-left.svg");
     public static final FlatSVGIcon ARROW_RIGHT   = svgIcon("icons/arrow-right.svg");
+    public static final FlatSVGIcon ARROW_UP      = svgIcon("icons/arrow-up.svg");
     public static final FlatSVGIcon SEARCH        = svgIcon("icons/search.svg");
     public static final FlatSVGIcon CLOSE         = svgIcon("icons/x.svg");
     public static final FlatSVGIcon LOCK          = svgIcon("icons/lock.svg");

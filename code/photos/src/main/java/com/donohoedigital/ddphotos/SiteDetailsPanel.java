@@ -3,7 +3,6 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.config.DataElement;
-import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.AlbumsFileException;
 import com.donohoedigital.ddphotos.config.AlbumsSettings;
@@ -302,7 +301,6 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         heroBaseLabel_ = new DDLabel("siteherobase", STYLE);
 
         heroImage_ = editable(new OptionFileChooser(null, "siteheroimage", STYLE, dummy_, 500, 350, null));
-        heroImage_.setChooserTitle(PropertyConfig.getMessage("msg.filechooser.title.hero"));
         heroImage_.setStartDirSupplier(() -> {
             Path baseAbsPath = resolveHeroBasePath();
             return baseAbsPath != null ? baseAbsPath.toString() : System.getProperty("user.home");
@@ -318,6 +316,12 @@ public class SiteDetailsPanel extends EditableDetailPanel {
                 return chosen;
             }
         });
+
+        // Browse with the DD thumbnail grid, rooted at the selected base so a pick stays
+        // relative to it.
+        PhotoChooser.install(heroImage_, context_, "msg.filechooser.title.hero",
+                             this::resolveHeroBasePath);
+
         heroImage_.setCustomValidator(heroValidator);
 
         heroCropLabel_ = new DDLabel("siteherocrop", STYLE);
