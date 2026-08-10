@@ -13,7 +13,7 @@ import java.nio.file.StandardCopyOption;
  * Replaces a file's contents without ever leaving it half-written.
  *
  * <p>{@link Files#writeString} truncates the file as it opens it, so anything that goes wrong
- * afterwards - a full disk, an external drive pulled mid-save - leaves the user with a truncated
+ * afterward - a full disk, an external drive pulled mid-save - leaves the user with a truncated
  * config file and no copy of what was there before.  Writing a sibling temp file and renaming it
  * over the original means the file the user sees is always either the old contents or the new
  * ones, never a mixture.
@@ -22,12 +22,35 @@ import java.nio.file.StandardCopyOption;
  * it atomic.  These config files live wherever the user's photos live, so the enclosing directory
  * is the only location guaranteed to be on the same volume as the target.
  */
-final class AtomicWrite {
+public final class AtomicWrite {
 
     private AtomicWrite() {}
 
     /**
      * Writes {@code content} to {@code path} as UTF-8, atomically.
+     */
+    public static void writeString(Path path, String content) throws IOException {
+        replace(path, tmp -> Files.writeString(tmp, content, StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Copies {@code source} over {@code path}, atomically.  Used to refresh a file the app does
+     * not author - the {@code ddphotos} wrapper script each site keeps a copy of, say - where the
+     * new contents come from another file rather than from a string in memory.
+     */
+    public static void copy(Path source, Path path) throws IOException {
+        replace(path, tmp -> Files.copy(source, tmp, StandardCopyOption.REPLACE_EXISTING));
+    }
+
+    /** Fills the temp file with the replacement contents. */
+    @FunctionalInterface
+    private interface TempFileWriter {
+        void write(Path tmp) throws IOException;
+    }
+
+    /**
+     * The shared machinery: validate, write a sibling temp file, carry the target's permissions
+     * over to it, and rename it into place.
      *
      * <p>The failures the caller cares about are reported against {@code path} rather than the
      * temp file: a missing parent directory as {@link NoSuchFileException}, an unwritable target
@@ -35,7 +58,7 @@ final class AtomicWrite {
      * write permission on the <em>directory</em>, so without it a read-only file would be
      * silently replaced.
      */
-    static void writeString(Path path, String content) throws IOException {
+    private static void replace(Path path, TempFileWriter writer) throws IOException {
         Path target = resolveLinks(path.toAbsolutePath());
         Path dir = target.getParent();
         if (dir == null || !Files.isDirectory(dir)) {
@@ -46,10 +69,10 @@ final class AtomicWrite {
         }
 
         // Named rather than Files.createTempFile() so the new file is created by the same
-        // writeString() call as before, and so picks up the same default permissions.
+        // Files call the caller would have made, and so picks up the same default permissions.
         Path tmp = dir.resolve(target.getFileName() + ".tmp" + ProcessHandle.current().pid());
         try {
-            Files.writeString(tmp, content, StandardCharsets.UTF_8);
+            writer.write(tmp);
             copyPermissions(target, tmp);
             move(tmp, target);
         } catch (IOException | RuntimeException e) {
