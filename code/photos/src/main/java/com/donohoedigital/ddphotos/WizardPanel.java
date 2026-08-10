@@ -36,6 +36,9 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
     /** Set once the user accepts the beta/license terms on the Welcome step. */
     private static final String PREF_WELCOME_ACCEPTED = "welcome.license.accepted";
 
+    /** Starting point for the suggested site folder name - see {@link #suggestedDirName()}. */
+    private static final String DEFAULT_DIR_NAME = "my-ddphotos";
+
     // ── Step IDs ──────────────────────────────────────────────────────────────
 
     private enum Step { WELCOME, DOCKER, BASH, SCRIPT, CHOICE, INIT }
@@ -431,7 +434,7 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         // Folder name — OptionText gives us a matching styled label automatically
         initDirName_ = new OptionText(PREFS_NODE, "wizard.dirname", STYLE, new TypedHashMap(),
                 100, "[^/\\\\\\s]+", 500);
-        initDirName_.getTextField().setText("my-ddphotos");
+        initDirName_.getTextField().setText(suggestedDirName());
         // Red when the resolved path already exists and is not a ddphotos site
         initDirName_.getTextField().setCustomValidator(s -> {
             if (s == null || s.isBlank()) return true;
@@ -525,7 +528,16 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
             return;
         }
         Path full = resolveInitDir();
-        if (Files.isDirectory(full.resolve("config"))) {
+        Site known = findKnownSite(full);
+        if (known != null) {
+            // Already in the sites list — there is nothing to add, so send them back to the editor.
+            // Only reachable on a rerun (onNext() bails out at SCRIPT when sites already exist),
+            // so the Cancel button they are told to press is on screen.
+            initOk_ = false;
+            initStatusArea_.setText(PropertyConfig.getMessage("msg.wizard.init.alreadyadded",
+                    full.toString(), known.getDisplayName()));
+            initRunner_.setRunEnabled(false);
+        } else if (Files.isDirectory(full.resolve("config"))) {
             // Already initialized — skip Run, enable Next
             initOk_  = true;
             initDir_ = full;
@@ -544,6 +556,29 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
             initRunner_.setRunEnabled(true);
         }
         updateNavButtons();
+    }
+
+    /**
+     * The site already in the sites list for {@code dir}, or null if there is none.  Uses the same
+     * rule {@link com.donohoedigital.ddphotos.config.SitesFile#findDuplicate} applies on Save, so
+     * the wizard says "already added" exactly when SiteDialog would refuse to add it.
+     */
+    private Site findKnownSite(Path dir) {
+        return sitesFile_.findDuplicate(new Site(null, dir.toString(), null), null);
+    }
+
+    /**
+     * The folder name to suggest: {@value #DEFAULT_DIR_NAME}, or {@code my-ddphotos-2}, {@code -3},
+     * ... when that one is already in the sites list (they are adding a second site).  A folder that
+     * exists but is not a known site is still suggested - adding it is what they came here to do.
+     */
+    private String suggestedDirName() {
+        Path parent = Path.of(initParentDir_.getText().trim());
+        String name = DEFAULT_DIR_NAME;
+        for (int n = 2; findKnownSite(parent.resolve(name)) != null; n++) {
+            name = DEFAULT_DIR_NAME + "-" + n;
+        }
+        return name;
     }
 
     /** True if {@code path} is a directory that contains no entries (e.g. a leftover from a prior attempt). */
