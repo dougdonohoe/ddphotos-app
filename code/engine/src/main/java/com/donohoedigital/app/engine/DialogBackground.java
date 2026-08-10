@@ -83,6 +83,11 @@ public class DialogBackground extends DDPanel
                 checkbase.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
                 buttonbase_.add(checkbase, BorderLayout.SOUTH);
             }
+            else
+            {
+                // gap at bottom if no checkbox
+                buttonbase_.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+            }
 
             // spacer to ensure minimum size
             DDPanel spacer = new DDPanel();
