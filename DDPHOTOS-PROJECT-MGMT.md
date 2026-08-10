@@ -10,7 +10,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 * Verify `Prefs` on Linux
 * Easier way to create new site than rerunning welcome wizard?
-* Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
   a settings menu to win/linux)?  Would want to show size of cache.  
 * Another possible thing in a Settings dialog could be image name used in install (currently we can override this

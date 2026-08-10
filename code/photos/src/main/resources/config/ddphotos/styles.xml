@@ -317,6 +317,27 @@
 	 <font name="OptionsDialog.button" fontname="SansSerif" pointsize="16"/>
 	<!-- OptionsDialog -->
 
+	<!-- PhotoChooser: the widgets inside the photo chooser dialog.  Its buttons are OptionsDialog
+	     (they come from the dialog's button box), but the path/filename labels and the thumbnail
+	     grid want ordinary body text, not the 18pt bold OptionsDialog label. -->
+	<color name="PhotoChooser.label.fg" copy="black"/>
+	<color name="PhotoChooser.label.bg" default="true"/>
+	 <font name="PhotoChooser.label" fontname="Monospaced" pointsize="16"/>
+	<color name="PhotoChooser.list.fg" default="true"/>
+	<color name="PhotoChooser.list.bg" default="true"/>
+	<color name="PhotoChooser.list.selection.fg" default="true"/>
+	<color name="PhotoChooser.list.selection.bg" default="true"/>
+	 <font name="PhotoChooser.list" fontname="Monospaced" pointsize="12"/>
+	<color name="PhotoChooser.button.fg" default="true"/>
+	<color name="PhotoChooser.button.bg" default="true"/>
+	 <font name="PhotoChooser.button" fontname="SansSerif" pointsize="14"/>
+	<color name="PhotoChooser.panel.fg" default="true"/>
+	<color name="PhotoChooser.panel.bg" default="true"/>
+	<color name="PhotoChooser.scrollpane.bg" default="true"/>
+	<color name="PhotoChooser.scrollbar.bg" copy="grey"/>
+	<color name="PhotoChooser.scrollbar.fg" copy="black"/>
+	<!-- PhotoChooser -->
+
 	<!-- DisplayMessage -->
 	<color name="DisplayMessage.label.fg" r="0" g="0" b="0"/>
 	<color name="DisplayMessage.label.bg" r="0" g="0" b="0"/>

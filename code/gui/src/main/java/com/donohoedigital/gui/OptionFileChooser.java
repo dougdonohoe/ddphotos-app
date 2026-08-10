@@ -27,6 +27,20 @@ public class OptionFileChooser extends DDOption implements PropertyChangeListene
     private UnaryOperator<String> pathProcessor_;
     private String chooserTitle_;
     private boolean directoryMode_ = false;
+    private Picker picker_;
+
+    /**
+     * Replaces the platform file dialog with a custom one.  Implementations return the absolute
+     * path of the chosen file, or null when the user cancels; the value is then run through the
+     * {@link #setPickedPathProcessor picked-path processor} exactly like a platform pick.  A
+     * picker supplies its own dialog title, so {@link #setChooserTitle} does not apply to it.
+     *
+     * <p>This exists so downstream modules can supply a chooser this one can't see - the photos
+     * module's thumbnail-grid photo chooser, for one.
+     */
+    public interface Picker {
+        String pick(Frame owner, String startDir);
+    }
 
     /**
      * @param sPrefNode       prefs node (null for dummy/no-persist)
@@ -142,6 +156,11 @@ public class OptionFileChooser extends DDOption implements PropertyChangeListene
         pathProcessor_ = processor;
     }
 
+    /** Installs a custom picker in place of the platform file dialog.  Null restores the default. */
+    public void setCustomPicker(Picker picker) {
+        picker_ = picker;
+    }
+
     /** Delegates to the underlying DDTextField. */
     public void setCustomValidator(Predicate<String> validator) {
         text_.setCustomValidator(validator);
@@ -244,13 +263,17 @@ public class OptionFileChooser extends DDOption implements PropertyChangeListene
                 startDir = new File(current).getParent();
             }
         }
-        String title = chooserTitle_ != null ? chooserTitle_
-                : directoryMode_ ? PropertyConfig.getMessage("msg.filechooser.default.folder")
-                : requiredFilename_ != null
-                        ? PropertyConfig.getMessage("msg.filechooser.default.named", requiredFilename_)
-                        : PropertyConfig.getMessage("msg.filechooser.default.file");
-
-        String chosen = pickFile(frame, startDir, title, requiredFilename_, requiredExtension_, directoryMode_);
+        String chosen;
+        if (picker_ != null) {
+            chosen = picker_.pick(frame, startDir);
+        } else {
+            String title = chooserTitle_ != null ? chooserTitle_
+                    : directoryMode_ ? PropertyConfig.getMessage("msg.filechooser.default.folder")
+                    : requiredFilename_ != null
+                            ? PropertyConfig.getMessage("msg.filechooser.default.named", requiredFilename_)
+                            : PropertyConfig.getMessage("msg.filechooser.default.file");
+            chosen = pickFile(frame, startDir, title, requiredFilename_, requiredExtension_, directoryMode_);
+        }
         if (chosen == null) return;
         if (pathProcessor_ != null) chosen = pathProcessor_.apply(chosen);
         text_.setText(chosen);

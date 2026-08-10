@@ -212,7 +212,6 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         });
 
         cover_ = editable(new OptionFileChooser(null, "albumcover", STYLE, dummy_, 200, PREFERRED_TEXT_WIDTH, null));
-        cover_.setChooserTitle(PropertyConfig.getMessage("msg.filechooser.title.cover"));
         cover_.setStartDirSupplier(() -> {
             Path sourceDir = resolveSourcePath();
             return sourceDir != null ? sourceDir.toString() : System.getProperty("user.home");
@@ -229,6 +228,11 @@ public class AlbumDetailPanel extends EditableDetailPanel {
                 return chosenPath.getFileName().toString();
             }
         });
+
+        // Browse with the DD thumbnail grid, rooted at the album's source folder so a pick is
+        // always expressible relative to it.
+        PhotoChooser.install(cover_, albumsList_.getContext(), "msg.filechooser.title.cover",
+                             this::resolveSourcePath);
 
         source_.setCustomValidator(sourceValidator);
         cover_.setCustomValidator(coverValidator);
