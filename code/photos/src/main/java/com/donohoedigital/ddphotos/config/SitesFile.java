@@ -11,6 +11,7 @@ import org.snakeyaml.engine.v2.exceptions.YamlEngineException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -119,7 +120,40 @@ public class SitesFile {
         Collections.sort(sites);
     }
 
+    /**
+     * Returns the existing site pointing at the same content as {@code candidate} - same site
+     * folder and same effective config folder - or null if there is none.  {@code exclude} is the
+     * site being edited, skipped by identity so it never matches itself.
+     */
+    public Site findDuplicate(Site candidate, Site exclude) {
+        for (Site site : sites) {
+            if (site == exclude) continue;
+            if (samePath(site.getDirPath(), candidate.getDirPath())
+                    && samePath(site.getActualConfigPath(), candidate.getActualConfigPath())) {
+                return site;
+            }
+        }
+        return null;
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Path equality that ignores trailing separators, redundant "." segments and (on Windows) the
+     * mix of separators {@link Site#getActualConfigPath} can produce.  Falls back to string
+     * equality for paths this platform cannot parse - sites.yaml is hand-editable, and a bad entry
+     * there must not blow up the caller.
+     */
+    private static boolean samePath(String a, String b) {
+        boolean aBlank = (a == null || a.isEmpty());
+        boolean bBlank = (b == null || b.isEmpty());
+        if (aBlank || bBlank) return aBlank && bBlank;
+        try {
+            return Path.of(a).normalize().equals(Path.of(b).normalize());
+        } catch (InvalidPathException e) {
+            return a.equals(b);
+        }
+    }
 
     private static Site siteFromMap(Map<?, ?> map) {
         Site site = new Site();

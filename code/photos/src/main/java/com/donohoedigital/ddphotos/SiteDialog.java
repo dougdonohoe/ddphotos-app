@@ -5,6 +5,7 @@ import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
 import com.donohoedigital.ddphotos.config.SitesFileException;
 import com.donohoedigital.app.config.AppButton;
+import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.gui.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -168,6 +169,13 @@ public class SiteDialog extends PhotosDialog
     public boolean processButton(AppButton button)
     {
         if ("save".equals(button.getName())) {
+            Site duplicate = sitesFile_.findDuplicate(siteFromFields(), siteBeingEdited_);
+            if (duplicate != null) {
+                EngineUtils.displayWarningDialog(context_,
+                        PropertyConfig.getMessage("msg.site.duplicate", duplicate.getDisplayName()),
+                        "msg.windowtitle.duplicateSite", null);
+                return false;   // leave the dialog up so the folders can be corrected
+            }
             apply();
         }
         removeDialog();

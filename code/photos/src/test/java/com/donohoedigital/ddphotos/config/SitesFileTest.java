@@ -194,7 +194,83 @@ public class SitesFileTest {
         assertEquals("/data/site2", reloaded.getSites().getFirst().getDirPath());
     }
 
+    // ── findDuplicate tests ─────────────────────────────────────────────────
+
+    @Test
+    public void findDuplicate_sameDirPath_bothConfigsBlank() {
+        SitesFile sf = sitesFileWith(new Site("Site One", "/data/site1", null));
+
+        Site found = sf.findDuplicate(new Site("Different Name", "/data/site1", null), null);
+        assertNotNull(found);
+        assertEquals("Site One", found.getDisplayName());
+    }
+
+    @Test
+    public void findDuplicate_ignoresTrailingSlashAndDotSegments() {
+        SitesFile sf = sitesFileWith(new Site("Site One", "/data/site1", null));
+
+        assertNotNull(sf.findDuplicate(new Site("Other", "/data/site1/", null), null));
+        assertNotNull(sf.findDuplicate(new Site("Other", "/data/./site1", null), null));
+    }
+
+    @Test
+    public void findDuplicate_blankConfigMatchesExplicitDefaultConfig() {
+        SitesFile sf = sitesFileWith(new Site("Site One", "/data/site1", null));
+
+        // config_path spelled out as the default <dir>/config resolves to the same config folder
+        assertNotNull(sf.findDuplicate(new Site("Other", "/data/site1", "/data/site1/config"), null));
+    }
+
+    @Test
+    public void findDuplicate_sameDirDifferentCustomConfig_returnsNull() {
+        SitesFile sf = sitesFileWith(new Site("Site One", "/data/site1", "/etc/site1-config"));
+
+        assertNull(sf.findDuplicate(new Site("Other", "/data/site1", "/etc/other-config"), null));
+    }
+
+    @Test
+    public void findDuplicate_differentDirPath_returnsNull() {
+        SitesFile sf = sitesFileWith(new Site("Site One", "/data/site1", null));
+
+        assertNull(sf.findDuplicate(new Site("Other", "/data/site2", null), null));
+    }
+
+    @Test
+    public void findDuplicate_excludedSiteDoesNotMatchItself() {
+        Site existing = new Site("Site One", "/data/site1", null);
+        SitesFile sf = sitesFileWith(existing);
+
+        // edit mode: only the display name changed, so the site must not match itself
+        assertNull(sf.findDuplicate(new Site("Renamed", "/data/site1", null), existing));
+    }
+
+    @Test
+    public void findDuplicate_excludedSiteStillMatchesSibling() {
+        Site editing = new Site("Site Two", "/data/site2", null);
+        SitesFile sf = sitesFileWith(new Site("Site One", "/data/site1", null), editing);
+
+        // edit mode: pointing site two at site one's folder is still a duplicate
+        Site found = sf.findDuplicate(new Site("Site Two", "/data/site1", null), editing);
+        assertNotNull(found);
+        assertEquals("Site One", found.getDisplayName());
+    }
+
+    @Test
+    public void findDuplicate_emptySitesFile_returnsNull() {
+        SitesFile sf = new SitesFile(Paths.get("/tmp/does-not-matter.yaml"));
+
+        assertNull(sf.findDuplicate(new Site("Site One", "/data/site1", null), null));
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
+
+    private SitesFile sitesFileWith(Site... sites) {
+        SitesFile sf = new SitesFile(Paths.get("/tmp/does-not-matter.yaml"));
+        for (Site site : sites) {
+            sf.addSite(site);
+        }
+        return sf;
+    }
 
     private Path writeYaml(String content) throws Exception {
         File f = tmp.newFile("test.yaml");
