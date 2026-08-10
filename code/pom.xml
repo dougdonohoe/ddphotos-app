@@ -25,7 +25,6 @@
     <junit.version>4.13.2</junit.version>
     <flatlaf.version>3.7.2</flatlaf.version>
     <jdom2.version>2.0.6.1</jdom2.version>
-    <xerces.version>2.12.2</xerces.version>
     <commons-io.version>2.22.0</commons-io.version>
     <annotations.version>26.1.0</annotations.version>
     <install4j.version>13.0.2</install4j.version>
@@ -72,11 +71,6 @@
         <groupId>org.jdom</groupId>
         <artifactId>jdom2</artifactId>
         <version>${jdom2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>xerces</groupId>
-        <artifactId>xercesImpl</artifactId>
-        <version>${xerces.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>
