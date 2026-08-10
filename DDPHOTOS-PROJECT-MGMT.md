@@ -8,7 +8,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* `ddphotos` in DD Photos dir gets stale, drifts from `ddphotos` used by the app
 * Verify `Prefs` on Linux
 * Easier way to create new site than rerunning welcome wizard?
 * Use DD photo chooser on win/linux since native doesn't show previews (Mac is OK)

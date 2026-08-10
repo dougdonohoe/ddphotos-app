@@ -67,6 +67,75 @@ public class AtomicWriteTest {
         assertEquals("a: 1\n", Files.readString(target, StandardCharsets.UTF_8));
     }
 
+    // ── copying one file over another ───────────────────────────────────────
+
+    @Test
+    public void copyReplacesAnExistingFile() throws IOException {
+        Path source = tmp.newFile("source").toPath();
+        Files.writeString(source, "the new script\n");
+        Path target = tmp.newFile("ddphotos").toPath();
+        Files.writeString(target, "the old script\n");
+
+        AtomicWrite.copy(source, target);
+
+        assertEquals("the new script\n", Files.readString(target, StandardCharsets.UTF_8));
+        assertEquals("the source is left alone", "the new script\n",
+                Files.readString(source, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void copyKeepsTheTargetsPermissionsRatherThanTheSources() throws IOException {
+        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
+        Path source = tmp.newFile("source").toPath();
+        Files.writeString(source, "the new script\n");
+        Files.setPosixFilePermissions(source, PosixFilePermissions.fromString("rw-------"));
+        Path target = tmp.newFile("ddphotos").toPath();
+        Files.writeString(target, "the old script\n");
+        Set<PosixFilePermission> executable = PosixFilePermissions.fromString("rwxr-xr-x");
+        Files.setPosixFilePermissions(target, executable);
+
+        AtomicWrite.copy(source, target);
+
+        assertEquals("an executable script must still be executable after a refresh",
+                executable, Files.getPosixFilePermissions(target));
+    }
+
+    @Test
+    public void copyLeavesNoTempFileBehind() throws IOException {
+        Path dir = tmp.newFolder("site").toPath();
+        Path source = tmp.newFile("source").toPath();
+        Files.writeString(source, "a\n");
+        Path target = dir.resolve("ddphotos");
+        Files.writeString(target, "b\n");
+
+        AtomicWrite.copy(source, target);
+
+        assertEquals(Set.of("ddphotos"), listNames(dir));
+    }
+
+    @Test
+    public void copyToAMissingDirectoryReportsTheTargetPath() throws IOException {
+        Path source = tmp.newFile("source").toPath();
+        Files.writeString(source, "a\n");
+        Path target = tmp.getRoot().toPath().resolve("gone/ddphotos");
+
+        NoSuchFileException e = assertThrows(NoSuchFileException.class,
+                () -> AtomicWrite.copy(source, target));
+        assertEquals(target.toString(), e.getFile());
+    }
+
+    @Test
+    public void copyFromAMissingSourceLeavesTheTargetIntact() throws IOException {
+        Path source = tmp.getRoot().toPath().resolve("never-installed");
+        Path dir = tmp.newFolder("site").toPath();
+        Path target = dir.resolve("ddphotos");
+        Files.writeString(target, "the old script\n");
+
+        assertThrows(NoSuchFileException.class, () -> AtomicWrite.copy(source, target));
+        assertEquals("the old script\n", Files.readString(target, StandardCharsets.UTF_8));
+        assertEquals(Set.of("ddphotos"), listNames(dir));
+    }
+
     // ── the reason this class exists ────────────────────────────────────────
 
     @Test
