@@ -45,6 +45,7 @@ import static javax.swing.JTabbedPane.TOP;
 public class PhotosBasePhase extends BasePhase {
 
     public static final String PARAM_RERUN_WIZARD = "rerun-wizard";
+    public static final String PARAM_NEW_SITE     = "new-site";
     public static final String PARAM_SELECT_SITE  = "select-site";
 
     public static final String HELP_STYLE = "PhotosHelp";
@@ -122,21 +123,25 @@ public class PhotosBasePhase extends BasePhase {
     @Override
     public void start() {
         boolean rerun = phase_.getBoolean(PARAM_RERUN_WIZARD, false);
-        if (rerun || sitesFile_.getSites().isEmpty()
+        if (phase_.getBoolean(PARAM_NEW_SITE, false)) {
+            // File -> New Site: everything the setup steps check has already been checked, so the
+            // wizard opens on the step that creates the site folder.
+            buildWizardUI(WizardPanel.Mode.NEW_SITE);
+        } else if (rerun || sitesFile_.getSites().isEmpty()
                 || !Files.isExecutable(PhotosUtils.scriptPath())
                 || !Files.isExecutable(Path.of(DockerStatus.dockerPath()))) {
-            buildWizardUI(rerun);
+            buildWizardUI(rerun ? WizardPanel.Mode.RERUN : WizardPanel.Mode.FIRST_RUN);
         } else {
             buildRegularUI((Site) phase_.getObject(PARAM_SELECT_SITE));
         }
     }
 
-    private void buildWizardUI(boolean rerun) {
+    private void buildWizardUI(WizardPanel.Mode mode) {
         DDPanel wrapper = new DDPanel();
         wrapper.setLayout(new GridBagLayout());
         wrapper.setOpaque(true);
         wrapper.setBackground(StylesConfig.getColor("app.panel.bg"));
-        wizardPanel_ = new WizardPanel(context_, sitesFile_, rerun);
+        wizardPanel_ = new WizardPanel(context_, sitesFile_, mode);
         wrapper.add(wizardPanel_);
 
         // the wizard fills the window on its own (it sets its own welcome help message)
@@ -277,6 +282,13 @@ public class PhotosBasePhase extends BasePhase {
 
     private JMenu buildFileMenu() {
         DDMenu menu = trackedMenu("file");
+
+        DDMenuItem newSite = new DDMenuItem("newsite");
+        newSite.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, GuiUtils.MENU_SHORTCUT_MASK));
+        newSite.addActionListener(mainWindowAction(this::doNewSite));
+        menu.add(newSite);
+
+        menu.addSeparator();
 
         DDMenuItem rerunWizard = new DDMenuItem("rerunwizard");
         rerunWizard.addActionListener(mainWindowAction(this::doRerunWizard));
@@ -420,12 +432,10 @@ public class PhotosBasePhase extends BasePhase {
             if (!(menu.getItem(i) instanceof DDMenuItem item)) continue; // separators
             switch (item.getName()) {
                 case "rerunwizard", "reruntour" -> item.setEnabled(!busy);
+                case "newsite" -> item.setEnabled(isEditorIdle(busy, site));
                 case "photogen" -> {
                     setSiteLabel(item, site);
-                    // Off mid-run too: the tab's Run button is disabled then, and startRun()
-                    // reports that as an invalid flag rather than as the "already running" it is.
-                    item.setEnabled(!busy && site != null
-                            && photogenTab_ != null && !photogenTab_.isRunning());
+                    item.setEnabled(isEditorIdle(busy, site));
                 }
                 case "publishsettings" -> {
                     setSiteLabel(item, site);
@@ -438,6 +448,17 @@ public class PhotosBasePhase extends BasePhase {
                 default -> { }
             }
         }
+    }
+
+    /**
+     * The rule shared by Run -> Photogen and File -> New Site: the editor is up, with a site in
+     * it, and photogen is not mid-run.  Photogen needs the run check because its tab's Run button
+     * is disabled while it runs, and {@link CommandRunnerPanel#startRun} would report that as an
+     * invalid flag rather than as the "already running" it is.  New Site is held to the same rule
+     * because it hands the window to the wizard, which must not happen out from under a run.
+     */
+    private boolean isEditorIdle(boolean busy, Site site) {
+        return !busy && site != null && photogenTab_ != null && !photogenTab_.isRunning();
     }
 
     /**
@@ -574,6 +595,13 @@ public class PhotosBasePhase extends BasePhase {
     private static String slug(String title) {
         if (title == null || title.isBlank()) return "screenshot";
         return title.trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
+    }
+
+    /** Re-enters this phase with the wizard opened on its create-site-folder step - see WizardPanel.Mode. */
+    private void doNewSite() {
+        TypedHashMap params = new TypedHashMap();
+        params.setBoolean(PARAM_NEW_SITE, true);
+        context_.processPhaseNow("StartMenu", params);
     }
 
     private void doRerunWizard() {

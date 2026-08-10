@@ -45,13 +45,26 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
 
     private static final Step[] ALL_STEPS = { Step.WELCOME, Step.DOCKER, Step.BASH, Step.SCRIPT, Step.CHOICE, Step.INIT };
 
+    // ── Modes ─────────────────────────────────────────────────────────────────
+
+    /** How the wizard was launched, which decides where it starts and how it can be left. */
+    public enum Mode {
+        /** First launch, or a repair pass because Docker or the script is missing. */
+        FIRST_RUN,
+        /** File -> Rerun Setup Wizard - the whole wizard, with Cancel to back out. */
+        RERUN,
+        /** File -> New Site - starts at the create-site-folder step, with no way back past it. */
+        NEW_SITE
+    }
+
     // ── State ─────────────────────────────────────────────────────────────────
 
     private final AppContext context_;
     private final SitesFile   sitesFile_;
-    private final boolean     rerun_;   // launched via "Rerun Welcome Wizard..." menu item
+    private final Mode        mode_;
+    private final int         startIndex_;   // first step shown; the user cannot go back past it
 
-    private int     stepIndex_     = 0;
+    private int     stepIndex_;
     private Path    initDir_       = null;   // set in INIT step, forwarded to SiteDialog
 
     private boolean dockerOk_  = false;
@@ -92,14 +105,17 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
 
     // ── Constructor ───────────────────────────────────────────────────────────
 
-    public WizardPanel(AppContext context, SitesFile sitesFile, boolean rerun) {
-        context_   = context;
-        sitesFile_ = sitesFile;
-        rerun_     = rerun;
+    public WizardPanel(AppContext context, SitesFile sitesFile, Mode mode) {
+        context_    = context;
+        sitesFile_  = sitesFile;
+        mode_       = mode;
+        // New Site goes straight to creating the folder: Docker and the script were already
+        // checked to get here, and the site bar's + button covers adding a site that exists
+        startIndex_ = (mode == Mode.NEW_SITE) ? indexOf(Step.INIT) : 0;
         buildUI();
         DockerStatus.addListener(this);
         dockerOk_ = DockerStatus.isDockerRunning();
-        showStep(0);
+        showStep(startIndex_);
 
         context_.getWindow().setHelpMessage(PropertyConfig.getMessage("button.icon48.help")); // init help
         context_.getWindow().ignoreNextHelp(); // ignore enter so main help message doesn't go away immediately
@@ -159,12 +175,12 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         nextBtn_.setText(PropertyConfig.getMessage("button.wizard.next.label"));
         nextBtn_.addActionListener(_ -> onNext());
 
-        // Only shown when the wizard was launched via "Rerun Welcome Wizard..." —
-        // lets the user back out without forcing them through to the end.
+        // Shown whenever the wizard was launched from the editor ("Rerun Setup Wizard..." or
+        // "New Site...") — lets the user back out without forcing them through to the end.
         DDButton cancelBtn = new DDButton("wizard.cancelwizard", STYLE);
         cancelBtn.setText(PropertyConfig.getMessage("button.wizard.cancelwizard.label"));
         cancelBtn.addActionListener(_ -> returnToStartMenu(null));
-        cancelBtn.setVisible(rerun_);
+        cancelBtn.setVisible(mode_ != Mode.FIRST_RUN);
 
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
@@ -531,8 +547,9 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         Site known = findKnownSite(full);
         if (known != null) {
             // Already in the sites list — there is nothing to add, so send them back to the editor.
-            // Only reachable on a rerun (onNext() bails out at SCRIPT when sites already exist),
-            // so the Cancel button they are told to press is on screen.
+            // Only reachable from the editor, via Rerun Setup Wizard or New Site (onNext() bails
+            // out at SCRIPT when sites already exist), so the Cancel button they are told to press
+            // is on screen.
             initOk_ = false;
             initStatusArea_.setText(PropertyConfig.getMessage("msg.wizard.init.alreadyadded",
                     full.toString(), known.getDisplayName()));
@@ -671,6 +688,8 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
     private String stepTitle(Step step) {
         if (step == Step.WELCOME) return "";
         String label = PropertyConfig.getMessage("msg.wizard.step." + step.name().toLowerCase());
+        // New Site enters mid-wizard, where a step number would count steps the user never saw
+        if (mode_ == Mode.NEW_SITE) return "<HTML>" + label + "</HTML>";
         return "<HTML>Step " + displayNumber(step) + " - " + label + "</HTML>";
     }
 
@@ -690,8 +709,10 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         boolean isChoice = step == Step.CHOICE;
         boolean isLast   = stepIndex_ == ALL_STEPS.length - 1;
 
-        backBtn_.setVisible(true);
-        backBtn_.setEnabled(stepIndex_ > 0);
+        // New Site never leaves its one step, so there is nothing behind it - hide Back rather
+        // than show a permanently dead button.
+        backBtn_.setVisible(mode_ != Mode.NEW_SITE);
+        backBtn_.setEnabled(stepIndex_ > startIndex_);
 
         nextBtn_.setVisible(!isChoice);
         nextBtn_.setEnabled(isNextEnabled());
@@ -735,7 +756,7 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
     }
 
     private void onBack() {
-        if (stepIndex_ > 0) showStep(prevStepIndex(stepIndex_));
+        if (stepIndex_ > startIndex_) showStep(prevStepIndex(stepIndex_));
     }
 
     private void onNext() {
@@ -748,7 +769,7 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         boolean isLast = stepIndex_ == ALL_STEPS.length - 1;
         if (isLast) {
             doAddSite();
-        } else if (!rerun_ && currentStep() == Step.SCRIPT && !sitesFile_.getSites().isEmpty()) {
+        } else if (mode_ == Mode.FIRST_RUN && currentStep() == Step.SCRIPT && !sitesFile_.getSites().isEmpty()) {
             // Wizard was launched to repair Docker/script, not to add a site — sites already exist
             returnToStartMenu(null);
         } else {
