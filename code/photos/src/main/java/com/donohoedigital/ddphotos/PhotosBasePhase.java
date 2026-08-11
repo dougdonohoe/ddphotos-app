@@ -131,13 +131,27 @@ public class PhotosBasePhase extends BasePhase {
             // File -> New Site: everything the setup steps check has already been checked, so the
             // wizard opens on the step that creates the site folder.
             buildWizardUI(WizardPanel.Mode.NEW_SITE);
-        } else if (rerun || sitesFile_.getSites().isEmpty()
-                || !Files.isExecutable(PhotosUtils.scriptPath())
-                || !Files.isExecutable(Path.of(DockerStatus.dockerPath()))) {
+        } else if (rerun || sitesFile_.getSites().isEmpty() || setupIncomplete()) {
             buildWizardUI(rerun ? WizardPanel.Mode.RERUN : WizardPanel.Mode.FIRST_RUN);
         } else {
             buildRegularUI((Site) phase_.getObject(PARAM_SELECT_SITE));
         }
+    }
+
+    /**
+     * True when any of the pieces the setup wizard puts in place is missing: the {@code ddphotos}
+     * script, the Docker binary, and on Windows the Git Bash that the script's {@code .cmd}
+     * wrapper runs under.  Any of them can go away after setup - uninstalled, moved, or its stored
+     * location cleared by Reset Preferences - and the wizard is where they are found again.  Bash
+     * is checked on Windows only because that is the only platform whose wizard has the step (see
+     * {@code WizardPanel.isStepEnabled}); elsewhere it would strand the user on a step that is
+     * skipped.  Each stored path falls back to a bare command name, which is relative and so never
+     * executable - that is what makes a cleared preference read as missing here.
+     */
+    private static boolean setupIncomplete() {
+        return !Files.isExecutable(PhotosUtils.scriptPath())
+                || !Files.isExecutable(Path.of(DockerStatus.dockerPath()))
+                || (Utils.ISWINDOWS && !Files.isExecutable(Path.of(BashSupport.bashPath())));
     }
 
     private void buildWizardUI(WizardPanel.Mode mode) {
@@ -633,7 +647,18 @@ public class PhotosBasePhase extends BasePhase {
         context_.processPhaseNow("StartMenu", params);
     }
 
+    /**
+     * Throws away every saved preference, so it asks first - there is no undo, and nothing else
+     * in the app hints at how much is stored (see msg.confirm.resetprefs for the list).  A
+     * warning (orange title bar) with no "don't show again" option: this one has to be read.
+     */
     private void doResetPrefs() {
+        if (!EngineUtils.displayWarningConfirmationDialog(context_,
+                PropertyConfig.getMessage("msg.confirm.resetprefs"),
+                "msg.windowtitle.resetPrefs", null)) {
+            return;
+        }
+
         Prefs.clearAll();
         EngineUtils.displayInformationDialog(context_, PropertyConfig.getMessage("msg.resetprefs"));
     }
