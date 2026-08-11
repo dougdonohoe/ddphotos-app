@@ -666,10 +666,21 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
 
     @Override
     public boolean okayToClose() {
+        return confirmStopRunning("msg.close.running.confirm", "closerunning");
+    }
+
+    /**
+     * Asks whether a live process may be stopped, and stops it when the user agrees.  True when
+     * there is nothing running, or they said yes.  {@code msgKey} is given the running command's
+     * name; {@code noShowKey} adds a "don't show again" option, or null for a question that must
+     * be asked every time.  Callers other than {@link #okayToClose} are things that discard the
+     * panel without exiting - see PhotosBasePhase, which hands the window to the wizard.
+     */
+    public boolean confirmStopRunning(String msgKey, String noShowKey) {
         if (process_ == null || !process_.isAlive() || activeRunner_ == null) return true;
 
-        String sMsg = PropertyConfig.getMessage("msg.close.running.confirm", activeRunner_.getDisplayName());
-        if (!EngineUtils.displayConfirmationDialog(context_, sMsg, "closerunning")) {
+        String sMsg = PropertyConfig.getMessage(msgKey, activeRunner_.getDisplayName());
+        if (!EngineUtils.displayConfirmationDialog(context_, sMsg, noShowKey)) {
             return false;
         }
         userStopped_ = true;

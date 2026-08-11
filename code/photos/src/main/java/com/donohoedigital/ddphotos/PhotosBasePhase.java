@@ -71,6 +71,10 @@ public class PhotosBasePhase extends BasePhase {
     // Held so Run -> Photogen... can select that tab and press its Run button.
     private CommandRunnerPanel photogenTab_;
 
+    // Every command tab, so anything that discards them can first deal with what they are
+    // running - see okayToLeaveEditor.  Empty while the wizard is up.
+    private List<CommandRunnerPanel> runnerTabs_ = List.of();
+
     /**
      * Every menu whose items {@link #refreshMenu} governs, built so far.  There is one set per
      * window on a Mac (see {@link #init}) and they all have to be re-labeled and re-enabled when
@@ -148,6 +152,10 @@ public class PhotosBasePhase extends BasePhase {
         base_.setTopBarVisible(false);
         base_.setCenterComponent(wrapper);
 
+        // The command tabs are gone with the editor - okayToLeaveEditor has already settled
+        // anything they were running.
+        runnerTabs_ = List.of();
+
         // The menu bar is built in init(), before start() has decided wizard or tabs, so the
         // wizard's rules can only be applied from here.
         wizardUp_ = true;
@@ -198,6 +206,9 @@ public class PhotosBasePhase extends BasePhase {
         tabs.addTab("msg.tab.wrangler", PhotosTabIcons.idle(wranglerTab), null, wranglerTab);
         tabs.addTab("msg.tab.surge", PhotosTabIcons.idle(surgeTab), null, surgeTab);
         tabs.addTab("msg.tab.upgrade", PhotosTabIcons.idle(upgradeTab), null, upgradeTab);
+
+        runnerTabs_ = List.of(photogenTab, runTab, buildTab, serveTab, deployTab,
+                exportTab, wranglerTab, surgeTab, upgradeTab);
 
         tourController_ = new TourController(context_, tabs, configTab, deployTab,
                 photogenTab, runTab, buildTab, serveTab, this::refreshMenus);
@@ -432,10 +443,15 @@ public class PhotosBasePhase extends BasePhase {
             if (!(menu.getItem(i) instanceof DDMenuItem item)) continue; // separators
             switch (item.getName()) {
                 case "rerunwizard", "reruntour" -> item.setEnabled(!busy);
-                case "newsite" -> item.setEnabled(isEditorIdle(busy, site));
+                // A command tab running does not gray this one out: it hands the window to the
+                // wizard, and okayToLeaveEditor asks about that when the item is picked.
+                case "newsite" -> item.setEnabled(!busy && site != null);
                 case "photogen" -> {
                     setSiteLabel(item, site);
-                    item.setEnabled(isEditorIdle(busy, site));
+                    // Off mid-run too: the tab's Run button is disabled then, and startRun()
+                    // reports that as an invalid flag rather than as the "already running" it is.
+                    item.setEnabled(!busy && site != null
+                            && photogenTab_ != null && !photogenTab_.isRunning());
                 }
                 case "publishsettings" -> {
                     setSiteLabel(item, site);
@@ -451,14 +467,17 @@ public class PhotosBasePhase extends BasePhase {
     }
 
     /**
-     * The rule shared by Run -> Photogen and File -> New Site: the editor is up, with a site in
-     * it, and photogen is not mid-run.  Photogen needs the run check because its tab's Run button
-     * is disabled while it runs, and {@link CommandRunnerPanel#startRun} would report that as an
-     * invalid flag rather than as the "already running" it is.  New Site is held to the same rule
-     * because it hands the window to the wizard, which must not happen out from under a run.
+     * Confirms leaving the editor for the wizard.  The wizard takes the window, so the command
+     * tabs go with it - and with them the only handle on any process they have running, which
+     * would otherwise carry on unwatched with no way to stop it.  Each tab is asked the same way
+     * quitting asks (see {@link AbstractRunnerPanel#confirmStopRunning}), stopping its command
+     * when the user agrees; a no from any of them abandons the whole thing.
      */
-    private boolean isEditorIdle(boolean busy, Site site) {
-        return !busy && site != null && photogenTab_ != null && !photogenTab_.isRunning();
+    private boolean okayToLeaveEditor() {
+        for (CommandRunnerPanel tab : runnerTabs_) {
+            if (!tab.confirmStopRunning("msg.leave.running.confirm", null)) return false;
+        }
+        return true;
     }
 
     /**
@@ -599,12 +618,16 @@ public class PhotosBasePhase extends BasePhase {
 
     /** Re-enters this phase with the wizard opened on its create-site-folder step - see WizardPanel.Mode. */
     private void doNewSite() {
+        if (!okayToLeaveEditor()) return;
+
         TypedHashMap params = new TypedHashMap();
         params.setBoolean(PARAM_NEW_SITE, true);
         context_.processPhaseNow("StartMenu", params);
     }
 
     private void doRerunWizard() {
+        if (!okayToLeaveEditor()) return;
+
         TypedHashMap params = new TypedHashMap();
         params.setBoolean(PARAM_RERUN_WIZARD, true);
         context_.processPhaseNow("StartMenu", params);
