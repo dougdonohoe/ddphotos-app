@@ -8,7 +8,7 @@
 
 <!-- 1.0.3 -->
 <div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
-    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.3 - TBD</span></strong>
+    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.3 - August 12th, 2026</span></strong>
 </div>
 <ul>
     <li>Picking an album's <b>Cover</b> photo or a site's <b>Hero Image</b> now opens a DD Photos
@@ -24,13 +24,39 @@
         Linux).  It switches to the <b>Photogen</b> tab and clicks <b>Run</b> for you - handy
         given how often <tt>photogen</tt> is rerun after editing a site, an album or your
         captions.</li>
-    <li>A tab running a command now shows a green lightning bolt, so you can see that
-        <tt>run</tt> or <tt>serve</tt> is still up, or watch a publish run move from tab to
-        tab.</li>
+    <li>New <b>File &rarr; New Site...</b> item, on <b>Cmd-N</b> (<b>Ctrl-N</b> on Windows and
+        Linux), for adding a second (or third) site without stepping through the whole setup
+        wizard.  It opens on the <b>Create DD Photos Site Folder</b> step, since Docker and the
+        <tt>ddphotos</tt> script are already sorted out.</li>
+    <li>DD Photos now notices when a site is one you already have.  <b>Save</b> in the
+        <b>Add Site</b> and <b>Edit Site</b> dialogs names the site already using those folders
+        instead of adding a duplicate, and the wizard says the same when you point it at a folder
+        that is already in your sites list.  The folder name it suggests moves along to
+        <tt>my-ddphotos-2</tt>, <tt>my-ddphotos-3</tt> and so on when the default is taken.</li>
+    <li>The copy of the <tt>ddphotos</tt> script that <tt>ddphotos init</tt> leaves in each site
+        folder is now kept up to date with the app's own copy.  Previously only the app's copy was
+        refreshed by <tt>upgrade</tt>, so running <tt>./ddphotos</tt> from a site folder quietly
+        used an older image.</li>
+    <li>Starting the setup wizard or <b>New Site...</b> while <tt>run</tt>, <tt>serve</tt> or any
+        other command is going now asks to stop it first.  The wizard takes the window, and the
+        command tabs with it, so there would be no way left to stop it.</li>
+    <li><b>File &rarr; Reset Preferences</b> now asks first and spells out what it clears - saved
+        <tt>ddphotos</tt> parameters, window sizes and positions, hidden dialogs, publish settings
+        and the Docker location found during setup, which means the setup wizard runs again next
+        time.  Your sites, photos and config files are not touched.</li>
+    <li>On Windows, if <b>Git Bash</b> is moved or uninstalled, DD Photos now sends you back to
+        the setup wizard to find it again, as it already did for Docker and the <tt>ddphotos</tt>
+        script.</li>
+    <li>Every tab now carries an icon beside its name.  A tab running a command shows a green
+        lightning bolt and a ring the rest of the time, so you can see that <tt>run</tt> or
+        <tt>serve</tt> is still up, or watch a publish run move from tab to tab.  The
+        <b>Config</b> tab runs nothing, so it gets a pencil instead.</li>
     <li>Menu items now gray out when they can't be used.  <b>Rerun Setup Wizard...</b>,
         <b>Rerun Tour...</b> and the whole <b>Run</b> menu stay out of the way while the setup
         wizard, the guided tour or a publish run is in progress, rather than interrupting the
         one you are in the middle of.</li>
+    <li>Fixed the help for an album's <b>Descriptions File</b>, which described it as per-photo
+        captions rather than the per-album descriptions it actually holds.</li>
 </ul>
 
 <!-- 1.0.2 -->
