@@ -6,7 +6,7 @@
 
 ![logo_256x256.png](logo/icons/ddphotos-logo/logo_256x256.png)
 
-DD Photos is a desktop app for quickly and easily publishing your own beautiful photo albums, like our
+DD Photos is a desktop app for quickly and easily publishing your own beautiful photo/video albums, like our
 [sample site↗](https://ddphotos.donohoe.info).  A DD Photos site is wicked-fast,
 mobile friendly, and distraction free.  
 
@@ -26,8 +26,8 @@ See [Screenshots](docs/SCREENSHOTS.md) for full-size screenshots of each screen.
 
 A DD Photos [site↗](https://ddphotos.donohoe.info) has a home page, with all of your albums,
 and their descriptions. You can easily switch between dark and light themes.  Click/touch an 
-album and you see a grid of all photos.  Click/touch a photo to see the full size version and
-a caption, if it has one. You can easily swipe between photos (or use arrow keys on a laptop).
+album, and you see a grid of all photos/videos.  Click/touch a photo/video to see the full size version and
+a caption, if it has one. You can easily swipe between photos/videos (or use arrow keys on a laptop).
 It works great on mobile, tablet, and desktop.
 
 ![screenshots.png](images/ddphotos/screenshots.png)
@@ -37,19 +37,19 @@ It works great on mobile, tablet, and desktop.
 The idea is that you already use _something else_ to curate and filter your photos. Maybe it
 is Adobe Lightroom Classic (my tool).  Or maybe it is Apple Photos or Google Photos.
 It doesn't matter, but once you get a selection of photos that comprise an album,
-you export the photos into a folder.  All the photos in a folder make up an album.
+you export the photos into a folder.  All the photos (and videos) in a folder make up an album.
 It's that simple.
 
 With DD Photos, you define where your albums live in the **Config** tab, and
 can specify a name, description and choose your cover photo.  Here, you also define
 details about your site, like name, description, optional HTML text and the
-hero image.  You can also set captions for your photos, and site or album passwords.
+hero image.  You can also set captions for your photos/videos, and site or album passwords.
 
-Once you have defined where your photos live, you use the **Photogen** tab to
-run the `photogen` tool, which resizes the photos for web viewing and generates index files that
+Once you have defined where your photos/videos live, you use the **Photogen** tab to
+run the `photogen` tool, which resizes the photos/videos for web viewing and generates index files that
 the web app uses.
 
-That's it.  You can now view your personal photo albums site on your machine using the dev server
+That's it.  You can now view your personal photo/video albums site on your machine using the dev server
 started in the **Run** tab.  You typically will repeat the `edit` - `photogen` - `run` loop multiple times
 as you refine your site, adding albums, choosing covers, setting descriptions, etc.
 
