@@ -6,6 +6,30 @@
 
 <h2>What's New?</h2>
 
+<!-- 1.0.4 -->
+<div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
+    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.4 - August 17th, 2026</span></strong>
+</div>
+<ul>
+    <li>Videos are now part of an album.  A <tt>.mov</tt>, <tt>.mp4</tt> or <tt>.m4v</tt> clip
+        sitting alongside your photos gets a row in the caption editor, so it can be captioned and
+        placed in the manual sort order just like a photo.</li>
+    <li>A video can also be an album's <b>Cover</b>: the <b>Cover</b> chooser now lists clips
+        beside the photos in the folder, and <tt>photogen</tt> covers the album with the clip's
+        poster frame.  A site's <b>Hero Image</b> stays photos only, since the hero is a crop that
+        <tt>photogen</tt> will not do to a video.</li>
+    <li>Java cannot decode video, so a clip shows a "no preview" placeholder rather than a frame,
+        in both the chooser and the caption editor.  In the caption editor it carries a tooltip
+        naming the file, as an unreadable photo (e.g. HEIC) already did.</li>
+    <li>The <b>Upgrade</b> tab now refreshes each site folder's copy of the <tt>ddphotos</tt>
+        script as soon as the upgrade finishes, so it matches the image you just pulled without
+        waiting for the next start of DD Photos.  It also catches up sites added from a folder DD
+        Photos never initialized.</li>
+    <li>The deployment help now covers Cloudflare's 25 MiB file size limit, which longer videos
+        can run into - roughly 40 to 120 seconds of footage, depending on how complex it is.</li>
+    <li>Wording throughout the app and the help now says photos and videos wherever both apply.</li>
+</ul>
+
 <!-- 1.0.3 -->
 <div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
     <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.3 - August 12th, 2026</span></strong>
