@@ -530,7 +530,7 @@ public class AlbumsFileTest {
                 continue;
             }
 
-            Path out = Path.of("/tmp/albums-roundtrip-" + name + ".yaml");
+            Path out = tmp.newFile("albums-roundtrip-" + name + ".yaml").toPath();
             AlbumsFile orig = AlbumsFile.load(originalPath);
             orig.save(out);
 
