@@ -86,12 +86,6 @@ public class PhotosBasePhase extends BasePhase {
     public PhotosBasePhase() {
         Path sitesFilePath = AppConfigUtils.getSaveDir().toPath().resolve("sites.yaml");
         sitesFile_ = new SitesFile(sitesFilePath).load();
-
-        // The Upgrade tab only refreshes the app's own copy of the ddphotos script, so the copy
-        // 'ddphotos init' left in each site directory goes stale.  Catch them up here - see
-        // ScriptSync.  This phase is entered afresh on every return from the wizard as well as at
-        // startup, which is what gets a site the wizard has just created its up-to-date copy.
-        ScriptSync.syncSites(sitesFile_.getSites());
     }
 
     @Override
@@ -209,7 +203,7 @@ public class PhotosBasePhase extends BasePhase {
         // Every command tab is added with its own idle lamp, which the panel swaps for a green
         // bolt while its command runs - see PhotosTabIcons. The lamps are per-tab because they
         // brighten on the selected tab, which each one has to work out for itself.
-        CommandRunnerPanel upgradeTab = new CommandRunnerPanel(siteBar, new UpgradeRunner(), context_);
+        CommandRunnerPanel upgradeTab = new CommandRunnerPanel(siteBar, new UpgradeRunner(sitesFile_), context_);
         tabs.addTab("msg.tab.config", PhotosTabIcons.config(configTab), null, configTab);
         tabs.addTab("msg.tab.photogen", PhotosTabIcons.idle(photogenTab), null, photogenTab);
         tabs.addTab("msg.tab.run", PhotosTabIcons.idle(runTab), null, runTab);

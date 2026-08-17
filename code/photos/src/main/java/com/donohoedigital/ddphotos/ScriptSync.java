@@ -25,7 +25,8 @@ import java.util.Set;
  * {@code /ddphotos-script-dir} mount, which is the app's bin directory.  So the site's copy is
  * left behind on whatever version was current when the site was created, still pinned to that
  * release's image tag.  Running it then quietly uses the old image, and the container warns that
- * the local script no longer matches.
+ * the local script no longer matches.  So the Upgrade tab runs this at the end of every run of
+ * {@code ddphotos upgrade}, whether or not there turned out to be an upgrade to do.
  *
  * <p>The script carries no version of its own, so - like the image's own check - this compares
  * byte for byte and replaces the whole file when it differs.
@@ -42,8 +43,8 @@ public final class ScriptSync {
 
     /**
      * Refreshes the script in every site directory that already has one.  Best effort: a site on
-     * an unplugged drive or in a read-only directory is logged and skipped, never allowed to stop
-     * the app from starting.
+     * an unplugged drive or in a read-only directory is logged and skipped, never allowed to fail
+     * the run this is called from (see {@code UpgradeRunner.afterRun}).
      */
     public static void syncSites(List<Site> sites) {
         syncSites(AppConfigUtils.getBinDir().toPath(), sites);

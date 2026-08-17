@@ -69,6 +69,15 @@ public abstract class CommandRunner {
     public Prerequisite getPrerequisite(Site site, Map<String, String> userValues) { return null; }
 
     /**
+     * Called on the EDT once a run of this command is over and nothing further will happen - after
+     * the main command exits, however it exited, and also when the run ended before that command
+     * was ever launched (no site, Docker down, a prerequisite that failed or could not be
+     * evaluated).  Default no-op; {@link UpgradeRunner} uses it to refresh each site's copy of the
+     * {@code ddphotos} script, which has to happen whether there was an upgrade to do.
+     */
+    public void afterRun() {}
+
+    /**
      * Inspect one ANSI-stripped line of the main command's output and return a URL to open in the
      * user's browser, or null for the vast majority of lines. Only the first non-null result of a
      * run is acted on - see {@code AbstractRunnerPanel.maybeAutoOpen}. Called once per output line

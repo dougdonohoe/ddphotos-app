@@ -3,7 +3,9 @@ package com.donohoedigital.ddphotos.runner;
 import com.donohoedigital.config.ConfigManager;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.PhotosUtils;
+import com.donohoedigital.ddphotos.ScriptSync;
 import com.donohoedigital.ddphotos.config.Site;
+import com.donohoedigital.ddphotos.config.SitesFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,6 +18,12 @@ import java.util.Map;
 public class UpgradeRunner extends DdphotosRunner {
 
     private static final Logger logger = LogManager.getLogger(UpgradeRunner.class);
+
+    private final SitesFile sitesFile_;
+
+    public UpgradeRunner(SitesFile sitesFile) {
+        sitesFile_ = sitesFile;
+    }
 
     @Override
     public String getSubCommand() { return "upgrade"; }
@@ -86,6 +94,19 @@ public class UpgradeRunner extends DdphotosRunner {
                 return PropertyConfig.getMessage("msg.upgrade.checkError");
             }
         };
+    }
+
+    /**
+     * An upgrade rewrites only the app's own copy of the {@code ddphotos} script, leaving the copy
+     * {@code ddphotos init} put in each site directory on the old release - so catch them up here,
+     * once the run is over.  Unconditional: this is also where a site added from a directory the
+     * app never initialized, or one left behind by an upgrade that failed part way, gets its
+     * current copy, and there is nothing to do when they are all in step anyway (see
+     * {@link ScriptSync}, which compares before it writes).
+     */
+    @Override
+    public void afterRun() {
+        ScriptSync.syncSites(sitesFile_.getSites());
     }
 
     private void removeLastCheckFile() {

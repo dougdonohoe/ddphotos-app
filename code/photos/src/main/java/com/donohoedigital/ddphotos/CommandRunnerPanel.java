@@ -145,8 +145,9 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
         return runner_.getDisplayName();
     }
 
-    /** Tells the watcher (if any) that nothing was launched. */
+    /** Tells the runner and the watcher (if any) that the run is over with nothing launched. */
     private void notifyAborted() {
+        runner_.afterRun();
         RunWatcher watcher = runWatcher_;
         if (watcher != null) watcher.runAborted();
     }
@@ -357,6 +358,9 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             if (runWatcher_ != null) runWatcher_.runStarted();
             startReaders(process_, code -> {
                 RunWatcher watcher = runWatcher_;
+                // Before any dialog: whatever the runner does here (the Upgrade tab refreshes the
+                // sites' scripts) should be done by the time the user is told the command is over.
+                runner_.afterRun();
                 // Feedback first: on a failure it is a modal dialog, and the tour's own dialog
                 // should not open behind it.
                 showCompletionFeedback(code, watcher);
