@@ -432,7 +432,7 @@ ddphotos-app
 
 ## Appendix B: Running GitHub Actions Locally
 
-You can run GitHub actions locally using the [act↗](https://nektosact.com/) tool (which requires Docker).
+You can run GitHub Actions locally using the [act↗](https://nektosact.com/) tool (which requires Docker).
 
 To install `act`:
 
