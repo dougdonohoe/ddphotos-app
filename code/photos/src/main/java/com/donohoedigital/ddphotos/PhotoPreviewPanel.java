@@ -1,6 +1,5 @@
 package com.donohoedigital.ddphotos;
 
-import com.donohoedigital.gui.DDIconButtons;
 import com.donohoedigital.gui.RenderUtils;
 
 import javax.swing.*;
@@ -13,19 +12,20 @@ public class PhotoPreviewPanel extends JPanel {
 
     private static final int PLACEHOLDER_ICON_SIZE = 48;
 
-    private final Icon placeholderIcon;
     private final int maxWidth;
     private final int maxHeight;
     private String crop_;
     private Path currentPath_;
     private BufferedImage image;
+    /** Redone per file, since a clip gets video-off where an undecodable photo gets camera-off. */
+    private Icon placeholderIcon;
     private boolean isLoading = false;
     private Future<BufferedImage> loadWorker;
 
     public PhotoPreviewPanel(int maxWidth, int maxHeight) {
         this.maxWidth = maxWidth;
         this.maxHeight = maxHeight;
-        placeholderIcon = DDIconButtons.svgIcon(DDIconButtons.CAMERA_OFF, PLACEHOLDER_ICON_SIZE, "Label.disabledForeground");
+        placeholderIcon = Thumbs.placeholderIcon(null, PLACEHOLDER_ICON_SIZE);
     }
 
     @Override
@@ -51,6 +51,7 @@ public class PhotoPreviewPanel extends JPanel {
         if (loadWorker != null && !loadWorker.isDone()) {
             loadWorker.cancel(true);
         }
+        placeholderIcon = Thumbs.placeholderIcon(path, PLACEHOLDER_ICON_SIZE);
         if (path == null || !path.toFile().exists()) {
             isLoading = false;
             image = null;
@@ -61,7 +62,7 @@ public class PhotoPreviewPanel extends JPanel {
         isLoading = true;
         loadWorker = Thumbs.loadAsyncForDisplay(this, path, maxWidth, maxHeight, crop_, img -> {
             isLoading = false;
-            image = img;  // null when undecodable -> paintPlaceholder draws the camera-off icon
+            image = img;  // null when undecodable -> paintPlaceholder draws the no-preview icon
             repaint();
         });
     }

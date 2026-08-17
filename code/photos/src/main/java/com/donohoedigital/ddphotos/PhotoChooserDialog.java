@@ -50,6 +50,8 @@ public class PhotoChooserDialog extends PhotosDialog {
     public static final String PARAM_ROOT_DIR = "photochooser-rootdir";
     /** Photo to open selected - the field's current value - or null ({@link Path}). */
     public static final String PARAM_SELECT = "photochooser-select";
+    /** Whether videos are offered alongside photos ({@link Boolean}) - true for a cover, false for a hero. */
+    public static final String PARAM_ALLOW_VIDEO = "photochooser-allow-video";
 
     private static final String BUTTON_CHOOSE = "choose";
 
@@ -64,11 +66,15 @@ public class PhotoChooserDialog extends PhotosDialog {
     /** Rows of cells to decode beyond the viewport so scrolling isn't chasing the thumbnails. */
     private static final int LOOKAHEAD_CELLS = 12;
 
+    /** Size of a cell's stand-in icon: a folder, or the camera-off/video-off "no preview" mark. */
+    private static final int PLACEHOLDER_ICON_SIZE = 48;
+
     private static final int PREVIEW_SIZE = 280;
     private static final int PREVIEW_COL_W = PREVIEW_SIZE + 20;
 
     private Path currentDir_;
     private Path rootDir_;
+    private boolean allowVideo_;
 
     /**
      * The field's existing photo, consumed by the first {@link #showFolder} so the chooser opens
@@ -109,6 +115,7 @@ public class PhotoChooserDialog extends PhotosDialog {
     public JComponent createDialogContents() {
         rootDir_ = (Path) phase_.getObject(PARAM_ROOT_DIR);
         pendingSelect_ = (Path) phase_.getObject(PARAM_SELECT);
+        allowVideo_ = phase_.getBoolean(PARAM_ALLOW_VIDEO, false);
         Path start = (Path) phase_.getObject(PARAM_START_DIR);
         if (start == null || !Files.isDirectory(start)) {
             start = rootDir_ != null ? rootDir_ : Path.of(System.getProperty("user.home"));
@@ -280,7 +287,7 @@ public class PhotoChooserDialog extends PhotosDialog {
 
         currentDir_ = dir;
         DefaultListModel<Entry> model = new DefaultListModel<>();
-        listEntries(dir).forEach(model::addElement);
+        listEntries(dir, allowVideo_).forEach(model::addElement);
         list_.setModel(model);
 
         upBtn_.setEnabled(canGoUp(dir, rootDir_));
@@ -344,7 +351,9 @@ public class PhotoChooserDialog extends PhotosDialog {
     }
 
     private String emptyFolderText() {
-        return list_.getModel().getSize() == 0 ? PropertyConfig.getMessage("msg.photochooser.empty") : "";
+        if (list_.getModel().getSize() != 0) return "";
+        return PropertyConfig.getMessage(allowVideo_ ? "msg.photochooser.empty.media"
+                                                     : "msg.photochooser.empty");
     }
 
     @Override
@@ -359,10 +368,12 @@ public class PhotoChooserDialog extends PhotosDialog {
     // -------------------------------------------------------------------------
 
     /**
-     * Subfolders first, then images, each sorted case-insensitively.  Anything that isn't an image
-     * is left out - this is a photo picker - as are dotfiles and unreadable entries.
+     * Subfolders first, then photos, each sorted case-insensitively.  Anything that isn't a photo
+     * is left out - this is a photo picker - as are dotfiles and unreadable entries.  With
+     * {@code allowVideo} the picker also offers clips: an album cover may be a video (photogen uses
+     * its poster frame), a site hero may not.
      */
-    static List<Entry> listEntries(Path dir) {
+    static List<Entry> listEntries(Path dir, boolean allowVideo) {
         List<Entry> folders = new ArrayList<>();
         List<Entry> images = new ArrayList<>();
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
@@ -370,7 +381,7 @@ public class PhotoChooserDialog extends PhotosDialog {
                 String name = p.getFileName().toString();
                 if (name.startsWith(".")) continue;
                 if (Files.isDirectory(p)) folders.add(new Entry(p, name, true));
-                else if (PathValidation.isImageFile(name) && !name.isBlank()) {
+                else if (matches(name, allowVideo) && !name.isBlank()) {
                     images.add(new Entry(p, name, false));
                 }
             }
@@ -385,6 +396,10 @@ public class PhotoChooserDialog extends PhotosDialog {
         all.addAll(folders);
         all.addAll(images);
         return all;
+    }
+
+    private static boolean matches(String name, boolean allowVideo) {
+        return allowVideo ? PathValidation.isMediaFile(name) : PathValidation.isImageFile(name);
     }
 
     /**
@@ -421,7 +436,8 @@ public class PhotoChooserDialog extends PhotosDialog {
             if (e.folder() || !requested_.add(e.path())) continue;
             thumbJobs_.add(Thumbs.loadAsyncForDisplay(list_, e.path(), THUMB_W, THUMB_H, null, img -> {
                 if (gen != folderGen_) return;   // navigated away while this was decoding
-                icons_.put(e.path(), boxed(img != null ? thumbIcon(list_, img) : placeholderIcon()));
+                icons_.put(e.path(), boxed(img != null ? thumbIcon(list_, img)
+                                                       : Thumbs.placeholderIcon(e.path(), PLACEHOLDER_ICON_SIZE)));
                 list_.repaint();
             }));
         }
@@ -457,12 +473,8 @@ public class PhotoChooserDialog extends PhotosDialog {
         return new ImageComponent(img, scale > 0 ? 1.0d / scale : 1.0d).getUniqueIcon();
     }
 
-    private static Icon placeholderIcon() {
-        return DDIconButtons.svgIcon(DDIconButtons.CAMERA_OFF, 48, "Label.disabledForeground");
-    }
-
     private static Icon folderIcon() {
-        return DDIconButtons.svgIcon(DDIconButtons.FOLDER_OPEN, 48, "Label.foreground");
+        return DDIconButtons.svgIcon(DDIconButtons.FOLDER_OPEN, PLACEHOLDER_ICON_SIZE, "Label.foreground");
     }
 
     private static Icon boxed(Icon icon) {

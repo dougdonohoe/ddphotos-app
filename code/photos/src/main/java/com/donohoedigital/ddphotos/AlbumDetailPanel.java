@@ -230,9 +230,10 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         });
 
         // Browse with the DD thumbnail grid, rooted at the album's source folder so a pick is
-        // always expressible relative to it.
+        // always expressible relative to it.  Videos are offered: photogen covers an album with
+        // the clip's poster frame.
         PhotoChooser.install(cover_, albumsList_.getContext(), "msg.filechooser.title.cover",
-                             this::resolveSourcePath);
+                             this::resolveSourcePath, true);
 
         source_.setCustomValidator(sourceValidator);
         cover_.setCustomValidator(coverValidator);

@@ -318,9 +318,10 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         });
 
         // Browse with the DD thumbnail grid, rooted at the selected base so a pick stays
-        // relative to it.
+        // relative to it.  Photos only - the hero is a libvips crop, which photogen will not do
+        // to a video.
         PhotoChooser.install(heroImage_, context_, "msg.filechooser.title.hero",
-                             this::resolveHeroBasePath);
+                             this::resolveHeroBasePath, false);
 
         heroImage_.setCustomValidator(heroValidator);
 
