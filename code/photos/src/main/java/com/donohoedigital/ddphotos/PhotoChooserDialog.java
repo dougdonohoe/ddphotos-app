@@ -203,6 +203,9 @@ public class PhotoChooserDialog extends PhotosDialog {
         list_.setFixedCellHeight(CELL_H);
         list_.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list_.setCellRenderer(new TileRenderer());
+        // GuiManager picked up the photos-only help from list.photochooser.help; when clips are on
+        // offer the wording has to say so.
+        if (allowVideo_) list_.setHelpText(PropertyConfig.getMessage("list.photochooser.help.media"));
 
         list_.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) selectionChanged();
