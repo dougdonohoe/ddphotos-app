@@ -8,6 +8,9 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
+* Better init site for photogen - eliminate fancy stuff in docker (too confusing)
+
+* Detect in `albums.yaml` or other config file changes while app is open (e.g., if edited manually or by AI)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
   a settings menu to win/linux)?  Would want to show size of cache.  
 * Another possible thing in a Settings dialog could be image name used in install (currently we can override this
@@ -48,6 +51,8 @@ cd code && mvn -pl common,gui,engine,photos compile -q
       still, matching what the web grid does. The `video-off` placeholder does that job for now.
 
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
+* Video explainer (YouTube)
+* Create 2nd sample site from photo discussions site
 * Detect running container error? Port already in use (nice to have)
 * Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?
 
