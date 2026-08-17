@@ -3,11 +3,14 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.app.config.AppConfigUtils;
 import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.ImageDef;
+import com.donohoedigital.gui.DDIconButtons;
 import com.donohoedigital.gui.RenderUtils;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
+import javax.swing.Icon;
 import javax.swing.SwingWorker;
 import java.awt.Component;
 import java.awt.Graphics2D;
@@ -50,6 +53,18 @@ public final class Thumbs {
     private Thumbs() {}
 
     /**
+     * The "no preview" icon to show in place of a thumbnail {@link #load} came back null for:
+     * video-off for a clip, camera-off for anything else (a HEIC, say).  ImageIO can decode neither,
+     * so this is what every thumbnail consumer falls back to.
+     */
+    public static Icon placeholderIcon(Path path, int size) {
+        FlatSVGIcon base = path != null && PathValidation.isVideoFile(path.getFileName().toString())
+                ? DDIconButtons.VIDEO_OFF
+                : DDIconButtons.CAMERA_OFF;
+        return DDIconButtons.svgIcon(base, size, "Label.disabledForeground");
+    }
+
+    /**
      * As {@link #loadAsync(Path, int, int, String, Consumer)}, but sized in <i>device</i> pixels for
      * the screen showing {@code c}: the requested logical box is multiplied by that screen's scale
      * factor (1.25 for Windows at 125%, 2.0 for Retina-class).  The caller must then draw the result
@@ -70,7 +85,7 @@ public final class Thumbs {
 
     /**
      * Decodes a thumbnail on the shared loader pool and delivers it to {@code onResult} on the EDT
-     * (null when the image can't be read, e.g. HEIC).  Returns a handle the caller can
+     * (null when the image can't be read, e.g. HEIC or a video).  Returns a handle the caller can
      * {@link Future#cancel cancel} — when a preview is replaced or an editor window closes — to drop
      * queued and interrupt running decodes; {@code onResult} is skipped if the job is cancelled.
      */
@@ -101,6 +116,11 @@ public final class Thumbs {
      * invalidate automatically.  Returns null if the image cannot be read.
      */
     public static BufferedImage load(Path path, int maxWidth, int maxHeight, String crop) {
+        // ImageIO has no reader for any video container, so a clip could only fail - and it would
+        // fail loudly, since ImageDef logs at error level.  Bail out here and let the caller draw
+        // the video-off placeholder (see placeholderIcon).
+        if (PathValidation.isVideoFile(path.getFileName().toString())) return null;
+
         Path cacheFile = cachePathFor(path, maxWidth, maxHeight, crop);
         if (cacheFile != null && cacheFile.toFile().exists()) {
             try {

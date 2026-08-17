@@ -68,6 +68,17 @@ public class PhotogenFileTest {
     }
 
     @Test
+    public void getCaption_matchesVideoWithAndWithoutExtension() throws Exception {
+        Path dir = write("clip A caption.\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertEquals("A caption.", pf.getCaption("clip"));
+        assertEquals("A caption.", pf.getCaption("clip.mov"));
+        assertEquals("A caption.", pf.getCaption("CLIP.MOV"));
+        assertEquals("A caption.", pf.getCaption("clip.mp4"));
+        assertTrue(pf.hasEntry("clip.m4v"));
+    }
+
+    @Test
     public void getCaption_subfolderPlaceholderHasEmptyCaption() throws Exception {
         Path dir = write("subfolder\n");
         PhotogenFile pf = new PhotogenFile(dir).load();

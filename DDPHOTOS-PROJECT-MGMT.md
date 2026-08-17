@@ -25,6 +25,28 @@ cd code && mvn -pl common,gui,engine,photos compile -q
   steps?  Another issue is that if the `ddphotos` script disappears we re-launch the wizard so they can install it.
   We'd need a dialog that confirms re-running the wizard and an option to not show that warning again.
 
+* **Video previews in the app** - videos (`.mov`, `.mp4`, `.m4v`) are now captionable, reorderable and
+  selectable as an album cover, but they show a `video-off` placeholder rather than a real thumbnail. This is
+  bigger than video alone. Verified on Java 25: `ImageIO.getReaderFormatNames()` returns only
+  JPG/PNG/GIF/BMP/TIFF/WBMP. **There is no reader for `mp4`, `mov`, `webp` *or* `heic`**, so `Thumbs.load`
+  short-circuits a video and HEIC falls through to the same null result. Any fix should be chosen to solve
+  HEIC, WebP and video together rather than one at a time.
+    * **Note this kills the existing idea above** of reusing photogen's `grid/` files for caption-editor
+      thumbnails: those are **WebP**, which ImageIO also cannot read.
+    * Options, roughly the cheapest first:
+        * **Add a decoder library.** `webp-imageio` is small and would unlock WebP (hence photogen's `grid/`
+          posters for *every* media type, video included, whenever photogen has already run). Does not help
+          before the first photogen run, and does not decode HEIC.
+        * **Ask the container for a frame.** The app already drives Docker for everything, and the image can
+          now reach ffmpeg via the `ddphotos-ffmpeg` volume. Would mean a new `ddphotos thumb <file>` command
+          emitting a JPEG. Correct for every format including HEIC, but a container spin-up per thumbnail
+          (~0.5s) is far too slow for a scrolling grid unless batched into one call per folder.
+        * **Have photogen emit a JPEG poster** next to the WebP ones purely so the app can read it. Cheap on
+          the ddphotos side, but adds an output file per video that nothing else consumes, and still gives
+          nothing until photogen has run.
+    * Once a video shows a real frame, it wants a play-badge overlay so a clip is distinguishable from a
+      still, matching what the web grid does. The `video-off` placeholder does that job for now.
+
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Detect running container error? Port already in use (nice to have)
 * Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?

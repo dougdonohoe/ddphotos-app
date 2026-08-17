@@ -33,12 +33,33 @@ public final class PathValidation {
 
     private static final Object[] NO_ARGS = new Object[0];
 
+    // Mirrors allowedPhotoExtensions / allowedVideoExtensions in ddphotos (pkg/photogen/album.go,
+    // pkg/photogen/video.go).  The two sets are kept apart because they are not interchangeable:
+    // a hero image, for instance, accepts photos only.
     private static final Pattern IMAGE_EXTENSION =
             Pattern.compile(".*\\.(?i)(png|jpe?g|webp|tiff?|hei[cf])");
 
-    /** True if blank or the path ends in a recognized image extension (png, jpg, jpeg, webp, tif, tiff, heic, heif). */
+    private static final Pattern VIDEO_EXTENSION =
+            Pattern.compile(".*\\.(?i)(mov|mp4|m4v)");
+
+    /**
+     * True if blank or the path ends in a recognized image extension (png, jpg, jpeg, webp, tif, tiff,
+     * heic, heif).  Note this and {@link #isMediaFile} answer "not disqualified" - blank passes - for
+     * the benefit of the {@code evaluate*} methods below; {@link #isVideoFile} answers the stricter
+     * "this <em>is</em> a clip", since callers use it to pick an icon.
+     */
     public static boolean isImageFile(String text) {
         return text == null || text.isBlank() || IMAGE_EXTENSION.matcher(text).matches();
+    }
+
+    /** True if the path ends in a recognized video extension (mov, mp4, m4v).  Blank is false. */
+    public static boolean isVideoFile(String text) {
+        return text != null && !text.isBlank() && VIDEO_EXTENSION.matcher(text).matches();
+    }
+
+    /** True if blank or the path is either a recognized image or a recognized video. */
+    public static boolean isMediaFile(String text) {
+        return isImageFile(text) || isVideoFile(text);
     }
 
     /**
@@ -103,6 +124,8 @@ public final class PathValidation {
      * Evaluates a cover photo against the resolved source directory.  Cover is always relative to
      * source; when source is not resolved we stay quiet (OK) since source's own warning already
      * blocks Save - avoids a redundant second message.
+     *
+     * <p>A video is a legal cover: photogen uses the clip's poster frame.
      */
     public static PathStatus evaluateCover(String value, Path resolvedSource) {
         String v = value == null ? "" : value.trim();
@@ -111,7 +134,7 @@ public final class PathValidation {
             return PathStatus.info("msg.note.source.docker", v);
         }
         if (resolvedSource == null) return PathStatus.ok();
-        if (!isImageFile(v)) {
+        if (!isMediaFile(v)) {
             return PathStatus.warn("msg.warn.cover.not.image");
         }
         Path candidate = resolvedSource.resolve(v).normalize();

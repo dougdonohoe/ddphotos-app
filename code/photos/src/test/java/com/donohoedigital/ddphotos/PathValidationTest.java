@@ -46,6 +46,29 @@ public class PathValidationTest {
         assertTrue(PathValidation.isImageFile(null));
         assertFalse(PathValidation.isImageFile("README.md"));
         assertFalse(PathValidation.isImageFile("notes.txt"));
+        assertFalse(PathValidation.isImageFile("clip.mov"));
+    }
+
+    @Test
+    public void isVideoFile_recognizesExtensions() {
+        assertTrue(PathValidation.isVideoFile("a.mov"));
+        assertTrue(PathValidation.isVideoFile("a.MP4"));
+        assertTrue(PathValidation.isVideoFile("a.m4v"));
+        assertFalse(PathValidation.isVideoFile("a.jpg"));
+        assertFalse(PathValidation.isVideoFile("notes.txt"));
+        assertFalse(PathValidation.isVideoFile(""));    // strict, unlike isImageFile
+        assertFalse(PathValidation.isVideoFile(null));
+    }
+
+    @Test
+    public void isMediaFile_acceptsPhotosAndVideos() {
+        assertTrue(PathValidation.isMediaFile("a.jpg"));
+        assertTrue(PathValidation.isMediaFile("a.heic"));
+        assertTrue(PathValidation.isMediaFile("a.mov"));
+        assertTrue(PathValidation.isMediaFile("a.M4V"));
+        assertTrue(PathValidation.isMediaFile(""));     // blank is permissive
+        assertTrue(PathValidation.isMediaFile(null));
+        assertFalse(PathValidation.isMediaFile("README.md"));
     }
 
     // ── blank ───────────────────────────────────────────────────────────────
@@ -148,6 +171,13 @@ public class PathValidationTest {
     }
 
     @Test
+    public void requireImage_video_warns() {
+        // hero is a libvips crop, which photogen will not do to a clip
+        PathStatus s = evaluateUnderBase("clip.mov", null, false, true, "hero");
+        assertWarn(s, "msg.warn.hero.not.image");
+    }
+
+    @Test
     public void requireImage_off_allowsNonImage() {
         // source is a folder - no image requirement
         PathStatus s = evaluateUnderBase("source", base, true, false, "source");
@@ -201,6 +231,16 @@ public class PathValidationTest {
     public void cover_valid_resolves() throws IOException {
         Path file = tmp.newFile("base/source/cover.jpg").toPath();
         PathStatus s = evaluateCover("cover.jpg", sourceDir);
+        assertTrue(s.isValid());
+        assertFalse(s.hasMessage());
+        assertEquals(file, s.resolved());
+    }
+
+    @Test
+    public void cover_video_resolves() throws IOException {
+        // photogen covers an album with the clip's poster frame, so a video is a legal cover
+        Path file = tmp.newFile("base/source/clip.mov").toPath();
+        PathStatus s = evaluateCover("clip.mov", sourceDir);
         assertTrue(s.isValid());
         assertFalse(s.hasMessage());
         assertEquals(file, s.resolved());

@@ -17,6 +17,7 @@ public class DDIconButtons
     public static final FlatSVGIcon CHEVRON_UP    = svgIcon("icons/chevron-up.svg");
     public static final FlatSVGIcon CHEVRON_DOWN  = svgIcon("icons/chevron-down.svg");
     public static final FlatSVGIcon CAMERA_OFF    = svgIcon("icons/camera-off.svg");
+    public static final FlatSVGIcon VIDEO_OFF     = svgIcon("icons/video-off.svg");
     public static final FlatSVGIcon PLAY          = svgIcon("icons/play.svg");
     public static final FlatSVGIcon STOP_SQUARE   = svgIcon("icons/square.svg");
     public static final FlatSVGIcon KILL          = svgIcon("icons/circle-x.svg");

@@ -35,9 +35,12 @@ public final class PhotoChooser {
      *                     cover, the selected base for a hero - re-evaluated on every open so
      *                     changing the base/source combo is picked up.  A null result means the
      *                     field has nothing to relativize against, so browsing roams free.
+     * @param allowVideo   whether clips are offered alongside photos: true for a cover, which
+     *                     photogen renders from the video's poster frame, false for a hero, which
+     *                     photogen rejects outright since it is a libvips crop
      */
     public static void install(OptionFileChooser option, AppContext context, String titleKey,
-                               Supplier<Path> rootSupplier) {
+                               Supplier<Path> rootSupplier, boolean allowVideo) {
         option.setCustomPicker((_, startDir) -> {
             Path root = rootSupplier != null ? rootSupplier.get() : null;
             Path current = currentPhoto(option.getText(), root);
@@ -48,6 +51,7 @@ public final class PhotoChooser {
             params.setObject(PhotoChooserDialog.PARAM_ROOT_DIR, root);
             params.setObject(PhotoChooserDialog.PARAM_SELECT, current);
             params.setObject(PhotoChooserDialog.PARAM_WINDOW_TITLE_KEY, titleKey);
+            params.setBoolean(PhotoChooserDialog.PARAM_ALLOW_VIDEO, allowVideo);
 
             // Modal, so this returns only once the dialog is gone and its result is in.
             Phase chooser = context.processPhaseNow(PhotoChooserDialog.PHASE_NAME, params);

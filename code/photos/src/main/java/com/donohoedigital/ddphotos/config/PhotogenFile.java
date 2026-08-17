@@ -212,15 +212,16 @@ public class PhotogenFile {
     }
 
     /**
-     * Normalizes a key for matching: lowercased, with a trailing image extension stripped so
-     * {@code "img_001.jpg"} and {@code "img_001"} match.  Mirrors the Go generator, which treats
-     * an entry's leading token case-insensitively and strips a known image extension.  Reuses
-     * {@link PathValidation#isImageFile(String)} for the recognized-extension set.
+     * Normalizes a key for matching: lowercased, with a trailing media extension stripped so
+     * {@code "img_001.jpg"} and {@code "img_001"} match, as do {@code "clip.mov"} and
+     * {@code "clip"}.  Mirrors the Go generator, which treats an entry's leading token
+     * case-insensitively and strips a known extension.  Reuses
+     * {@link PathValidation#isMediaFile(String)} for the recognized-extension set.
      */
     public static String normalizeKey(String name) {
         if (name == null) return "";
         String s = name.trim().toLowerCase(Locale.ROOT);
-        if (PathValidation.isImageFile(s)) {
+        if (PathValidation.isMediaFile(s)) {
             int dot = s.lastIndexOf('.');
             if (dot > 0) s = s.substring(0, dot);
         }

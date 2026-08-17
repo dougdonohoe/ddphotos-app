@@ -34,12 +34,22 @@ public class PhotoChooserTest {
         assertTrue(dir.resolve(name).toFile().createNewFile());
     }
 
-    private void folder(String name) throws IOException {
+    private void folder(String name) {
         assertTrue(dir.resolve(name).toFile().mkdir());
     }
 
     private static List<String> names(List<Entry> entries) {
         return entries.stream().map(Entry::name).toList();
+    }
+
+    /** The photo-only listing (the hero field), which is what most cases below are about. */
+    private static List<Entry> listPhotos(Path dir) {
+        return listEntries(dir, false);
+    }
+
+    /** The photo-or-video listing (the cover field). */
+    private static List<Entry> listMedia(Path dir) {
+        return listEntries(dir, true);
     }
 
     // -- listEntries ---------------------------------------------------------
@@ -51,7 +61,7 @@ public class PhotoChooserTest {
         file("apple.png");
         folder("zulu");
 
-        assertEquals(List.of("alpha", "zulu", "apple.png", "zebra.jpg"), names(listEntries(dir)));
+        assertEquals(List.of("alpha", "zulu", "apple.png", "zebra.jpg"), names(listPhotos(dir)));
     }
 
     @Test
@@ -60,7 +70,7 @@ public class PhotoChooserTest {
         file("apple.jpg");
         file("Cherry.jpg");
 
-        assertEquals(List.of("apple.jpg", "Banana.jpg", "Cherry.jpg"), names(listEntries(dir)));
+        assertEquals(List.of("apple.jpg", "Banana.jpg", "Cherry.jpg"), names(listPhotos(dir)));
     }
 
     @Test
@@ -74,7 +84,7 @@ public class PhotoChooserTest {
         file("g.heic");
         file("h.heif");
 
-        assertEquals(8, listEntries(dir).size());
+        assertEquals(8, listPhotos(dir).size());
     }
 
     @Test
@@ -85,7 +95,30 @@ public class PhotoChooserTest {
         file(".hidden.jpg");
         file(".DS_Store");
 
-        assertEquals(List.of("keep.jpg"), names(listEntries(dir)));
+        assertEquals(List.of("keep.jpg"), names(listPhotos(dir)));
+    }
+
+    @Test
+    public void listEntries_excludesVideosWhenPhotosOnly() throws IOException {
+        file("keep.jpg");
+        file("clip.mov");
+        file("clip.mp4");
+        file("clip.m4v");
+
+        assertEquals(List.of("keep.jpg"), names(listPhotos(dir)));
+    }
+
+    @Test
+    public void listEntries_includesVideosWhenAllowed() throws IOException {
+        file("keep.jpg");
+        file("clip.MOV");
+        file("clip.mp4");
+        file("clip.m4v");
+        file("notes.md");
+        folder("sub");
+
+        assertEquals(List.of("sub", "clip.m4v", "clip.MOV", "clip.mp4", "keep.jpg"),
+                     names(listMedia(dir)));
     }
 
     @Test
@@ -93,7 +126,7 @@ public class PhotoChooserTest {
         folder("sub");
         file("pic.jpg");
 
-        List<Entry> entries = listEntries(dir);
+        List<Entry> entries = listPhotos(dir);
         assertTrue(entries.get(0).folder());
         assertFalse(entries.get(1).folder());
         assertEquals(dir.resolve("pic.jpg"), entries.get(1).path());
@@ -101,7 +134,7 @@ public class PhotoChooserTest {
 
     @Test
     public void listEntries_returnsEmptyForAMissingDirectory() {
-        assertTrue(listEntries(dir.resolve("nope")).isEmpty());
+        assertTrue(listPhotos(dir.resolve("nope")).isEmpty());
     }
 
     // -- canGoUp -------------------------------------------------------------
@@ -112,7 +145,7 @@ public class PhotoChooserTest {
     }
 
     @Test
-    public void canGoUp_isTrueBelowTheRoot() throws IOException {
+    public void canGoUp_isTrueBelowTheRoot() {
         Path sub = dir.resolve("sub");
         folder("sub");
         assertTrue(canGoUp(sub, dir));

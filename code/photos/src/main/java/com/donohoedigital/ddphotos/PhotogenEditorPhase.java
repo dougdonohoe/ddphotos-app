@@ -58,6 +58,9 @@ public class PhotogenEditorPhase extends BasePhase {
     private static final int THUMB_MIN_H = 72;
     private static final int NAME_COL_WIDTH = 240;
 
+    /** Size of the camera-off/video-off "no preview" mark drawn in a row's thumbnail cell. */
+    private static final int PLACEHOLDER_ICON_SIZE = 48;
+
     // Thumbnail cell size — computed in buildUI to fill the row: height matches the caption box,
     // width is landscape (3:2) so typical photos use the available space.
     private int thumbW_ = 108;
@@ -328,7 +331,9 @@ public class PhotogenEditorPhase extends BasePhase {
                     if (album_.isRecurse()) {
                         subfolders.add(Row.subfolder(fileName, p, pf.getCaption(fileName)));
                     }
-                } else if (PathValidation.isImageFile(fileName)) {
+                } else if (PathValidation.isMediaFile(fileName)) {
+                    // Videos get a row too - photogen publishes them, so they need captioning and
+                    // ordering here, even though we can only show a placeholder for one.
                     images.add(Row.image(fileName, p, pf.getCaption(fileName)));
                 }
             }
@@ -521,13 +526,17 @@ public class PhotogenEditorPhase extends BasePhase {
         JLabel label = new JLabel();
         label.setPreferredSize(new Dimension(thumbW_, thumbH_));
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        // Decoded image, or the "no preview" camera-off placeholder when it can't be read (e.g. HEIC,
-        // which ImageIO can't decode) — mirrors PhotoPreviewPanel.  Runs on Thumbs' shared pool.
+        // Decoded image, or the "no preview" placeholder when it can't be read - ImageIO decodes
+        // neither HEIC nor any video - mirrors PhotoPreviewPanel.  Runs on Thumbs' shared pool.
+        String fileName = path.getFileName().toString();
+        String tooltipKey = PathValidation.isVideoFile(fileName) ? "msg.nothumb.video.tooltip"
+                                                                 : "msg.nothumb.tooltip";
         thumbJobs_.add(Thumbs.loadAsyncForDisplay(label, path, thumbW_, thumbH_, null,
                 img -> {
-            label.setIcon(img != null ? thumbIcon(label, img) : placeholderIcon());
+            label.setIcon(img != null ? thumbIcon(label, img)
+                                      : Thumbs.placeholderIcon(path, PLACEHOLDER_ICON_SIZE));
             if (img == null) {
-                label.setToolTipText(PropertyConfig.getMessage("msg.nothumb.tooltip", path.getFileName().toString()));
+                label.setToolTipText(PropertyConfig.getMessage(tooltipKey, fileName));
             }
         }));
         return label;
@@ -541,11 +550,6 @@ public class PhotogenEditorPhase extends BasePhase {
     private static Icon thumbIcon(JComponent owner, BufferedImage img) {
         double scale = RenderUtils.getDisplayScale(owner);
         return new ImageComponent(img, scale > 0 ? 1.0d / scale : 1.0d).getUniqueIcon();
-    }
-
-    /** Camera-off icon shown in a row's thumbnail cell when the image can't be decoded. */
-    private static Icon placeholderIcon() {
-        return DDIconButtons.svgIcon(DDIconButtons.CAMERA_OFF, 48, "Label.disabledForeground");
     }
 
     // -------------------------------------------------------------------------
@@ -723,6 +727,7 @@ public class PhotogenEditorPhase extends BasePhase {
     // Inner types
     // -------------------------------------------------------------------------
 
+    /** IMAGE covers any media file that can carry a caption - a photo or a video clip. */
     private enum RowType { IMAGE, SUBFOLDER }
 
     private static final class Row {
@@ -754,7 +759,9 @@ public class PhotogenEditorPhase extends BasePhase {
         }
 
         private static String stripExtension(String fileName) {
-            if (!PathValidation.isImageFile(fileName)) return fileName;
+            // Must recognize the same extensions as PhotogenFile.normalizeKey, or a row would be
+            // written under one key and looked up under another.
+            if (!PathValidation.isMediaFile(fileName)) return fileName;
             int dot = fileName.lastIndexOf('.');
             return dot > 0 ? fileName.substring(0, dot) : fileName;
         }
