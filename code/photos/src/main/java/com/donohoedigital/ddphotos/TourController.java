@@ -97,7 +97,7 @@ public class TourController {
                 Step.server("msg.tour.serve", serve, "msg.tour.serve.running"),
                 Step.narrate("TourStep", "msg.tour.deploy", deployTab),
                 // Final step returns to the Config tab so the user can start customizing
-                // the starter site (rename the temporary album, define a base, etc.).
+                // the starter site (replace the Vacation album, delete sample-photos, etc.).
                 Step.narrate("TourEnd", "msg.tour.finish", configTab)
         );
     }

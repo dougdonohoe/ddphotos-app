@@ -8,7 +8,7 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* Better init site for photogen - eliminate fancy stuff in docker (too confusing)
+* Verify cloudflare upload limit
 
 * Detect in `albums.yaml` or other config file changes while app is open (e.g., if edited manually or by AI)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
