@@ -8,8 +8,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* Verify cloudflare upload limit
-
 * Detect in `albums.yaml` or other config file changes while app is open (e.g., if edited manually or by AI)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
   a settings menu to win/linux)?  Would want to show size of cache.  
@@ -17,6 +15,12 @@ cd code && mvn -pl common,gui,engine,photos compile -q
   via a debug setting, but someone with a forked ddphotos might want to use their own)
 * Undo support - Still open: reverting `albums.yaml` / `passwords.yaml` /
   `photogen.txt` to a previous on-disk version - backup files somewhere in config?
+
+* `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
+* Video explainer (YouTube)
+* Create 2nd sample site from photo discussions site
+* Detect running container error? Port already in use (nice to have)
+* Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?
 
 * `descriptions.txt` editor? Or is this just an advanced feature?
 * Resizable thumbs in caption editor? Seems good as-is, but might be a nice feature - would need
@@ -49,12 +53,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
           nothing until photogen has run.
     * Once a video shows a real frame, it wants a play-badge overlay so a clip is distinguishable from a
       still, matching what the web grid does. The `video-off` placeholder does that job for now.
-
-* `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
-* Video explainer (YouTube)
-* Create 2nd sample site from photo discussions site
-* Detect running container error? Port already in use (nice to have)
-* Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?
 
 ---
 
