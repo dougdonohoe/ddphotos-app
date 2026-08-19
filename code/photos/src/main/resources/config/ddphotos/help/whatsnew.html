@@ -6,6 +6,28 @@
 
 <h2>What's New?</h2>
 
+<!-- 1.0.5 -->
+<div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
+    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.5 - August 19th, 2026</span></strong>
+</div>
+<ul>
+    <li>The starter site created by <tt>ddphotos init</tt> is now made of real files on your disk.
+        Its photos land in a <tt>sample-photos</tt> folder beside <tt>config</tt>, and the starter
+        albums reach them through a base named <tt>sample-base</tt>.  Previously they pointed inside
+        the Docker image (<tt>/ddphotos-init</tt> and friends), which DD Photos cannot open, so a
+        brand-new site had no captions to edit and nothing to show in the <b>Cover</b> chooser.</li>
+    <li>The starter site's hero image is now a <tt>.jpg</tt> in that same folder, so it previews in
+        the <b>Hero Image</b> chooser like any other photo.  The old one was a <tt>.webp</tt>, which
+        Java cannot decode.</li>
+    <li>The placeholder <b>Replace Me</b> album is now <b>Vacation</b>, and the <b>Secret</b> and
+        <b>Empty</b> albums come from <tt>sample-photos</tt> as well.</li>
+    <li>The guided tour and the <tt>Init</tt> tab now explain the starter site: where its photos
+        live, what <tt>sample-base</tt> points at, and that the folder, the base and the three
+        starter albums can all be deleted once you have added your own.</li>
+    <li>Sites created by earlier versions are unaffected - albums still naming the old
+        <tt>/ddphotos</tt> paths keep working.</li>
+</ul>
+
 <!-- 1.0.4 -->
 <div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
     <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.4 - August 17th, 2026</span></strong>
