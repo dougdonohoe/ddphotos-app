@@ -30,6 +30,9 @@ album, and you see a grid of all photos/videos.  Click/touch a photo/video to se
 a caption, if it has one. You can easily swipe between photos/videos (or use arrow keys on a laptop).
 It works great on mobile, tablet, and desktop.
 
+Videos sit in the same grid as your photos, marked with a play badge and their length,
+and play right where the full size photo would appear.
+
 ![screenshots.png](images/ddphotos/screenshots.png)
 
 ## How it Works
@@ -41,7 +44,7 @@ you export the photos into a folder.  All the photos (and videos) in a folder ma
 It's that simple.
 
 With DD Photos, you define where your albums live in the **Config** tab, and
-can specify a name, description and choose your cover photo.  Here, you also define
+can specify a name, description, and choose your cover photo.  Here, you also define
 details about your site, like name, description, optional HTML text and the
 hero image.  You can also set captions for your photos/videos, and site or album passwords.
 
