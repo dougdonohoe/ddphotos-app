@@ -59,6 +59,8 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## Future Surge support for login via PTY (full interactive terminal, handles `surge login`)
 
+UPDATE: may be moot as surge appears to be adding a browser-based option (as of Aug '26)
+
 If we need to support the initial `surge login` flow (or any other interactive command),
 we need a pseudo-terminal so the process thinks it is running in a real terminal.
 
