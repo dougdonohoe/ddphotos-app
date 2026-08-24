@@ -18,7 +18,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 * `AGENTS.md` file of some sort for AI to describe DD Photos (e.g., Chip)
 * Video explainer (YouTube)
-* Create 2nd sample site from photo discussions site
 * Detect running container error? Port already in use (nice to have)
 * Switching site while something is running (e.g., `run` / `serve`) - problematic or confusing?
 
