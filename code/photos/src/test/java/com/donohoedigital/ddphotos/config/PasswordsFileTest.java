@@ -603,7 +603,124 @@ public class PasswordsFileTest {
         }
     }
 
+    // ── external changes while a dialog is open (PasswordDialog.rebaseOnDisk) ───
+
+    @Test
+    public void changeDetection_ourOwnSaveIsNotAnExternalChange() throws Exception {
+        Path path = write("""
+                key: site-key
+                albums:
+                  alpha:
+                    password: alpha-pw
+                """);
+        PasswordsFile pf = new PasswordsFile(path).load();
+
+        pf.setAlbumPassword("alpha", "changed");
+        pf.save();
+
+        assertFalse("saving must not read as somebody else's write", pf.isChangedOnDisk());
+    }
+
+    @Test
+    public void changeDetection_someoneElsesWriteIsSeen() throws Exception {
+        Path path = write("""
+                key: site-key
+                albums:
+                  alpha:
+                    password: alpha-pw
+                """);
+        PasswordsFile pf = new PasswordsFile(path).load();
+
+        writeOver(path, """
+                key: site-key
+                albums:
+                  alpha:
+                    password: alpha-pw
+                  beta:
+                    password: beta-pw
+                """);
+
+        assertTrue(pf.isChangedOnDisk());
+    }
+
+    /**
+     * The invariant {@code PasswordDialog.rebaseOnDisk} rests on: a save rewrites the whole file
+     * from the in-memory model, so editing one album while somebody else edits another would drop
+     * their change - unless the newest copy is re-read first and this dialog's one entry applied
+     * on top of it.  Both survive that way, with nothing to reconcile.
+     */
+    @Test
+    public void rebase_keepsAnotherAlbumsExternalChange() throws Exception {
+        Path path = write("""
+                key: site-key
+                albums:
+                  alpha:
+                    password: alpha-old
+                  beta:
+                    password: beta-old
+                """);
+
+        // The dialog opens on alpha and reads the file.
+        PasswordsFile opened = new PasswordsFile(path).load();
+
+        // Meanwhile, someone else changes beta.
+        writeOver(path, """
+                key: site-key
+                albums:
+                  alpha:
+                    password: alpha-old
+                  beta:
+                    password: beta-NEW
+                """);
+
+        // Saving the stale model outright would bury beta-NEW, so re-read and re-apply instead.
+        assertTrue(opened.isChangedOnDisk());
+        PasswordsFile fresh = new PasswordsFile(path).load();
+        fresh.setAlbumPassword("alpha", "alpha-NEW");
+        fresh.save();
+
+        PasswordsFile reread = new PasswordsFile(path).load();
+        assertEquals("this dialog's edit", "alpha-NEW", reread.getAlbumPassword("alpha"));
+        assertEquals("the other writer's edit", "beta-NEW", reread.getAlbumPassword("beta"));
+        assertEquals("site-key", reread.getKey());
+    }
+
+    @Test
+    public void rebase_withoutReread_losesTheOtherChange() throws Exception {
+        // The bug this guards against, spelled out: same setup, no re-read.
+        Path path = write("""
+                key: site-key
+                albums:
+                  alpha:
+                    password: alpha-old
+                  beta:
+                    password: beta-old
+                """);
+        PasswordsFile opened = new PasswordsFile(path).load();
+
+        writeOver(path, """
+                key: site-key
+                albums:
+                  alpha:
+                    password: alpha-old
+                  beta:
+                    password: beta-NEW
+                """);
+
+        opened.setAlbumPassword("alpha", "alpha-NEW");
+        opened.save();
+
+        assertEquals("beta-old", new PasswordsFile(path).load().getAlbumPassword("beta"));
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
+
+    /** Rewrites a file so its stamp is unmistakably different from the one just taken. */
+    private void writeOver(Path path, String content) throws Exception {
+        Files.writeString(path, content, StandardCharsets.UTF_8);
+        Files.setLastModifiedTime(path, java.nio.file.attribute.FileTime.fromMillis(
+                Files.getLastModifiedTime(path).toMillis() + 5_000));
+    }
 
     private Path write(String content) throws Exception {
         Path f = tmp.newFolder().toPath().resolve(PasswordsFile.FILE_NAME);

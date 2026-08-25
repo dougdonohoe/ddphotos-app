@@ -8,7 +8,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* Detect in `albums.yaml` or other config file changes while app is open (e.g., if edited manually or by AI)
 * Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
   a settings menu to win/linux)?  Would want to show size of cache.  
 * Another possible thing in a Settings dialog could be image name used in install (currently we can override this
@@ -58,6 +57,8 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 # Parking Lot
 
 ## Future Surge support for login via PTY (full interactive terminal, handles `surge login`)
+
+UPDATE: may be moot as surge appears to be adding a browser-based option (as of Aug '26)
 
 If we need to support the initial `surge login` flow (or any other interactive command),
 we need a pseudo-terminal so the process thinks it is running in a real terminal.

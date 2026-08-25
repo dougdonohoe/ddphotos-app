@@ -380,6 +380,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         Site site = albumsList_.getCurrentSite();
         AlbumsFile af = currentAlbumsFile();
         if (site == null || af == null || currentEntry_ == null) return;
+        if (!okayToOverwrite(af)) return;
 
         AlbumEntry updated = entryFromFields();
         String oldSlug = currentEntry_.getSlug();

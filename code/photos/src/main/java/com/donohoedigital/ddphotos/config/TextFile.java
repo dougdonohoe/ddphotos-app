@@ -22,7 +22,7 @@ import java.nio.file.Path;
  * with is remembered and restored on save, so editing a CRLF file on Windows doesn't silently
  * rewrite every line.  An untouched load/save cycle is byte-for-byte identical.
  */
-public abstract class TextFile {
+public abstract class TextFile extends ConfigFile {
 
     private static final Logger logger = LogManager.getLogger(TextFile.class);
 
@@ -66,6 +66,7 @@ public abstract class TextFile {
 
         logger.info("read {}", path_);
         existed_ = true;
+        restamp();
         separator_ = content.contains(CRLF) ? CRLF : LF;
         content_ = content.replace(CRLF, LF);
         return this;
@@ -108,10 +109,12 @@ public abstract class TextFile {
             throw new TextFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }
         existed_ = true;
+        restamp();
     }
 
     // ── content ─────────────────────────────────────────────────────────────
 
+    @Override
     public Path getPath() { return path_; }
 
     /** True if the file was present on disk when {@link #load()} ran (or has since been saved). */

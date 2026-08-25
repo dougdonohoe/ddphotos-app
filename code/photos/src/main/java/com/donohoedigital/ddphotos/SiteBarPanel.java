@@ -202,6 +202,26 @@ public class SiteBarPanel extends DDPanel
         return (Site) siteCombo_.getSelectedItem();
     }
 
+    /**
+     * Re-reads the selected site's {@code albums.yaml} and pushes it through the same listener
+     * chain a site switch uses, so every panel bound to the site reloads from the fresh model.
+     * A parse failure keeps what is already in memory (see {@link Site#tryReloadAlbumsFile}), and
+     * is reported as a no-op here.
+     *
+     * @return true when the reload happened
+     */
+    public boolean refreshSelectedSite()
+    {
+        Site site = getSelectedSite();
+        if (site == null || !site.tryReloadAlbumsFile()) return false;
+
+        notifySiteListeners(site);
+        // The combo shows the site id, which lives in albums.yaml and may just have changed.
+        siteCombo_.repaint();
+        updateButtonState();
+        return true;
+    }
+
     // -------------------------------------------------------------------------
     // Combo rendering
     // -------------------------------------------------------------------------

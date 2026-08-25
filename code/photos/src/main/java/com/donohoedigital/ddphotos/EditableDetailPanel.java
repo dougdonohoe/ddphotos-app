@@ -4,6 +4,7 @@ import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
+import com.donohoedigital.ddphotos.config.ConfigFile;
 import com.donohoedigital.gui.*;
 
 import javax.swing.*;
@@ -125,6 +126,22 @@ abstract class EditableDetailPanel extends DDPanel {
 
     /** The context the shared dialogs (see {@link #showPhotogenReminder}) are opened in. */
     protected abstract AppContext getContext();
+
+    /**
+     * Confirms writing over a file that has been rewritten by something else since it was read.
+     * Call at the top of {@link #applyAndSave}, before anything is committed.
+     *
+     * <p>This asks the file rather than tracking a flag, which means it is right even for a user
+     * who never saw {@link ConfigWatcher}'s prompt - the watcher only polls the selected site, and
+     * an unwatched file can still have moved under a long-open panel.  Answering no leaves the
+     * panel exactly as it was, still dirty, so nothing is lost by being careful here.
+     *
+     * @return true when the caller should go ahead and save
+     */
+    protected final boolean okayToOverwrite(ConfigFile file) {
+        if (file == null || !file.isChangedOnDisk()) return true;
+        return ExternalChange.confirmOverwrite(getContext(), file.getPath());
+    }
 
     /**
      * The shared post-save photogen reminder - see {@link PhotosUtils#showPhotogenReminder}.

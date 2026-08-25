@@ -37,7 +37,7 @@ import java.util.Set;
  * <p>Per spec, {@link #save()} never creates a {@code photogen.txt} that was not present at
  * load time — it is a no-op when the file did not exist.
  */
-public class PhotogenFile {
+public class PhotogenFile extends ConfigFile {
 
     private static final Logger logger = LogManager.getLogger(PhotogenFile.class);
 
@@ -77,6 +77,7 @@ public class PhotogenFile {
         }
         existed_ = true;
         parse(content);
+        restamp();
         return this;
     }
 
@@ -117,11 +118,15 @@ public class PhotogenFile {
         } catch (IOException e) {
             throw new PhotogenFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }
+        existed_ = true;
+        restamp();
     }
 
     // ── getters ─────────────────────────────────────────────────────────────
 
     public Path getDir()  { return dir_; }
+
+    @Override
     public Path getPath() { return path_; }
 
     /** True if the {@code photogen.txt} file was present on disk when {@link #load()} ran. */

@@ -105,6 +105,29 @@ public class Site implements NamedObject, Comparable<Site> {
         albumsFile_ = loadFromDisk();
     }
 
+    /**
+     * Reloads from disk, keeping whatever is already in memory when the file cannot be read or
+     * parsed.  This is the variant for a reload the <em>user did not ask for</em> - one triggered
+     * by noticing the file changed underneath us - where catching a half-written file mid-save is
+     * expected rather than exceptional.  {@link #reloadAlbumsFile()} and the lazy load behind
+     * {@link #getAlbumsFile()} still fail loudly, since there a broken file is news.
+     *
+     * @return true when the model was replaced; false when the previous one was kept
+     */
+    public boolean tryReloadAlbumsFile() {
+        Path path = getAlbumsFilePath();
+        if (path == null || !Files.exists(path)) return false;
+        try {
+            AlbumsFile af = AlbumsFile.load(path);
+            setDirsOn(af);
+            albumsFile_ = af;
+            return true;
+        } catch (AlbumsFileException e) {
+            logger.warn("reload failed, keeping in-memory copy: {} ({})", path, e.getMessage());
+            return false;
+        }
+    }
+
     /** Saves the cached AlbumsFile to disk. No-op if nothing is cached or path is unknown. */
     public void saveAlbumsFile() throws AlbumsFileException {
         if (albumsFile_ == null) return;

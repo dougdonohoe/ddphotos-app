@@ -4,6 +4,7 @@ import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.app.engine.AppEngine;
+import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.gui.DDPanel;
 import com.donohoedigital.gui.OptionSplitPane;
 import com.donohoedigital.gui.DDTabPanel;
@@ -11,6 +12,7 @@ import com.donohoedigital.gui.DDTabbedPane;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Path;
 
 public class ConfigTab extends DDTabPanel implements AppEngine.CloseListener
 {
@@ -20,6 +22,9 @@ public class ConfigTab extends DDTabPanel implements AppEngine.CloseListener
     private final SiteBarPanel   siteBar_;
     private SiteDetailsPanel     siteDetailsPanel_;
     private AlbumDetailPanel     albumDetailPanel_;
+
+    /** Watches the selected site's albums.yaml; closed in {@link #removeNotify}. */
+    private ConfigWatcher.Registration albumsWatch_;
 
     public ConfigTab(AppContext context, SiteBarPanel siteBar)
     {
@@ -70,6 +75,44 @@ public class ConfigTab extends DDTabPanel implements AppEngine.CloseListener
         add(split, BorderLayout.CENTER);
 
         AppEngine.getAppEngine().addCloseListener(this);
+
+        // Follows the selection rather than a fixed site, so switching sites re-points the watch
+        // (and re-baselines it) with nothing extra to wire up.
+        albumsWatch_ = ConfigWatcher.watch(
+                () -> {
+                    Site site = siteBar_.getSelectedSite();
+                    return site == null ? null : site.getAlbumsFile();
+                },
+                this::onAlbumsFileChangedOnDisk);
+    }
+
+    /**
+     * The selected site's {@code albums.yaml} was rewritten by something else.  With nothing
+     * pending it just reloads; with unsaved edits on screen the user chooses, and either way the
+     * log records which.  Keeping the edits leaves the file changed on disk, which is what
+     * {@link EditableDetailPanel#okayToOverwrite} picks up at Save time.
+     *
+     * <p>Note {@link #isDirty()} means "editing <em>and</em> something was actually typed": having
+     * pressed Edit and touched nothing has nothing to lose, so it reloads silently, and the reload
+     * takes the panel back out of edit mode on its way through.
+     */
+    private void onAlbumsFileChangedOnDisk()
+    {
+        Site site = siteBar_.getSelectedSite();
+        if (site == null) return;
+        Path path = site.getAlbumsFilePath();
+
+        // Asked before reloading: the reload takes the panels out of edit mode, so asking
+        // afterward would always say clean.
+        if (isDirty() && !ExternalChange.confirmDiscard(context_, path)) {
+            return;   // their edits stand; the watch will not re-ask about this same version
+        }
+
+        // A failure here is a half-written or hand-broken file: keep what is in memory and say
+        // nothing.  The watch reports each state once, so the next real write gets another try.
+        if (siteBar_.refreshSelectedSite()) {
+            ExternalChange.logReloaded(path);
+        }
     }
 
     /**
@@ -92,6 +135,10 @@ public class ConfigTab extends DDTabPanel implements AppEngine.CloseListener
     {
         super.removeNotify();
         AppEngine.getAppEngine().removeCloseListener(this);
+        if (albumsWatch_ != null) {
+            albumsWatch_.close();
+            albumsWatch_ = null;
+        }
     }
 
     public boolean isDirty()

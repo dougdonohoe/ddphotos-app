@@ -256,6 +256,8 @@ public class PasswordDialog extends PhotosDialog
     {
         if (passwords_ == null) return;
 
+        rebaseOnDisk();
+
         if (isEditingKey()) {
             passwords_.setKey(keyField_.getText().trim());
         }
@@ -274,6 +276,41 @@ public class PasswordDialog extends PhotosDialog
         }
 
         saveFiles();
+    }
+
+    /**
+     * Re-applies this dialog's edit on top of the newest {@code passwords.yaml} when something
+     * else has written the file since it was opened.
+     *
+     * <p>Saving rewrites the file whole, from a model read when the dialog opened - so without
+     * this, entering a password for one album would quietly undo a password someone else changed
+     * for a <em>different</em> album while the dialog sat open.  Re-reading here and letting
+     * {@link #apply} set its one entry afterward keeps both changes: this dialog only ever
+     * touches the site entry or one album's (plus the key), and the file is a keyed map, so
+     * there is nothing to reconcile beyond taking the newest copy as the starting point.
+     *
+     * <p>The key is the exception: whatever is on disk stands, because re-keying renames every
+     * encrypted photo and another writer's key is already the one in force.  The one generated in
+     * {@link #loadPasswords} is only there to fill a gap, and is used only when the fresh copy
+     * still has none.  An explicit key edit is applied after this and so wins outright, which is
+     * the user asking for exactly that.
+     */
+    private void rebaseOnDisk()
+    {
+        if (!passwords_.isChangedOnDisk()) return;
+
+        String ourKey = passwords_.getKey();
+
+        albumsFile_.reloadPasswordsFile();
+        PasswordsFile fresh = albumsFile_.getOrCreatePasswordsFile();
+        if (fresh == null) return;   // no resolvable path; keep what we have and save as before
+
+        if (!fresh.hasKey() && ourKey != null && !ourKey.isBlank()) {
+            fresh.setKey(ourKey);
+        }
+        passwords_ = fresh;
+        logger.info("passwords.yaml changed while open; merged this edit onto it: {}",
+                    albumsFile_.resolvePasswordsPath());
     }
 
     private void saveFiles()
