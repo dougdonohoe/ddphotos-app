@@ -19,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SitesFile {
+public class SitesFile extends ConfigFile {
 
     private static final Logger logger = LogManager.getLogger(SitesFile.class);
 
@@ -76,6 +76,7 @@ public class SitesFile {
                 Collections.sort(sites);
             }
         }
+        restamp();
         return this;
     }
 
@@ -102,10 +103,12 @@ public class SitesFile {
         } catch (IOException e) {
             throw new SitesFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }
+        restamp();
     }
 
     // ── getters / setters ───────────────────────────────────────────────────
 
+    @Override
     public Path getPath() { return path_; }
 
     public List<Site> getSites() { return sites; }

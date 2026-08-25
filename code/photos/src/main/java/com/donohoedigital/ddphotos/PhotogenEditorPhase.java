@@ -95,6 +95,9 @@ public class PhotogenEditorPhase extends BasePhase {
     // Held so finish() can unregister it; quitting the app must not discard captions silently either.
     private AppEngine.CloseListener quitGuard_;
 
+    // One watch per folder's photogen.txt; all closed in finish().
+    private final List<ConfigWatcher.Registration> watches_ = new ArrayList<>();
+
     private LogoWindowPanel base_;
     private OptionCombo<String> folderCombo_;
     private JScrollPane scroll_;
@@ -169,6 +172,8 @@ public class PhotogenEditorPhase extends BasePhase {
             AppEngine.getAppEngine().removeCloseListener(quitGuard_);
             quitGuard_ = null;
         }
+        for (ConfigWatcher.Registration w : watches_) w.close();
+        watches_.clear();
         // Cancel any in-flight / queued thumbnail decodes so they don't run after the window closes.
         for (Future<?> job : thumbJobs_) job.cancel(true);
         thumbJobs_.clear();
@@ -210,6 +215,61 @@ public class PhotogenEditorPhase extends BasePhase {
         folderCombo_.getComboBox().setSelectedItem(valueForDir(initial));
         switching_ = false;
         showFolder(initial);
+        watchFolders();
+        onDirtyChanged();
+    }
+
+    // -------------------------------------------------------------------------
+    // External changes
+    // -------------------------------------------------------------------------
+
+    /**
+     * Watches every folder's {@code photogen.txt}.  A recursive album can be dozens of files, which
+     * is still only dozens of stats per poll - far less work than watching the directories would be.
+     * The supplier reads through {@link #filesByDir_} rather than closing over the model, since a
+     * reload replaces it.
+     */
+    private void watchFolders() {
+        for (Path dir : filesByDir_.keySet()) {
+            watches_.add(ConfigWatcher.watch(() -> filesByDir_.get(dir),
+                                             () -> onPhotogenChangedOnDisk(dir)));
+        }
+    }
+
+    /**
+     * One folder's {@code photogen.txt} was rewritten by something else.  Only that folder is
+     * touched: the others keep their pending captions, and the dirty check is per-folder too, so an
+     * edit in a folder the user is not looking at still gets its own question rather than being
+     * discarded quietly.
+     */
+    private void onPhotogenChangedOnDisk(Path dir) {
+        PhotogenFile pf = filesByDir_.get(dir);
+        if (pf == null) return;
+
+        FolderEditor f = editors_.get(dir);
+        if (f != null && folderDirty(f) && !ExternalChange.confirmDiscard(context_, pf.getPath())) {
+            return;
+        }
+
+        reloadFolder(dir);
+        ExternalChange.logReloaded(pf.getPath());
+    }
+
+    /**
+     * Re-reads one folder and throws away its cached editor, so the rows (and their order) are
+     * rebuilt from the new file the next time the folder is shown.
+     */
+    private void reloadFolder(Path dir) {
+        PhotogenFile fresh = new PhotogenFile(dir).load();
+        // load() is a no-op for a file that has been deleted, which would leave the model reading
+        // as changed and so re-reported on every poll.  Stamp what is actually there now.
+        fresh.restamp();
+        filesByDir_.put(dir, fresh);
+        editors_.remove(dir);
+
+        if (currentFolder_ != null && currentFolder_.dir.equals(dir)) {
+            showFolder(dir);
+        }
         onDirtyChanged();
     }
 
@@ -662,8 +722,15 @@ public class PhotogenEditorPhase extends BasePhase {
     /** Persists every changed folder.  Returns true when all saved without error. */
     private boolean saveAll() {
         List<String> errors = new ArrayList<>();
+        boolean declined = false;
         for (FolderEditor f : editors_.values()) {
             if (!folderDirty(f)) continue;
+            // Something else rewrote this folder's file since it was read.  Asked per folder, so
+            // declining one does not abandon the captions typed into the others.
+            if (f.pf.isChangedOnDisk() && !ExternalChange.confirmOverwrite(context_, f.pf.getPath())) {
+                declined = true;
+                continue;
+            }
             try {
                 applyFolder(f);
             } catch (PhotogenFileException e) {
@@ -674,6 +741,11 @@ public class PhotogenEditorPhase extends BasePhase {
         onDirtyChanged();
         if (!errors.isEmpty()) {
             PhotosUtils.showSaveErrors(context_, errors);
+            return false;
+        }
+        // Captions were deliberately kept back rather than written; Save & Close must not close
+        // over them as though they had been saved.
+        if (declined) {
             return false;
         }
         // Save & Close shows this before the window goes away, so the reminder isn't missed.

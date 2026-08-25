@@ -23,13 +23,21 @@ import java.util.regex.Pattern;
 
 import static com.donohoedigital.ddphotos.config.YamlNodes.*;
 
-public class AlbumsFile {
+public class AlbumsFile extends ConfigFile {
 
     private static final Logger logger = LogManager.getLogger(AlbumsFile.class);
 
     /** Valid values for the {@code default_theme} setting. */
     public static final String THEME_LIGHT = "light";
     public static final String THEME_DARK  = "dark";
+
+    /**
+     * The file this instance was loaded from, or last saved to.  Null for a brand-new
+     * {@link AlbumsFile} that has never been written - unlike its siblings, this class is
+     * constructed without a target (see {@code Site.getOrCreateAlbumsFile}) and is handed one by
+     * {@link #load(Path)} or {@link #save(Path)}.
+     */
+    private Path path_;
 
     private MappingNode rootNode;
     private AlbumsSettings settings;
@@ -74,6 +82,7 @@ public class AlbumsFile {
         }
 
         AlbumsFile af = new AlbumsFile();
+        af.path_ = path;
         af.rootNode = root;
         af.readFromNode(root);
         try {
@@ -81,6 +90,7 @@ public class AlbumsFile {
         } catch (AlbumsFileException e) {
             throw new AlbumsFileException(path + ": " + e.getMessage(), e.getCause());
         }
+        af.restamp();
         return af;
     }
 
@@ -114,11 +124,17 @@ public class AlbumsFile {
             throw new AlbumsFileException("write " + path + ": " + FileErrors.reason(e), e);
         }
         if (rootNode == null) rootNode = node;
+        path_ = path;
+        restamp();
         passwordsSettingUnsaved_ = false;
         cssSettingUnsaved_ = false;
     }
 
     // ── getters / setters ───────────────────────────────────────────────────
+
+    /** The {@code albums.yaml} this was loaded from or last saved to; null until it has one. */
+    @Override
+    public Path getPath() { return path_; }
 
     public AlbumsSettings getSettings() { return settings; }
     @SuppressWarnings("unused")

@@ -978,7 +978,7 @@ public class AlbumsFileTest {
         // no longer reveal that albums.yaml is still missing it.
         af.reloadPasswordsFile();
         PasswordsFile pf = af.getOrCreatePasswordsFile();
-        assertTrue("albums.yaml still lacks the setting after a cancelled create",
+        assertTrue("albums.yaml still lacks the setting after a canceled create",
                    af.isPasswordsSettingUnsaved());
 
         pf.setKey("my-photos-key");
@@ -1132,6 +1132,69 @@ public class AlbumsFileTest {
         assertEquals("site.css", af.getSettings().getCss());
         assertFalse("the setting was already there; albums.yaml is not dirty", af.isCssSettingUnsaved());
     }
+
+    // ── change detection (ConfigFile) ───────────────────────────────────────
+
+    @Test
+    public void load_recordsThePathItCameFrom() throws Exception {
+        Path path = writeYaml(MINIMAL);
+        assertEquals(path, AlbumsFile.load(path).getPath());
+    }
+
+    @Test
+    public void newFile_hasNoPathAndIsNeverChanged() {
+        // Site.getOrCreateAlbumsFile() builds one of these before it has anywhere to live.
+        AlbumsFile af = new AlbumsFile();
+        assertNull(af.getPath());
+        assertFalse(af.isChangedOnDisk());
+    }
+
+    @Test
+    public void afterLoad_isNotChangedOnDisk() throws Exception {
+        Path path = writeYaml(MINIMAL);
+        assertFalse(AlbumsFile.load(path).isChangedOnDisk());
+    }
+
+    @Test
+    public void afterOurOwnSave_isNotChangedOnDisk() throws Exception {
+        // The one that matters most: saving must not leave the app thinking someone else wrote
+        // the file, or every save would raise a false "changed on disk" alarm.
+        Path path = writeYaml(MINIMAL);
+        AlbumsFile af = AlbumsFile.load(path);
+
+        af.getSettings().setSiteName("Renamed");
+        af.save(path);
+
+        assertFalse("our own write must not read as an external change", af.isChangedOnDisk());
+    }
+
+    @Test
+    public void saveGivesAPathToAFileThatNeverHadOne() throws Exception {
+        AlbumsFile af = new AlbumsFile();
+        Path path = tmp.getRoot().toPath().resolve("brand-new.yaml");
+        af.save(path);
+
+        assertEquals(path, af.getPath());
+        assertFalse(af.isChangedOnDisk());
+    }
+
+    @Test
+    public void afterExternalWrite_isChangedOnDisk() throws Exception {
+        Path path = writeYaml(MINIMAL);
+        AlbumsFile af = AlbumsFile.load(path);
+
+        Files.writeString(path, MINIMAL + "\n# someone else was here\n", StandardCharsets.UTF_8);
+        Files.setLastModifiedTime(path, java.nio.file.attribute.FileTime.fromMillis(
+                Files.getLastModifiedTime(path).toMillis() + 5_000));
+
+        assertTrue(af.isChangedOnDisk());
+    }
+
+    private static final String MINIMAL = """
+            settings:
+              id: sample
+              site_name: Sample
+            """;
 
     // ── helpers ─────────────────────────────────────────────────────────────
 

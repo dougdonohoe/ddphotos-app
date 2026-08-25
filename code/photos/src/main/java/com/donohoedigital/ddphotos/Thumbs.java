@@ -87,7 +87,7 @@ public final class Thumbs {
      * Decodes a thumbnail on the shared loader pool and delivers it to {@code onResult} on the EDT
      * (null when the image can't be read, e.g. HEIC or a video).  Returns a handle the caller can
      * {@link Future#cancel cancel} — when a preview is replaced or an editor window closes — to drop
-     * queued and interrupt running decodes; {@code onResult} is skipped if the job is cancelled.
+     * queued and interrupt running decodes; {@code onResult} is skipped if the job is canceled.
      */
     public static Future<BufferedImage> loadAsync(Path path, int maxWidth, int maxHeight, String crop,
                                                   Consumer<BufferedImage> onResult) {

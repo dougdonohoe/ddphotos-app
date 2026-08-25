@@ -62,7 +62,7 @@ import static com.donohoedigital.ddphotos.config.YamlNodes.*;
  * <p>As with {@link PhotogenFile}, {@link #save()} never creates a file that was not present at
  * load time; {@link #saveOrCreate()} is the variant the editor uses to write a brand-new file.
  */
-public class PasswordsFile {
+public class PasswordsFile extends ConfigFile {
 
     private static final Logger logger = LogManager.getLogger(PasswordsFile.class);
 
@@ -118,6 +118,7 @@ public class PasswordsFile {
 
         // An empty file is legal — it just means "nothing configured yet".
         if (opt.isEmpty()) {
+            restamp();
             return this;
         }
         if (!(opt.get() instanceof MappingNode root)) {
@@ -125,6 +126,7 @@ public class PasswordsFile {
         }
         rootNode_ = root;
         readFromNode(root);
+        restamp();
         return this;
     }
 
@@ -183,10 +185,12 @@ public class PasswordsFile {
             throw new PasswordsFileException("write " + path_ + ": " + FileErrors.reason(e), e);
         }
         existed_ = true;
+        restamp();
     }
 
     // ── getters ─────────────────────────────────────────────────────────────
 
+    @Override
     public Path getPath() { return path_; }
 
     /** True if the file was present on disk when {@link #load()} ran (or has since been saved). */

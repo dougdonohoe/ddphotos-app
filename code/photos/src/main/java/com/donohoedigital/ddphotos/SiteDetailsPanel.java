@@ -512,6 +512,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     @Override
     protected void applyAndSave() {
         AlbumsFile af = currentSite_.getOrCreateAlbumsFile();
+        if (!okayToOverwrite(af)) return;
+
         AlbumsSettings s = af.getSettings();
         AlbumsSettings updated = settingsFromFields();
         s.setId(updated.getId());

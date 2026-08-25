@@ -63,6 +63,9 @@ public abstract class TextEditorPhase extends BasePhase {
     // Held so finish() can unregister it; quitting the app must not discard edits silently either.
     private AppEngine.CloseListener quitGuard_;
 
+    // Watches the file being edited; closed in finish() alongside the quit guard.
+    private ConfigWatcher.Registration watch_;
+
     private LogoWindowPanel base_;
     private DDLabel siteLabel_;
     private DDLabel pathLabel_;
@@ -157,6 +160,10 @@ public abstract class TextEditorPhase extends BasePhase {
             AppEngine.getAppEngine().removeCloseListener(quitGuard_);
             quitGuard_ = null;
         }
+        if (watch_ != null) {
+            watch_.close();
+            watch_ = null;
+        }
         super.finish();
     }
 
@@ -201,6 +208,43 @@ public abstract class TextEditorPhase extends BasePhase {
         buttons_ = new EditorButtonBar(STYLE, this::onCancel, this::onSave, this::onSaveClose, this::onClose);
         center.add(buttons_, BorderLayout.SOUTH);
 
+        // These windows stay open for long stretches holding the whole file in memory, so they
+        // have the same exposure to an outside edit that albums.yaml does.
+        watch_ = ConfigWatcher.watch(this::getFile, this::onFileChangedOnDisk);
+
+        onDirtyChanged();
+    }
+
+    // -------------------------------------------------------------------------
+    // External changes
+    // -------------------------------------------------------------------------
+
+    /**
+     * The file being edited was rewritten by something else.  Untouched, the window just picks the
+     * new text up; with edits pending the user chooses, and the log records which way it went.
+     * Declining leaves the file changed on disk, which {@link #save()} then asks about.
+     */
+    private void onFileChangedOnDisk() {
+        if (file_ == null) return;
+        if (isDirty() && !ExternalChange.confirmDiscard(context_, file_.getPath())) {
+            return;
+        }
+        reloadFromDisk();
+        ExternalChange.logReloaded(file_.getPath());
+    }
+
+    /** Re-reads the file and re-baselines the text area against it, keeping the caret where it can. */
+    private void reloadFromDisk() {
+        file_.load();
+        // load() is a no-op for a file that has been deleted, and would leave the model still
+        // reading as changed - and so re-reported every tick.  Stamp whatever is there now,
+        // including nothing, keeping the text we already have.
+        file_.restamp();
+        originalText_ = file_.getContent();
+        int caret = text_.getCaretPosition();
+        text_.setText(originalText_);
+        text_.setCaretPosition(Math.min(caret, originalText_.length()));
+        showPath();
         onDirtyChanged();
     }
 
@@ -313,6 +357,7 @@ public abstract class TextEditorPhase extends BasePhase {
 
     private boolean save() {
         if (file_ == null) return false;
+        if (!okayToOverwrite()) return false;
         file_.setContent(text_.getText());
         if (!saveFile()) return false;
 
@@ -329,6 +374,15 @@ public abstract class TextEditorPhase extends BasePhase {
         // Save & Close shows this before the window goes away, so the reminder isn't missed.
         if (needsPhotogen()) PhotosUtils.showPhotogenReminder(context_);
         return true;
+    }
+
+    /**
+     * Confirms writing over a file something else has rewritten since it was read.  Answering no
+     * abandons the save and leaves the window exactly as it was, still dirty.
+     */
+    private boolean okayToOverwrite() {
+        if (!file_.isChangedOnDisk()) return true;
+        return ExternalChange.confirmOverwrite(context_, file_.getPath());
     }
 
     /** Reports a failed write against the file being edited. */

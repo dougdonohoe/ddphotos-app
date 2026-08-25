@@ -162,6 +162,78 @@ public class SiteTest {
         }
     }
 
+    // ── tryReloadAlbumsFile() ───────────────────────────────────────────────
+
+    @Test
+    public void tryReload_picksUpAnExternalEdit() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        writeMinimalAlbums(configDir, "before");
+
+        Site site = new Site("My Site", "/irrelevant", configDir.toString());
+        assertEquals("before", site.getAlbumsFile().getSettings().getId());
+
+        writeMinimalAlbums(configDir, "after");
+        assertTrue(site.tryReloadAlbumsFile());
+        assertEquals("after", site.getAlbumsFile().getSettings().getId());
+    }
+
+    @Test
+    public void tryReload_keepsInMemoryCopyWhenTheFileIsBroken() throws Exception {
+        // The half-written-file case: an outside editor saves in stages, and we catch it midway.
+        // Blowing up (as getAlbumsFile does) would be wrong for a reload nobody asked for.
+        Path configDir = tmp.newFolder("config").toPath();
+        writeMinimalAlbums(configDir, "good");
+
+        Site site = new Site("My Site", "/irrelevant", configDir.toString());
+        AlbumsFile before = site.getAlbumsFile();
+
+        Files.writeString(configDir.resolve("albums.yaml"), ":\nnot: [valid", StandardCharsets.UTF_8);
+
+        assertFalse(site.tryReloadAlbumsFile());
+        assertSame("the previous model must survive a failed reload", before, site.getAlbumsFile());
+        assertEquals("good", site.getAlbumsFile().getSettings().getId());
+    }
+
+    @Test
+    public void tryReload_recoversOnceTheFileIsWholeAgain() throws Exception {
+        Path configDir = tmp.newFolder("config").toPath();
+        writeMinimalAlbums(configDir, "good");
+
+        Site site = new Site("My Site", "/irrelevant", configDir.toString());
+        site.getAlbumsFile();
+
+        Files.writeString(configDir.resolve("albums.yaml"), ":\nnot: [valid", StandardCharsets.UTF_8);
+        assertFalse(site.tryReloadAlbumsFile());
+
+        writeMinimalAlbums(configDir, "fixed");
+        assertTrue(site.tryReloadAlbumsFile());
+        assertEquals("fixed", site.getAlbumsFile().getSettings().getId());
+    }
+
+    @Test
+    public void tryReload_noFile_isANoOp() {
+        Site site = new Site("My Site", null, null);
+        assertFalse(site.tryReloadAlbumsFile());
+    }
+
+    @Test
+    public void tryReload_setsDirsOnTheFreshModel() throws Exception {
+        // Easy to lose in a reload: without setDirsOn, relative bases stop resolving.
+        Path siteDir = tmp.newFolder("site").toPath();
+        Path configDir = Files.createDirectory(siteDir.resolve("config"));
+        writeMinimalAlbums(configDir, "one");
+
+        Site site = new Site("My Site", siteDir.toString(), null);
+        site.getAlbumsFile();
+
+        writeMinimalAlbums(configDir, "two");
+        assertTrue(site.tryReloadAlbumsFile());
+
+        AlbumsFile af = site.getAlbumsFile();
+        assertEquals(siteDir, af.getSiteDir());
+        assertEquals(configDir, af.getConfigDir());
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private void writeMinimalAlbums(Path dir, String id) throws Exception {
