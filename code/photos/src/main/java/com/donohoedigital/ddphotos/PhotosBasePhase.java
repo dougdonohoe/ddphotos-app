@@ -253,6 +253,11 @@ public class PhotosBasePhase extends BasePhase {
         // Welcome dialog's no-show option suppresses it after that). Deferred so the frame is
         // realized first, like the showHelp call above.
         SwingUtilities.invokeLater(tourController_::start);
+
+        // Ask GitHub whether a newer DD Photos has been released.  Only from here: the wizard has
+        // enough to say already, and the check runs off the EDT and stays quiet unless there is
+        // news, so it never holds up the editor appearing.
+        UpdateCheck.checkAtStartup(context_, this::isBusy);
     }
 
     // -------------------------------------------------------------------------
@@ -432,20 +437,29 @@ public class PhotosBasePhase extends BasePhase {
     }
 
     /**
+     * True while the wizard, the tour or a publish run owns the main UI: the wizard replaces the
+     * tabs, the tour walks the user through them, and a publish run presses their Run buttons in
+     * turn.  Nothing that rebuilds or drives that UI may start meanwhile, and nothing may
+     * interrupt it with a dialog of its own (see {@link UpdateCheck#checkAtStartup}).
+     *
+     * <p>For the menus this means disabling the items outright rather than relying on modality: a
+     * publish run's dialogs are modal, but that blocks the mouse only - a menu accelerator would
+     * still fire, and a disabled item doesn't fire its accelerator (as the Edit menu notes).
+     */
+    private boolean isBusy() {
+        return wizardUp_
+                || (tourController_ != null && tourController_.isRunning())
+                || (publishController_ != null && publishController_.isRunning());
+    }
+
+    /**
      * The rules for every item whose availability depends on what the app is doing.  Items not
      * named here - Reset Preferences, Quit, Help, Support, About - are always available.
      */
     private void refreshMenu(DDMenu menu) {
         Site site = siteBar_ != null ? siteBar_.getSelectedSite() : null;
 
-        // Nothing that rebuilds or drives the main UI may start while one of these owns it: the
-        // wizard replaces the tabs, the tour walks the user through them, and a publish run
-        // presses their Run buttons in turn. A publish run's dialogs are modal, but that blocks
-        // the mouse only - a menu accelerator would still fire, so the items are disabled
-        // outright (a disabled item doesn't fire its accelerator, as the Edit menu notes).
-        boolean busy = wizardUp_
-                || (tourController_ != null && tourController_.isRunning())
-                || (publishController_ != null && publishController_.isRunning());
+        boolean busy = isBusy();
 
         for (int i = 0; i < menu.getItemCount(); i++) {
             if (!(menu.getItem(i) instanceof DDMenuItem item)) continue; // separators
@@ -565,6 +579,10 @@ public class PhotosBasePhase extends BasePhase {
             if (tourController_ != null) tourController_.startFromMenu();
         }));
         menu.add(rerunTour);
+
+        DDMenuItem checkUpdate = new DDMenuItem("checkupdate");
+        checkUpdate.addActionListener(mainWindowAction(() -> UpdateCheck.checkFromMenu(context_)));
+        menu.add(checkUpdate);
 
         menu.addSeparator();
 

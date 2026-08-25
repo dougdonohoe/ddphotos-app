@@ -10,6 +10,9 @@ public class PhotosConstants {
     public static final String APP_DISPLAY_NAME = "DD Photos"; // should match installer app name
     public static final String PREFS_NODE_APP = "ddphotos-app";
 
+    /** Prefs key (under {@link #PREFS_NODE_APP}) holding the version {@link UpdateCheck} last told the user about. */
+    public static final String PREFS_KEY_UPDATE_NOTIFIED = "update.notified.version";
+
     /**
      * Version history, most recent first. The current version is always the first entry -
      * to ship a new release, just add a line at the top (no commenting/uncommenting needed).
