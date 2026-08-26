@@ -347,6 +347,16 @@ public class AlbumsListPanel extends DDPanel {
     // -------------------------------------------------------------------------
 
     private static class AlbumCellRenderer extends DefaultListCellRenderer {
+        /**
+         * A sizing sample, never displayed: 31 characters, the length of the longest album name
+         * worth showing in full.  Measuring it in the list's own font keeps the cap consistent
+         * across platforms and font sizes rather than hard-coding a pixel width.
+         */
+        private static final String WIDTH_PROTOTYPE = "abcdefghijklmnopqrstuvwxyzabcde";
+
+        private Font cachedFont_;
+        private int cachedMaxWidth_;
+
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                                                       boolean isSelected, boolean cellHasFocus) {
@@ -354,10 +364,22 @@ public class AlbumsListPanel extends DDPanel {
                     list, value, index, isSelected, cellHasFocus);
             if (value instanceof AlbumEntry entry) {
                 String name = entry.getName();
-                label.setText(name != null && !name.isBlank() ? name : entry.getSlug());
+                String text = name != null && !name.isBlank() ? name : entry.getSlug();
+                // Eliding here is also what caps the panel's width: a JList sizes itself to the
+                // widest cell the renderer reports, so short names still shrink it to fit.
+                label.setText(text == null ? null : GuiUtils.elideRight(text, label, maxTextWidth(label)));
             }
             label.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
             return label;
+        }
+
+        private int maxTextWidth(JComponent c) {
+            Font font = c.getFont();
+            if (font != cachedFont_) {
+                cachedFont_ = font;
+                cachedMaxWidth_ = c.getFontMetrics(font).stringWidth(WIDTH_PROTOTYPE);
+            }
+            return cachedMaxWidth_;
         }
     }
 }

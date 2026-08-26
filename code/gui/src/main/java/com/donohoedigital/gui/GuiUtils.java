@@ -150,6 +150,40 @@ public class GuiUtils
         c.setPreferredSize(new Dimension(width, (int) c.getPreferredSize().getHeight()));
     }
 
+    /**
+     * Trims text from the left to fit maxWidth, since for a path the tail - the folder you are
+     * actually in - is the part worth showing.  Returns text unchanged when it already fits.
+     */
+    public static String elideLeft(String text, JComponent c, int maxWidth)
+    {
+        FontMetrics fm = c.getFontMetrics(c.getFont());
+        if (maxWidth <= 0 || fm.stringWidth(text) <= maxWidth) return text;
+        String ellipsis = "...";
+        int start = 0;
+        while (start < text.length() && fm.stringWidth(ellipsis + text.substring(start)) > maxWidth)
+        {
+            start++;
+        }
+        return ellipsis + text.substring(start);
+    }
+
+    /**
+     * Trims text from the right to fit maxWidth, appending an ellipsis.  Returns text unchanged
+     * when it already fits.
+     */
+    public static String elideRight(String text, JComponent c, int maxWidth)
+    {
+        FontMetrics fm = c.getFontMetrics(c.getFont());
+        if (maxWidth <= 0 || fm.stringWidth(text) <= maxWidth) return text;
+        String ellipsis = "...";
+        int end = text.length();
+        while (end > 0 && fm.stringWidth(text.substring(0, end) + ellipsis) > maxWidth)
+        {
+            end--;
+        }
+        return text.substring(0, end) + ellipsis;
+    }
+
     private static String indent(int nIndent)
     {
         return "    ".repeat(Math.max(0, nIndent));
@@ -678,7 +712,7 @@ public class GuiUtils
     /**
      * Build an HTML report of the display scale factors in play.  A scale other than 1.0 means
      * the JDK is upscaling everything drawn in logical pixels to device pixels, which is what
-     * makes fixed-size 1x bitmaps (splash screen, icons) look pixelated.  Non-integer factors
+     * makes fixed-size 1x bitmaps (splash screen, icons) look pixelated. Noninteger factors
      * (1.25, 1.5) look worse than a clean 2.0 because edges land on half pixels.
      *
      * @param c component whose window identifies the "current" screen; may be null

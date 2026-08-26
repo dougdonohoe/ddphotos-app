@@ -294,7 +294,7 @@ public class PhotoChooserDialog extends PhotosDialog {
         list_.setModel(model);
 
         upBtn_.setEnabled(canGoUp(dir, rootDir_));
-        pathLabel_.setText(elideLeft(dir.toString(), pathLabel_, pathLabelWidth_));
+        pathLabel_.setText(GuiUtils.elideLeft(dir.toString(), pathLabel_, pathLabelWidth_));
 
         // Open on the photo the field already holds; otherwise start on the first one, so the
         // preview has something in it and Choose is live either way.
@@ -575,24 +575,5 @@ public class PhotoChooserDialog extends PhotosDialog {
         }
         String amount = unit == 0 ? String.valueOf(bytes) : String.format("%.1f", value);
         return PropertyConfig.getMessage("msg.photochooser.filesize", amount, units[unit]);
-    }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Trims a path from the left to fit, since the tail - the folder you are actually in - is the
-     * part worth showing.  The full path stays available as the tooltip.
-     */
-    private static String elideLeft(String text, JComponent c, int maxWidth) {
-        FontMetrics fm = c.getFontMetrics(c.getFont());
-        if (maxWidth <= 0 || fm.stringWidth(text) <= maxWidth) return text;
-        String ellipsis = "...";
-        int start = 0;
-        while (start < text.length() && fm.stringWidth(ellipsis + text.substring(start)) > maxWidth) {
-            start++;
-        }
-        return ellipsis + text.substring(start);
     }
 }
