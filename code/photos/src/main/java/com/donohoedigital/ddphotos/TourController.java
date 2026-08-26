@@ -27,27 +27,41 @@ import java.util.function.Consumer;
  * click the console link and then Stop when they are done. The tour advances when the process
  * exits; if it failed, the "click Run" instruction comes back so the user can retry.
  *
- * <p>See the {@code TourWelcome}/{@code TourStep}/{@code TourWait}/{@code TourEnd} phases in
- * appdef.xml for the dialogs - {@code TourWait} is the button-less one used while we watch a run.
+ * <p>A command step can also be passed over with <b>Skip Step</b>, which advances without running
+ * anything - for replays, where the user wants the narration but not another {@code photogen}.
+ *
+ * <p>See the {@code TourWelcome}/{@code TourStep}/{@code TourAsk}/{@code TourWait}/{@code TourEnd}
+ * phases in appdef.xml for the dialogs - {@code TourAsk} is the "click Run" one (Skip Step, Stop
+ * Tour) and {@code TourWait} the Next-less one used while we watch a run.
  */
 public class TourController {
 
     /**
-     * One narration step. {@code tab} is selected before the dialog is shown. If {@code runner} is
-     * non-null this is a command step: {@code msgKey} asks the user to click Run and
-     * {@code runningMsgKey} is shown for the duration of the run.
+     * One narration step. {@code phase} is the dialog the step opens, and {@code tab} is selected
+     * before it is shown. If {@code runner} is non-null this is a command step: {@code msgKey} asks
+     * the user to click Run and {@code runningMsgKey} is shown for the duration of the run.
      */
     private record Step(String phase, String msgKey, Component tab, CommandRunnerPanel runner,
-                        String runningMsgKey, boolean stopToContinue) {
+                        String runningMsgKey, boolean stopToContinue, boolean ack) {
 
         /** Narration step: Next advances, no command involved. */
         static Step narrate(String phase, String msgKey, Component tab) {
-            return new Step(phase, msgKey, tab, null, null, false);
+            return new Step(phase, msgKey, tab, null, null, false, false);
+        }
+
+        /**
+         * Success acknowledgement for the command step before it ("photogen finished
+         * successfully"). Skipped along with that step - nothing ran, so saying it succeeded would
+         * be a lie. tab=null keeps the command's own tab selected, so its output stays visible
+         * behind the dialog before we move on.
+         */
+        static Step ack(String msgKey) {
+            return new Step("TourStep", msgKey, null, null, null, false, true);
         }
 
         /** One-shot command ({@code photogen}, {@code build}): it ends on its own. */
         static Step command(String msgKey, CommandRunnerPanel runner, String runningMsgKey) {
-            return new Step("TourWait", msgKey, runner, runner, runningMsgKey, false);
+            return new Step(PHASE_ASK, msgKey, runner, runner, runningMsgKey, false, false);
         }
 
         /**
@@ -55,7 +69,7 @@ public class TourController {
          * button pulses while we wait for them.
          */
         static Step server(String msgKey, CommandRunnerPanel runner, String runningMsgKey) {
-            return new Step("TourWait", msgKey, runner, runner, runningMsgKey, true);
+            return new Step(PHASE_ASK, msgKey, runner, runner, runningMsgKey, true, false);
         }
     }
 
@@ -65,6 +79,15 @@ public class TourController {
      * also set it once the tour runs to completion so it isn't re-offered on the next launch.
      */
     private static final String NO_SHOW_KEY = "show.tour";
+
+    /** The "click Run" dialog - the only one Skip Step is offered on. */
+    private static final String PHASE_ASK = "TourAsk";
+
+    /** Stays up while the command runs; no Skip Step there, the tour is watching the process. */
+    private static final String PHASE_RUNNING = "TourWait";
+
+    /** Skip Step, on the {@link #PHASE_ASK} dialog. */
+    private static final String BUTTON_SKIP_STEP = "tourskipstep";
 
     private final AppContext context_;
     private final OptionTabbedPane tabs_;
@@ -88,12 +111,10 @@ public class TourController {
         steps_ = List.of(
                 Step.narrate("TourStep", "msg.tour.overview", configTab),
                 Step.command("msg.tour.photogen", photogen, "msg.tour.photogen.running"),
-                // Success ack after the one-shot photogen; tab=null keeps the Photogen tab
-                // selected so its output stays visible behind this dialog before we move on.
-                Step.narrate("TourStep", "msg.tour.photogen.done", null),
+                Step.ack("msg.tour.photogen.done"),
                 Step.server("msg.tour.run", run, "msg.tour.run.running"),
                 Step.command("msg.tour.build", build, "msg.tour.build.running"),
-                Step.narrate("TourStep", "msg.tour.build.done", null),
+                Step.ack("msg.tour.build.done"),
                 Step.server("msg.tour.serve", serve, "msg.tour.serve.running"),
                 Step.narrate("TourStep", "msg.tour.deploy", deployTab),
                 // Final step returns to the Config tab so the user can start customizing
@@ -198,9 +219,14 @@ public class TourController {
         }
 
         runner.pulseRunButton();
-        Phase dialog = showDialog(step.phase(), step.msgKey(), _ -> {
-            // Only Stop Tour (or the window close) can resolve this dialog - a run resolves it via
-            // the watcher below, which dismisses it without a result.
+        Phase dialog = showDialog(step.phase(), step.msgKey(), button -> {
+            // Skip Step: carry on as if they had run the command, and it had succeeded.
+            if (button != null && BUTTON_SKIP_STEP.equals(button.getName())) {
+                skipStep(i, runner);
+                return;
+            }
+            // Otherwise Stop Tour (or the window close) - a run resolves this dialog via the
+            // watcher below, which dismisses it without a result.
             endStep(runner);
         });
 
@@ -231,8 +257,9 @@ public class TourController {
         // way we pointed at Run. The one-shot commands end by themselves - nothing to click.
         if (step.stopToContinue()) runner.pulseStopButton();
 
-        // {0} is the site id, which serve echoes in its "Serving [id] at:" line.
-        Phase dialog = showDialog(step.phase(), step.runningMsgKey(), _ -> endStep(runner),
+        // {0} is the site id, which serve echoes in its "Serving [id] at:" line.  This dialog is
+        // always PHASE_RUNNING - step.phase() is the "click Run" one we have just replaced.
+        Phase dialog = showDialog(PHASE_RUNNING, step.runningMsgKey(), _ -> endStep(runner),
                                   runner.getSiteId());
 
         runner.setRunWatcher(new CommandRunnerPanel.RunWatcher() {
@@ -251,6 +278,27 @@ public class TourController {
                 SwingUtilities.invokeLater(() -> runStep(ok ? i + 1 : i));
             }
         });
+    }
+
+    /**
+     * Skip Step on a command step: stop watching and pulsing as if the command had been run, and
+     * move on.  Not confirmed, unlike Stop Tour - nothing is lost by skipping.  A command step is
+     * never the last one, so there is always a step to go to.
+     */
+    private void skipStep(int i, CommandRunnerPanel runner) {
+        runner.setRunWatcher(null);
+        runner.clearPulse();
+        runStep(nextAfterSkip(i));
+    }
+
+    /**
+     * Where Skip Step lands: past the command step, and past its success acknowledgement if it has
+     * one - the command was never run, so we must not tell the user it finished successfully.
+     */
+    private int nextAfterSkip(int i) {
+        int next = i + 1;
+        if (next < steps_.size() && steps_.get(next).ack()) next++;
+        return next;
     }
 
     /**

@@ -314,9 +314,29 @@
         </paramlist>
     </phase>
 
-    <!-- A tour step that waits on the user doing something in the main window (clicking Run, then
-         Stop), so it has no Next button - the tour closes it itself.  No default-button either:
+    <!-- The tour step that asks the user to click a tab's Run button.  It has no Next button -
+         the tour closes it itself once the command starts - but it does have Skip Step, for
+         replays where the user does not want to run the command again.  No default-button:
          focus then stays on the main window, where the button they need to click is. -->
+    <phase name="TourAsk" class="com.donohoedigital.ddphotos.TourDialog" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.tour"/>
+        <param name="dialog-minwidth" intvalue="750"/>
+        <param name="dialog-modal" boolvalue="false"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="tourcancel"/>
+        <paramlist name="buttons">
+            <strvalue>tourskipstep</strvalue>
+            <strvalue>tourcancel</strvalue>
+        </paramlist>
+    </phase>
+
+    <!-- Shown for the duration of a command run, while the tour watches the panel: it ends when
+         the process does (for a dev server, when the user clicks Stop), so there is nothing to
+         skip and no Next.  Same no-default-button reasoning as TourAsk. -->
     <phase name="TourWait" class="com.donohoedigital.ddphotos.TourDialog" transient="true">
         <param name="style" strvalue="DisplayMessage"/>
         <param name="dialog-style" strvalue="DisplayMessage"/>
