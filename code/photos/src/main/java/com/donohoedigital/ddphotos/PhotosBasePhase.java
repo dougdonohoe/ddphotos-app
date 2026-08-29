@@ -31,6 +31,7 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -314,6 +315,16 @@ public class PhotosBasePhase extends BasePhase {
 
         menu.addSeparator();
 
+        DDMenuItem showConfigFolder = new DDMenuItem("showconfigfolder");
+        showConfigFolder.addActionListener(mainWindowAction(() -> doShowFolder(Site::getActualConfigPath)));
+        menu.add(showConfigFolder);
+
+        DDMenuItem showSiteFolder = new DDMenuItem("showsitefolder");
+        showSiteFolder.addActionListener(mainWindowAction(() -> doShowFolder(Site::getDirPath)));
+        menu.add(showSiteFolder);
+
+        menu.addSeparator();
+
         DDMenuItem rerunWizard = new DDMenuItem("rerunwizard");
         rerunWizard.addActionListener(mainWindowAction(this::doRerunWizard));
         menu.add(rerunWizard);
@@ -468,6 +479,12 @@ public class PhotosBasePhase extends BasePhase {
                 // A command tab running does not gray this one out: it hands the window to the
                 // wizard, and okayToLeaveEditor asks about that when the item is picked.
                 case "newsite" -> item.setEnabled(!busy && site != null);
+                // Not gated on busy: opening a folder neither rebuilds nor drives the UI, so
+                // these stay live whenever there is a site to show.
+                case "showconfigfolder", "showsitefolder" -> {
+                    setSiteLabel(item, site);
+                    item.setEnabled(site != null);
+                }
                 case "photogen" -> {
                     setSiteLabel(item, site);
                     // Off mid-run too: the tab's Run button is disabled then, and startRun()
@@ -640,6 +657,25 @@ public class PhotosBasePhase extends BasePhase {
     private static String slug(String title) {
         if (title == null || title.isBlank()) return "screenshot";
         return title.trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
+    }
+
+    /**
+     * Opens one of the selected site's folders in the OS file manager.  A {@code File} rather than
+     * a {@code Path} throughout: sites.yaml is hand-editable, and Path.of would throw on an entry
+     * this platform cannot parse.  The folder is checked here because {@link Utils#openFolder}'s
+     * platform fallbacks report success as soon as the file manager is launched, whether
+     * the folder they handed it exists.
+     */
+    private void doShowFolder(Function<Site, String> whichFolder) {
+        Site site = siteBar_ != null ? siteBar_.getSelectedSite() : null;
+        if (site == null) return;
+
+        String dir = whichFolder.apply(site);
+        File folder = (dir != null && !dir.isBlank()) ? new File(dir) : null;
+        if (folder == null || !folder.isDirectory() || !Utils.openFolder(folder)) {
+            EngineUtils.displayErrorDialog(context_,
+                    PropertyConfig.getMessage("msg.error.openfolder", dir != null ? dir : ""));
+        }
     }
 
     /** Re-enters this phase with the wizard opened on its create-site-folder step - see WizardPanel.Mode. */
