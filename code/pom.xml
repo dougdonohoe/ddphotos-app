@@ -27,7 +27,7 @@
     <jdom2.version>2.0.6.1</jdom2.version>
     <commons-io.version>2.22.0</commons-io.version>
     <annotations.version>26.1.0</annotations.version>
-    <install4j.version>13.0.2</install4j.version>
+    <install4j.version>13.1</install4j.version>
     <snakeyaml-engine.version>3.1.1</snakeyaml-engine.version>
     <dependency.classpath.outputFile>target/classpath.txt</dependency.classpath.outputFile>
   </properties>
