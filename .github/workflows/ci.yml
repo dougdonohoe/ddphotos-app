@@ -35,4 +35,4 @@ jobs:
           set -o errexit
           source ddphotos.rc
           cd code
-          mvn package -Dskip.unit.tests=false
+          mvn package

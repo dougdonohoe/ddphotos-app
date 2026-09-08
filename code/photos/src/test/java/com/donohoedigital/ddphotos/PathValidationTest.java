@@ -3,34 +3,35 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.ddphotos.PathValidation.PathStatus;
 import com.donohoedigital.ddphotos.PathValidation.Severity;
 import com.donohoedigital.base.Utils;
-import org.junit.Rule;
-import org.junit.Assume;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static com.donohoedigital.ddphotos.PathValidation.evaluateCover;
 import static com.donohoedigital.ddphotos.PathValidation.evaluateUnderBase;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 /**
  * Unit tests for the path-validation rule engine.  No Swing or config dependency - exercises
- * the rules directly with on-disk fixtures from a {@link TemporaryFolder}.
+ * the rules directly with on-disk fixtures from a {@link TempDir}.
  */
 public class PathValidationTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     private Path base;        // an existing base directory
     private Path sourceDir;   // base/source, an existing source directory
 
-    @org.junit.Before
+    @BeforeEach
     public void setUp() throws IOException {
-        base = tmp.newFolder("base").toPath();
-        sourceDir = tmp.newFolder("base", "source").toPath();
+        base = Files.createDirectory(tmp.resolve("base"));
+        sourceDir = Files.createDirectories(tmp.resolve("base").resolve("source"));
     }
 
     // ── isImageFile ─────────────────────────────────────────────────────────
@@ -94,7 +95,7 @@ public class PathValidationTest {
 
     @Test
     public void baseSelected_absolute_mustBeRelative() {
-        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
+        assumeFalse(Utils.ISWINDOWS, "test data uses Unix absolute paths, which are not absolute on Windows");
         PathStatus s = evaluateUnderBase("/abs/path", base, true, false, "source");
         assertWarn(s, "msg.warn.source.must.be.relative");
         assertNull(s.resolved());
@@ -138,7 +139,7 @@ public class PathValidationTest {
 
     @Test
     public void noBase_absoluteMissing_warns() {
-        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
+        assumeFalse(Utils.ISWINDOWS, "test data uses Unix absolute paths, which are not absolute on Windows");
         PathStatus s = evaluateUnderBase("/no/such/path", null, false, false, "source");
         assertWarn(s, "msg.warn.source.not.found");
     }
@@ -149,10 +150,10 @@ public class PathValidationTest {
     public void docker_noBase_isInfoNote() {
         for (String p : new String[]{"/ddphotos/x.jpg", "/docker/x.jpg"}) {
             PathStatus s = evaluateUnderBase(p, null, false, true, "hero");
-            assertEquals(p, Severity.INFO, s.severity());
-            assertTrue("docker note stays valid", s.isValid());
+            assertEquals(Severity.INFO, s.severity(), p);
+            assertTrue(s.isValid(), "docker note stays valid");
             assertEquals("msg.note.source.docker", s.messageKey());
-            assertNull("cannot preview a container path", s.resolved());
+            assertNull(s.resolved(), "cannot preview a container path");
         }
     }
 
@@ -210,7 +211,7 @@ public class PathValidationTest {
 
     @Test
     public void cover_nonImage_warns() throws IOException {
-        tmp.newFile("base/source/README.md");
+        Files.createFile(tmp.resolve("base/source/README.md")).toFile();
         PathStatus s = evaluateCover("README.md", sourceDir);
         assertWarn(s, "msg.warn.cover.not.image");
     }
@@ -229,7 +230,7 @@ public class PathValidationTest {
 
     @Test
     public void cover_valid_resolves() throws IOException {
-        Path file = tmp.newFile("base/source/cover.jpg").toPath();
+        Path file = Files.createFile(tmp.resolve("base/source/cover.jpg"));
         PathStatus s = evaluateCover("cover.jpg", sourceDir);
         assertTrue(s.isValid());
         assertFalse(s.hasMessage());
@@ -239,7 +240,7 @@ public class PathValidationTest {
     @Test
     public void cover_video_resolves() throws IOException {
         // photogen covers an album with the clip's poster frame, so a video is a legal cover
-        Path file = tmp.newFile("base/source/clip.mov").toPath();
+        Path file = Files.createFile(tmp.resolve("base/source/clip.mov"));
         PathStatus s = evaluateCover("clip.mov", sourceDir);
         assertTrue(s.isValid());
         assertFalse(s.hasMessage());
@@ -249,9 +250,9 @@ public class PathValidationTest {
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private static void assertWarn(PathStatus s, String expectedKey) {
-        assertEquals("severity", Severity.WARN, s.severity());
-        assertFalse("WARN must be invalid", s.isValid());
-        assertTrue("WARN must carry a message", s.hasMessage());
-        assertEquals("message key", expectedKey, s.messageKey());
+        assertEquals(Severity.WARN, s.severity(), "severity");
+        assertFalse(s.isValid(), "WARN must be invalid");
+        assertTrue(s.hasMessage(), "WARN must carry a message");
+        assertEquals(expectedKey, s.messageKey(), "message key");
     }
 }

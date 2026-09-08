@@ -1,10 +1,8 @@
 package com.donohoedigital.ddphotos.config;
 
 import com.donohoedigital.base.Utils;
-import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.net.URL;
@@ -18,12 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 public class AlbumsFileTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     // ── load tests ──────────────────────────────────────────────────────────
 
@@ -92,7 +91,7 @@ public class AlbumsFileTest {
 
     @Test
     public void load_invalidYaml() throws Exception {
-        Path bad = tmp.newFile("bad.yaml").toPath();
+        Path bad = Files.createFile(tmp.resolve("bad.yaml"));
         Files.writeString(bad, ":\nthis: [is: {not valid", StandardCharsets.UTF_8);
         try {
             AlbumsFile.load(bad);
@@ -104,7 +103,7 @@ public class AlbumsFileTest {
 
     @Test
     public void load_emptyFile() throws Exception {
-        Path empty = tmp.newFile("empty.yaml").toPath();
+        Path empty = Files.createFile(tmp.resolve("empty.yaml"));
         Files.writeString(empty, "", StandardCharsets.UTF_8);
         try {
             AlbumsFile.load(empty);
@@ -187,29 +186,27 @@ public class AlbumsFileTest {
     @Test
     public void roundTrip_preservesComments() throws Exception {
         AlbumsFile af = loadFixture("testdata/albums.yaml");
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
         String saved = Files.readString(out, StandardCharsets.UTF_8);
-        assertTrue("block comment should survive round-trip",
-                saved.contains("# Album with no base"));
-        assertTrue("header comment should survive round-trip",
-                saved.contains("# Test fixture"));
+        assertTrue(saved.contains("# Album with no base"), "block comment should survive round-trip");
+        assertTrue(saved.contains("# Test fixture"), "header comment should survive round-trip");
     }
 
     @Test
     public void roundTrip_preservesFoldedStyle() throws Exception {
         AlbumsFile af = loadFixture("testdata/albums.yaml");
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
         String saved = Files.readString(out, StandardCharsets.UTF_8);
-        assertTrue(">- style should survive round-trip", saved.contains(">-"));
+        assertTrue(saved.contains(">-"), ">- style should survive round-trip");
     }
 
     @Test
     public void roundTrip_modifyField() throws Exception {
         AlbumsFile af = loadFixture("testdata/albums.yaml");
         af.getSettings().setSiteName("Updated Name");
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
 
         AlbumsFile reloaded = AlbumsFile.load(out);
@@ -228,7 +225,7 @@ public class AlbumsFileTest {
         newAlbum.setSource("new-folder");
         af.getAlbums().add(newAlbum);
 
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
 
         AlbumsFile reloaded = AlbumsFile.load(out);
@@ -249,17 +246,17 @@ public class AlbumsFileTest {
         newAlbum.setSource("/tmp/new");
         af.getAlbums().addFirst(newAlbum);
 
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
         String yaml = Files.readString(out, StandardCharsets.UTF_8);
 
         // "first"'s cover was PLAIN - must not gain quotes
-        assertTrue("plain cover must stay plain", yaml.contains("cover: plain.jpg"));
+        assertTrue(yaml.contains("cover: plain.jpg"), "plain cover must stay plain");
         // "second"'s cover/source were DOUBLE_QUOTED - must keep quotes (contain spaces)
-        assertTrue("spaced cover must stay quoted",  yaml.contains("cover: \"cover with spaces.jpg\""));
-        assertTrue("spaced source must stay quoted", yaml.contains("source: \"2024 Summer Vacation/Best Photos\""));
+        assertTrue(yaml.contains("cover: \"cover with spaces.jpg\""), "spaced cover must stay quoted");
+        assertTrue(yaml.contains("source: \"2024 Summer Vacation/Best Photos\""), "spaced source must stay quoted");
         // Booleans are always written explicitly for clarity (e.g. the new album, which is false)
-        assertTrue("false boolean must be written explicitly", yaml.contains("manual_sort_order: false"));
+        assertTrue(yaml.contains("manual_sort_order: false"), "false boolean must be written explicitly");
 
         AlbumsFile reloaded = AlbumsFile.load(out);
         assertEquals(4, reloaded.getAlbums().size());
@@ -267,7 +264,7 @@ public class AlbumsFileTest {
         assertEquals("first",  reloaded.getAlbums().get(1).getSlug());
         assertEquals("second", reloaded.getAlbums().get(2).getSlug());
         assertEquals("third",  reloaded.getAlbums().get(3).getSlug());
-        assertTrue("manual_sort_order must survive reorder", reloaded.getAlbums().get(1).isManualSortOrder());
+        assertTrue(reloaded.getAlbums().get(1).isManualSortOrder(), "manual_sort_order must survive reorder");
         assertEquals("cover with spaces.jpg",            reloaded.getAlbums().get(2).getCover());
         assertEquals("2024 Summer Vacation/Best Photos", reloaded.getAlbums().get(2).getSource());
     }
@@ -285,20 +282,20 @@ public class AlbumsFileTest {
         List<AlbumEntry> albums = af.getAlbums();
         albums.addFirst(albums.removeLast());        // move to front
 
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
         String yaml = Files.readString(out, StandardCharsets.UTF_8);
 
-        assertTrue("plain cover must stay plain",   yaml.contains("cover: plain.jpg"));
-        assertTrue("spaced cover must stay quoted", yaml.contains("cover: \"cover with spaces.jpg\""));
-        assertTrue("false boolean must be written explicitly", yaml.contains("manual_sort_order: false"));
+        assertTrue(yaml.contains("cover: plain.jpg"), "plain cover must stay plain");
+        assertTrue(yaml.contains("cover: \"cover with spaces.jpg\""), "spaced cover must stay quoted");
+        assertTrue(yaml.contains("manual_sort_order: false"), "false boolean must be written explicitly");
 
         AlbumsFile reloaded = AlbumsFile.load(out);
         assertEquals(4, reloaded.getAlbums().size());
         assertEquals("new",   reloaded.getAlbums().get(0).getSlug());
         assertEquals("first", reloaded.getAlbums().get(1).getSlug());
         assertEquals("cover with spaces.jpg", reloaded.getAlbums().get(2).getCover());
-        assertTrue("manual_sort_order must survive reorder", reloaded.getAlbums().get(1).isManualSortOrder());
+        assertTrue(reloaded.getAlbums().get(1).isManualSortOrder(), "manual_sort_order must survive reorder");
     }
 
     @Test
@@ -306,7 +303,7 @@ public class AlbumsFileTest {
         AlbumsFile af = loadFixture("testdata/albums.yaml");
         af.getAlbums().remove(1); // remove nepal
 
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
 
         AlbumsFile reloaded = AlbumsFile.load(out);
@@ -327,7 +324,7 @@ public class AlbumsFileTest {
         extra.setSource("trip2024");
         af.getAlbums().add(extra);
 
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
 
         AlbumsFile reloaded = AlbumsFile.load(out);
@@ -344,18 +341,18 @@ public class AlbumsFileTest {
         af.getBases().put("t7", "/Volumes/T7/Photos");
         af.getAlbums().getFirst().setBase("t7");
 
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
         String yaml = Files.readString(out, StandardCharsets.UTF_8);
 
         int basesIdx  = yaml.indexOf("\nbases:");
         int albumsIdx = yaml.indexOf("\nalbums:");
-        assertTrue("bases: must be present",  basesIdx >= 0);
-        assertTrue("albums: must be present", albumsIdx >= 0);
-        assertTrue("bases: must come before albums:", basesIdx < albumsIdx);
-        assertTrue("blank line must precede bases:", yaml.contains("\n\nbases:"));
-        assertTrue("blank line must separate bases block from albums:",
-                yaml.contains("/Volumes/T7/Photos\n\nalbums:"));
+        assertTrue(basesIdx >= 0, "bases: must be present");
+        assertTrue(albumsIdx >= 0, "albums: must be present");
+        assertTrue(basesIdx < albumsIdx, "bases: must come before albums:");
+        assertTrue(yaml.contains("\n\nbases:"), "blank line must precede bases:");
+        assertTrue(yaml.contains("/Volumes/T7/Photos\n\nalbums:"),
+                "blank line must separate bases block from albums:");
 
         // and it round-trips back correctly
         AlbumsFile reloaded = AlbumsFile.load(out);
@@ -380,33 +377,32 @@ public class AlbumsFileTest {
                         """);
         AlbumsFile af = AlbumsFile.load(f);
 
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
         String yaml = Files.readString(out, StandardCharsets.UTF_8);
 
         int basesIdx  = yaml.indexOf("\nbases:");
         int albumsIdx = yaml.indexOf("\nalbums:");
-        assertTrue("bases: must be relocated before albums:", basesIdx >= 0 && basesIdx < albumsIdx);
-        assertTrue("blank line must precede bases:", yaml.contains("\n\nbases:"));
-        assertTrue("blank line must separate bases block from albums:",
-                yaml.contains("/Volumes/T7/Photos\n\nalbums:"));
+        assertTrue(basesIdx >= 0 && basesIdx < albumsIdx, "bases: must be relocated before albums:");
+        assertTrue(yaml.contains("\n\nbases:"), "blank line must precede bases:");
+        assertTrue(yaml.contains("/Volumes/T7/Photos\n\nalbums:"),
+                "blank line must separate bases block from albums:");
     }
 
     @Test
     public void roundTrip_clearFieldViaEmptyString() throws Exception {
         AlbumsFile af = loadFixture("testdata/albums.yaml");
-        assertNotNull("precondition: siteTitleHtml must be set in fixture",
-                af.getSettings().getSiteTitleHtml());
+        assertNotNull(af.getSettings().getSiteTitleHtml(), "precondition: siteTitleHtml must be set in fixture");
 
         af.getSettings().setSiteTitleHtml("");
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
 
         AlbumsFile reloaded = AlbumsFile.load(out);
-        assertNull("cleared field should be absent after reload", reloaded.getSettings().getSiteTitleHtml());
+        assertNull(reloaded.getSettings().getSiteTitleHtml(), "cleared field should be absent after reload");
 
         String yaml = Files.readString(out, StandardCharsets.UTF_8);
-        assertFalse("cleared key should not appear in YAML", yaml.contains("site_title_html"));
+        assertFalse(yaml.contains("site_title_html"), "cleared key should not appear in YAML");
 
         // other fields must survive
         assertEquals("sample", reloaded.getSettings().getId());
@@ -416,15 +412,14 @@ public class AlbumsFileTest {
     @Test
     public void roundTrip_clearFieldViaNullDoesNotRestoreOldValue() throws Exception {
         AlbumsFile af = loadFixture("testdata/albums.yaml");
-        assertNotNull("precondition: siteSubtitleHtml must be set in fixture",
-                af.getSettings().getSiteSubtitleHtml());
+        assertNotNull(af.getSettings().getSiteSubtitleHtml(), "precondition: siteSubtitleHtml must be set in fixture");
 
         af.getSettings().setSiteSubtitleHtml(null);
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
 
         AlbumsFile reloaded = AlbumsFile.load(out);
-        assertNull("null field should be absent after reload", reloaded.getSettings().getSiteSubtitleHtml());
+        assertNull(reloaded.getSettings().getSiteSubtitleHtml(), "null field should be absent after reload");
     }
 
     @Test
@@ -445,7 +440,7 @@ public class AlbumsFileTest {
         a.setSource("trip2024");
         af.getAlbums().add(a);
 
-        Path out = tmp.newFile("new.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("new.yaml"));
         af.save(out);
 
         AlbumsFile reloaded = AlbumsFile.load(out);
@@ -468,13 +463,13 @@ public class AlbumsFileTest {
         // manual_sort_order and recurse left at their default (false)
         af.getAlbums().add(a);
 
-        Path out = tmp.newFile("bools.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("bools.yaml"));
         af.save(out);
 
         String yaml = Files.readString(out, StandardCharsets.UTF_8);
-        assertTrue("allow_crawling: false must be written",     yaml.contains("allow_crawling: false"));
-        assertTrue("manual_sort_order: false must be written",  yaml.contains("manual_sort_order: false"));
-        assertTrue("recurse: false must be written",            yaml.contains("recurse: false"));
+        assertTrue(yaml.contains("allow_crawling: false"), "allow_crawling: false must be written");
+        assertTrue(yaml.contains("manual_sort_order: false"), "manual_sort_order: false must be written");
+        assertTrue(yaml.contains("recurse: false"), "recurse: false must be written");
 
         // and round-trips back to the same values
         AlbumsFile reloaded = AlbumsFile.load(out);
@@ -487,14 +482,13 @@ public class AlbumsFileTest {
     public void roundTrip_addsExplicitFalseToFileMissingBooleans() throws Exception {
         // localtest in the fixture has no manual_sort_order / recurse keys; saving must add them.
         AlbumsFile af = loadFixture("testdata/albums.yaml");
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         af.save(out);
 
         String yaml = Files.readString(out, StandardCharsets.UTF_8);
-        assertTrue("manual_sort_order: false must appear for albums without it",
-                yaml.contains("manual_sort_order: false"));
-        assertTrue("recurse: false must appear for albums without it",
-                yaml.contains("recurse: false"));
+        assertTrue(yaml.contains("manual_sort_order: false"),
+                "manual_sort_order: false must appear for albums without it");
+        assertTrue(yaml.contains("recurse: false"), "recurse: false must appear for albums without it");
     }
 
     // ── real-file round-trip tests ──────────────────────────────────────────
@@ -517,7 +511,7 @@ public class AlbumsFileTest {
         files.put("donohoe",     Paths.get("/Users/donohoe/work/infra/photos/donohoe/albums.yaml"));
 
         boolean anyExists = files.values().stream().anyMatch(Files::exists);
-        Assume.assumeTrue("Skipping real-file round-trip: none of the source files found (CI?)", anyExists);
+        assumeTrue(anyExists, "Skipping real-file round-trip: none of the source files found (CI?)");
 
         List<String> failures = new ArrayList<>();
 
@@ -530,7 +524,7 @@ public class AlbumsFileTest {
                 continue;
             }
 
-            Path out = tmp.newFile("albums-roundtrip-" + name + ".yaml").toPath();
+            Path out = Files.createFile(tmp.resolve("albums-roundtrip-" + name + ".yaml"));
             AlbumsFile orig = AlbumsFile.load(originalPath);
             orig.save(out);
 
@@ -659,7 +653,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveBasePath_absolutePath() {
-        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
+        assumeFalse(Utils.ISWINDOWS, "test data uses Unix absolute paths, which are not absolute on Windows");
         AlbumsFile af = new AlbumsFile();
         af.getBases().put("t7", "/Volumes/T7/Photos");
         assertEquals(Path.of("/Volumes/T7/Photos"), af.resolveBasePath("t7"));
@@ -701,7 +695,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveSourcePath_absolutePath() {
-        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
+        assumeFalse(Utils.ISWINDOWS, "test data uses Unix absolute paths, which are not absolute on Windows");
         AlbumsFile af = new AlbumsFile();
         assertEquals(
                 Path.of("/Users/example/photos/2024"),
@@ -710,7 +704,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveSourcePath_relativeWithAbsoluteBase() {
-        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
+        assumeFalse(Utils.ISWINDOWS, "test data uses Unix absolute paths, which are not absolute on Windows");
         AlbumsFile af = new AlbumsFile();
         af.getBases().put("t7", "/Volumes/T7/Photos");
         assertEquals(
@@ -767,7 +761,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveCoverPath_resolved() {
-        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
+        assumeFalse(Utils.ISWINDOWS, "test data uses Unix absolute paths, which are not absolute on Windows");
         AlbumsFile af = new AlbumsFile();
         af.getBases().put("t7", "/Volumes/T7/Photos");
         AlbumEntry a = albumWith("a", "t7", "2024-Trip");
@@ -797,14 +791,14 @@ public class AlbumsFileTest {
     @Test
     public void toRelativeBasePath_alreadyRelative() throws Exception {
         AlbumsFile af = new AlbumsFile();
-        af.setSiteDir(tmp.newFolder("site").toPath());
+        af.setSiteDir(Files.createDirectory(tmp.resolve("site")));
         assertEquals("already/relative", af.toRelativeBasePath("already/relative"));
     }
 
     @Test
     public void toRelativeBasePath_withinSiteDir() throws Exception {
-        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
-        File siteDir = tmp.newFolder("site");
+        assumeFalse(Utils.ISWINDOWS, "test data uses Unix absolute paths, which are not absolute on Windows");
+        File siteDir = Files.createDirectory(tmp.resolve("site")).toFile();
         File sourceDir = new File(siteDir, "sample/source");
         assertTrue(sourceDir.mkdirs());
 
@@ -816,8 +810,8 @@ public class AlbumsFileTest {
 
     @Test
     public void toRelativeBasePath_outsideSiteDir() throws Exception {
-        File siteDir   = tmp.newFolder("site");
-        File outsideDir = tmp.newFolder("outside");
+        File siteDir   = Files.createDirectory(tmp.resolve("site")).toFile();
+        File outsideDir = Files.createDirectory(tmp.resolve("outside")).toFile();
 
         AlbumsFile af = new AlbumsFile();
         af.setSiteDir(siteDir.toPath());
@@ -831,7 +825,7 @@ public class AlbumsFileTest {
 
     @Test
     public void getPhotogenFiles_nonRecursive_rootOnly() throws Exception {
-        Path site = tmp.newFolder("site").toPath();
+        Path site = Files.createDirectory(tmp.resolve("site"));
         Path source = Files.createDirectories(site.resolve("src/album"));
         Files.writeString(source.resolve("photogen.txt"), "img_1 One\n", StandardCharsets.UTF_8);
         Files.createDirectories(source.resolve("sub")); // ignored when not recursing
@@ -848,7 +842,7 @@ public class AlbumsFileTest {
 
     @Test
     public void getPhotogenFiles_recursive_rootAndSubfoldersAlphabetical() throws Exception {
-        Path site = tmp.newFolder("site").toPath();
+        Path site = Files.createDirectory(tmp.resolve("site"));
         Path source = Files.createDirectories(site.resolve("src/album"));
         Files.createDirectories(source.resolve("Bravo"));
         Files.createDirectories(source.resolve("alpha")); // sorts before Bravo case-insensitively
@@ -877,7 +871,7 @@ public class AlbumsFileTest {
 
     @Test
     public void resolvePasswordsPath_defaultsFileName() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         AlbumsFile af = new AlbumsFile();
         af.setConfigDir(configDir);
 
@@ -890,9 +884,9 @@ public class AlbumsFileTest {
 
     @Test
     public void resolvePasswordsPath_absoluteAndUnknownConfigDir() {
-        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
+        assumeFalse(Utils.ISWINDOWS, "test data uses Unix absolute paths, which are not absolute on Windows");
         AlbumsFile af = new AlbumsFile();
-        assertNull("no config dir and a relative name is unresolvable", af.resolvePasswordsPath());
+        assertNull(af.resolvePasswordsPath(), "no config dir and a relative name is unresolvable");
 
         af.getSettings().setPasswords("/etc/ddphotos/passwords.yaml");
         assertEquals(Path.of("/etc/ddphotos/passwords.yaml"), af.resolvePasswordsPath());
@@ -900,27 +894,27 @@ public class AlbumsFileTest {
 
     @Test
     public void getPasswordsFile_nullWhenUnsetOrAbsent() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         AlbumsFile af = new AlbumsFile();
         af.setConfigDir(configDir);
 
-        assertNull("settings.passwords unset", af.getPasswordsFile());
+        assertNull(af.getPasswordsFile(), "settings.passwords unset");
 
         af.getSettings().setPasswords("passwords.yaml");
         af.reloadPasswordsFile();
-        assertNull("settings.passwords set but no file on disk", af.getPasswordsFile());
+        assertNull(af.getPasswordsFile(), "settings.passwords set but no file on disk");
 
         Files.writeString(configDir.resolve("passwords.yaml"), "key: a-key\n", StandardCharsets.UTF_8);
         af.reloadPasswordsFile();
         PasswordsFile pf = af.getPasswordsFile();
         assertNotNull(pf);
         assertEquals("a-key", pf.getKey());
-        assertSame("subsequent calls return the cached instance", pf, af.getPasswordsFile());
+        assertSame(pf, af.getPasswordsFile(), "subsequent calls return the cached instance");
     }
 
     @Test
     public void getOrCreatePasswordsFile_defaultsSetting() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         AlbumsFile af = new AlbumsFile();
         af.setConfigDir(configDir);
         assertNull(af.getSettings().getPasswords());
@@ -951,7 +945,7 @@ public class AlbumsFileTest {
      */
     @Test
     public void getOrCreatePasswordsFile_settingIsPersistedToAlbumsYaml() throws Exception {
-        Path siteDir = tmp.newFolder("site").toPath();
+        Path siteDir = Files.createDirectory(tmp.resolve("site"));
         Path configDir = Files.createDirectories(siteDir.resolve("config"));
         Files.writeString(configDir.resolve("albums.yaml"), """
                 settings:
@@ -966,7 +960,7 @@ public class AlbumsFileTest {
 
         Site site = new Site("My Photos", siteDir.toString(), null);
         AlbumsFile af = site.getOrCreateAlbumsFile();
-        assertNull("fixture must start with no passwords setting", af.getSettings().getPasswords());
+        assertNull(af.getSettings().getPasswords(), "fixture must start with no passwords setting");
 
         // First open of the dialog: the user cancels, so nothing is written.
         af.reloadPasswordsFile();
@@ -978,8 +972,7 @@ public class AlbumsFileTest {
         // no longer reveal that albums.yaml is still missing it.
         af.reloadPasswordsFile();
         PasswordsFile pf = af.getOrCreatePasswordsFile();
-        assertTrue("albums.yaml still lacks the setting after a canceled create",
-                   af.isPasswordsSettingUnsaved());
+        assertTrue(af.isPasswordsSettingUnsaved(), "albums.yaml still lacks the setting after a canceled create");
 
         pf.setKey("my-photos-key");
         pf.setSitePassword("hunter2");
@@ -987,18 +980,18 @@ public class AlbumsFileTest {
         assertTrue(Files.exists(configDir.resolve("passwords.yaml")));
 
         site.saveAlbumsFile();
-        assertFalse("saving clears the flag", af.isPasswordsSettingUnsaved());
+        assertFalse(af.isPasswordsSettingUnsaved(), "saving clears the flag");
 
         String albums = Files.readString(configDir.resolve("albums.yaml"), StandardCharsets.UTF_8);
-        assertTrue("albums.yaml must record settings.passwords:\n" + albums,
-                   albums.contains("passwords: passwords.yaml"));
+        assertTrue(albums.contains("passwords: passwords.yaml"),
+                "albums.yaml must record settings.passwords:\n" + albums);
     }
 
     // ── css file tests ──────────────────────────────────────────────────────
 
     @Test
     public void resolveCssPath_defaultsFileName() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         AlbumsFile af = new AlbumsFile();
         af.setConfigDir(configDir);
 
@@ -1011,9 +1004,9 @@ public class AlbumsFileTest {
 
     @Test
     public void resolveCssPath_absoluteAndUnknownConfigDir() {
-        Assume.assumeFalse("test data uses Unix absolute paths, which are not absolute on Windows", Utils.ISWINDOWS);
+        assumeFalse(Utils.ISWINDOWS, "test data uses Unix absolute paths, which are not absolute on Windows");
         AlbumsFile af = new AlbumsFile();
-        assertNull("no config dir and a relative name is unresolvable", af.resolveCssPath());
+        assertNull(af.resolveCssPath(), "no config dir and a relative name is unresolvable");
 
         af.getSettings().setCss("/etc/ddphotos/custom.css");
         assertEquals(Path.of("/etc/ddphotos/custom.css"), af.resolveCssPath());
@@ -1025,24 +1018,24 @@ public class AlbumsFileTest {
      */
     @Test
     public void getCssFile_foundEvenWhenSettingUnset() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         AlbumsFile af = new AlbumsFile();
         af.setConfigDir(configDir);
 
-        assertNull("nothing on disk yet", af.getCssFile());
+        assertNull(af.getCssFile(), "nothing on disk yet");
 
         Files.writeString(configDir.resolve("custom.css"), "a { color: red; }\n", StandardCharsets.UTF_8);
         af.reloadCssFile();
         CssFile css = af.getCssFile();
         assertNotNull(css);
-        assertNull("loading must not touch the setting", af.getSettings().getCss());
+        assertNull(af.getSettings().getCss(), "loading must not touch the setting");
         assertEquals("a { color: red; }\n", css.getContent());
-        assertSame("subsequent calls return the cached instance", css, af.getCssFile());
+        assertSame(css, af.getCssFile(), "subsequent calls return the cached instance");
     }
 
     @Test
     public void getOrCreateCssFile_leavesSettingAlone() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         AlbumsFile af = new AlbumsFile();
         af.setConfigDir(configDir);
 
@@ -1068,7 +1061,7 @@ public class AlbumsFileTest {
      */
     @Test
     public void saveCssFile_settingIsPersistedToAlbumsYamlOnlyOnceFileExists() throws Exception {
-        Path siteDir = tmp.newFolder("site").toPath();
+        Path siteDir = Files.createDirectory(tmp.resolve("site"));
         Path configDir = Files.createDirectories(siteDir.resolve("config"));
         Files.writeString(configDir.resolve("albums.yaml"), """
                 settings:
@@ -1083,7 +1076,7 @@ public class AlbumsFileTest {
 
         Site site = new Site("My Photos", siteDir.toString(), null);
         AlbumsFile af = site.getOrCreateAlbumsFile();
-        assertNull("fixture must start with no css setting", af.getSettings().getCss());
+        assertNull(af.getSettings().getCss(), "fixture must start with no css setting");
 
         // First open of the editor: the user types nothing, so nothing is written anywhere.
         af.reloadCssFile();
@@ -1091,7 +1084,7 @@ public class AlbumsFileTest {
         assertNotNull(css);
         af.saveCssFile();
         assertFalse(Files.exists(configDir.resolve("custom.css")));
-        assertNull("a dangling settings.css would break photogen", af.getSettings().getCss());
+        assertNull(af.getSettings().getCss(), "a dangling settings.css would break photogen");
         assertFalse(af.isCssSettingUnsaved());
 
         // Second open: the user actually writes a rule.
@@ -1106,17 +1099,16 @@ public class AlbumsFileTest {
         assertTrue(af.isCssSettingUnsaved());
 
         site.saveAlbumsFile();
-        assertFalse("saving clears the flag", af.isCssSettingUnsaved());
+        assertFalse(af.isCssSettingUnsaved(), "saving clears the flag");
 
         String albums = Files.readString(configDir.resolve("albums.yaml"), StandardCharsets.UTF_8);
-        assertTrue("albums.yaml must record settings.css:\n" + albums,
-                   albums.contains("css: custom.css"));
+        assertTrue(albums.contains("css: custom.css"), "albums.yaml must record settings.css:\n" + albums);
     }
 
     /** An existing settings.css is left exactly as the user wrote it. */
     @Test
     public void saveCssFile_keepsExistingSettingUntouched() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         Files.writeString(configDir.resolve("site.css"), "a { color: red; }\n", StandardCharsets.UTF_8);
 
         AlbumsFile af = new AlbumsFile();
@@ -1130,7 +1122,7 @@ public class AlbumsFileTest {
         assertEquals("a { color: blue; }\n",
                      Files.readString(configDir.resolve("site.css"), StandardCharsets.UTF_8));
         assertEquals("site.css", af.getSettings().getCss());
-        assertFalse("the setting was already there; albums.yaml is not dirty", af.isCssSettingUnsaved());
+        assertFalse(af.isCssSettingUnsaved(), "the setting was already there; albums.yaml is not dirty");
     }
 
     // ── change detection (ConfigFile) ───────────────────────────────────────
@@ -1165,13 +1157,13 @@ public class AlbumsFileTest {
         af.getSettings().setSiteName("Renamed");
         af.save(path);
 
-        assertFalse("our own write must not read as an external change", af.isChangedOnDisk());
+        assertFalse(af.isChangedOnDisk(), "our own write must not read as an external change");
     }
 
     @Test
     public void saveGivesAPathToAFileThatNeverHadOne() throws Exception {
         AlbumsFile af = new AlbumsFile();
-        Path path = tmp.getRoot().toPath().resolve("brand-new.yaml");
+        Path path = tmp.resolve("brand-new.yaml");
         af.save(path);
 
         assertEquals(path, af.getPath());
@@ -1200,12 +1192,12 @@ public class AlbumsFileTest {
 
     private AlbumsFile loadFixture(String resourcePath) throws Exception {
         URL url = getClass().getClassLoader().getResource(resourcePath);
-        assertNotNull("test resource not found: " + resourcePath, url);
+        assertNotNull(url, "test resource not found: " + resourcePath);
         return AlbumsFile.load(Paths.get(url.toURI()));
     }
 
     private Path writeYaml(String content) throws Exception {
-        File f = tmp.newFile("test.yaml");
+        File f = Files.createFile(tmp.resolve("test.yaml")).toFile();
         Files.writeString(f.toPath(), content, StandardCharsets.UTF_8);
         return f.toPath();
     }

@@ -105,11 +105,8 @@ is why each command passes `-f code/pom.xml`.
 mvn -f code/pom.xml package -DskipTests=true
 
 # build and run the unit tests
-mvn -f code/pom.xml test -Dskip.unit.tests=false
+mvn -f code/pom.xml test
 ```
-
-Unit tests are skipped by default, which is why running them takes
-`-Dskip.unit.tests=false` rather than just `test`.
 
 ### Running DD Photos
 
@@ -699,11 +696,11 @@ untouched, and both Windows and Java accept `/` in paths.
 ### PowerShell quirks worth knowing
 
 * **Quote `-D` arguments containing dots.**  PowerShell splits an unquoted
-  `-Dskip.unit.tests=false` at the first `.`, handing Maven a stray `.unit.tests=false` and
-  failing with *"Unknown lifecycle phase"*.  Quote it:
+  `-Ddependency.classpath.outputFile=/tmp/t` at the first `.`, handing Maven a stray
+  `.classpath.outputFile=/tmp/t` and failing with *"Unknown lifecycle phase"*.  Quote it:
 
   ```powershell
-  .\mvn -f code/pom.xml test '-Dskip.unit.tests=false'
+  .\mvn -f code/pom.xml dependency:tree '-Ddependency.classpath.outputFile=/tmp/t'
   ```
 
   `-DskipTests=true` has no dot, so it is fine unquoted.

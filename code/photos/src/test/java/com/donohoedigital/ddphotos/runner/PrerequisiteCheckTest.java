@@ -2,9 +2,9 @@ package com.donohoedigital.ddphotos.runner;
 
 import com.donohoedigital.ddphotos.PhotosUtils;
 import com.donohoedigital.ddphotos.runner.Prerequisite.Result;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the prerequisite classification rules.  No Swing, config or process dependency -
@@ -268,16 +268,16 @@ public class PrerequisiteCheckTest {
     @Test
     public void stripAnsi_leavesNoBracketCodesInRealWranglerError() {
         String clean = PhotosUtils.stripAnsi(WRANGLER_EXPIRED);
-        org.junit.Assert.assertFalse(clean.contains(ESC));
-        org.junit.Assert.assertFalse(clean.contains("[31m"));
-        org.junit.Assert.assertFalse(clean.contains("[41;97m"));
-        org.junit.Assert.assertFalse(clean.contains("[0m"));
-        org.junit.Assert.assertTrue(clean.contains("✘ [ERROR] Not logged in. Your auth token has expired"));
+        assertFalse(clean.contains(ESC));
+        assertFalse(clean.contains("[31m"));
+        assertFalse(clean.contains("[41;97m"));
+        assertFalse(clean.contains("[0m"));
+        assertTrue(clean.contains("✘ [ERROR] Not logged in. Your auth token has expired"));
     }
 
     @Test
     public void containsAny_isCaseInsensitive() {
-        org.junit.Assert.assertTrue(Prerequisite.containsAny("   NOT AUTHENTICATED", "Not Authenticated"));
-        org.junit.Assert.assertFalse(Prerequisite.containsAny("all good", "Not Authenticated"));
+        assertTrue(Prerequisite.containsAny("   NOT AUTHENTICATED", "Not Authenticated"));
+        assertFalse(Prerequisite.containsAny("all good", "Not Authenticated"));
     }
 }

@@ -1,10 +1,8 @@
 package com.donohoedigital.ddphotos.config;
 
 import com.donohoedigital.base.Utils;
-import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,7 +14,8 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 /**
  * Unit tests for the atomic replace.  The point of the class is what the file looks like when a
@@ -24,19 +23,19 @@ import static org.junit.Assert.*;
  */
 public class AtomicWriteTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     @Test
     public void writesANewFile() throws IOException {
-        Path target = tmp.getRoot().toPath().resolve("albums.yaml");
+        Path target = tmp.resolve("albums.yaml");
         AtomicWrite.writeString(target, "a: 1\n");
         assertEquals("a: 1\n", Files.readString(target, StandardCharsets.UTF_8));
     }
 
     @Test
     public void replacesAnExistingFile() throws IOException {
-        Path target = tmp.newFile("albums.yaml").toPath();
+        Path target = Files.createFile(tmp.resolve("albums.yaml"));
         Files.writeString(target, "old\n");
         AtomicWrite.writeString(target, "new\n");
         assertEquals("new\n", Files.readString(target, StandardCharsets.UTF_8));
@@ -44,16 +43,15 @@ public class AtomicWriteTest {
 
     @Test
     public void leavesNoTempFileBehind() throws IOException {
-        Path target = tmp.getRoot().toPath().resolve("albums.yaml");
+        Path target = tmp.resolve("albums.yaml");
         AtomicWrite.writeString(target, "a: 1\n");
         AtomicWrite.writeString(target, "a: 2\n");
-        assertEquals("only the target should remain",
-                Set.of("albums.yaml"), listNames(tmp.getRoot().toPath()));
+        assertEquals(Set.of("albums.yaml"), listNames(tmp), "only the target should remain");
     }
 
     @Test
     public void writesUtf8() throws IOException {
-        Path target = tmp.getRoot().toPath().resolve("albums.yaml");
+        Path target = tmp.resolve("albums.yaml");
         AtomicWrite.writeString(target, "name: café → über\n");
         assertEquals("name: café → über\n", Files.readString(target, StandardCharsets.UTF_8));
     }
@@ -61,7 +59,7 @@ public class AtomicWriteTest {
     @Test
     public void handlesARelativePath() throws IOException {
         // The callers hand us whatever path the site was configured with.
-        Path target = tmp.getRoot().toPath().resolve("albums.yaml");
+        Path target = tmp.resolve("albums.yaml");
         Path relative = Path.of("").toAbsolutePath().relativize(target);
         AtomicWrite.writeString(relative, "a: 1\n");
         assertEquals("a: 1\n", Files.readString(target, StandardCharsets.UTF_8));
@@ -71,39 +69,38 @@ public class AtomicWriteTest {
 
     @Test
     public void copyReplacesAnExistingFile() throws IOException {
-        Path source = tmp.newFile("source").toPath();
+        Path source = Files.createFile(tmp.resolve("source"));
         Files.writeString(source, "the new script\n");
-        Path target = tmp.newFile("ddphotos").toPath();
+        Path target = Files.createFile(tmp.resolve("ddphotos"));
         Files.writeString(target, "the old script\n");
 
         AtomicWrite.copy(source, target);
 
         assertEquals("the new script\n", Files.readString(target, StandardCharsets.UTF_8));
-        assertEquals("the source is left alone", "the new script\n",
-                Files.readString(source, StandardCharsets.UTF_8));
+        assertEquals("the new script\n", Files.readString(source, StandardCharsets.UTF_8), "the source is left alone");
     }
 
     @Test
     public void copyKeepsTheTargetsPermissionsRatherThanTheSources() throws IOException {
-        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
-        Path source = tmp.newFile("source").toPath();
+        assumeFalse(Utils.ISWINDOWS, "POSIX file permissions are not supported on Windows");
+        Path source = Files.createFile(tmp.resolve("source"));
         Files.writeString(source, "the new script\n");
         Files.setPosixFilePermissions(source, PosixFilePermissions.fromString("rw-------"));
-        Path target = tmp.newFile("ddphotos").toPath();
+        Path target = Files.createFile(tmp.resolve("ddphotos"));
         Files.writeString(target, "the old script\n");
         Set<PosixFilePermission> executable = PosixFilePermissions.fromString("rwxr-xr-x");
         Files.setPosixFilePermissions(target, executable);
 
         AtomicWrite.copy(source, target);
 
-        assertEquals("an executable script must still be executable after a refresh",
-                executable, Files.getPosixFilePermissions(target));
+        assertEquals(executable, Files.getPosixFilePermissions(target),
+                "an executable script must still be executable after a refresh");
     }
 
     @Test
     public void copyLeavesNoTempFileBehind() throws IOException {
-        Path dir = tmp.newFolder("site").toPath();
-        Path source = tmp.newFile("source").toPath();
+        Path dir = Files.createDirectory(tmp.resolve("site"));
+        Path source = Files.createFile(tmp.resolve("source"));
         Files.writeString(source, "a\n");
         Path target = dir.resolve("ddphotos");
         Files.writeString(target, "b\n");
@@ -115,9 +112,9 @@ public class AtomicWriteTest {
 
     @Test
     public void copyToAMissingDirectoryReportsTheTargetPath() throws IOException {
-        Path source = tmp.newFile("source").toPath();
+        Path source = Files.createFile(tmp.resolve("source"));
         Files.writeString(source, "a\n");
-        Path target = tmp.getRoot().toPath().resolve("gone/ddphotos");
+        Path target = tmp.resolve("gone/ddphotos");
 
         NoSuchFileException e = assertThrows(NoSuchFileException.class,
                 () -> AtomicWrite.copy(source, target));
@@ -126,8 +123,8 @@ public class AtomicWriteTest {
 
     @Test
     public void copyFromAMissingSourceLeavesTheTargetIntact() throws IOException {
-        Path source = tmp.getRoot().toPath().resolve("never-installed");
-        Path dir = tmp.newFolder("site").toPath();
+        Path source = tmp.resolve("never-installed");
+        Path dir = Files.createDirectory(tmp.resolve("site"));
         Path target = dir.resolve("ddphotos");
         Files.writeString(target, "the old script\n");
 
@@ -140,8 +137,8 @@ public class AtomicWriteTest {
 
     @Test
     public void aFailedWriteLeavesTheOriginalIntact() throws IOException {
-        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
-        Path dir = tmp.newFolder("config").toPath();
+        assumeFalse(Utils.ISWINDOWS, "POSIX file permissions are not supported on Windows");
+        Path dir = Files.createDirectory(tmp.resolve("config"));
         Path target = dir.resolve("albums.yaml");
         Files.writeString(target, "the original\n");
 
@@ -160,7 +157,7 @@ public class AtomicWriteTest {
 
     @Test
     public void missingDirectoryReportsTheTargetPath() {
-        Path target = tmp.getRoot().toPath().resolve("gone/config/albums.yaml");
+        Path target = tmp.resolve("gone/config/albums.yaml");
         NoSuchFileException e = assertThrows(NoSuchFileException.class,
                 () -> AtomicWrite.writeString(target, "a: 1\n"));
         assertEquals(target.toString(), e.getFile());
@@ -168,8 +165,8 @@ public class AtomicWriteTest {
 
     @Test
     public void readOnlyTargetIsRefusedRatherThanReplaced() throws IOException {
-        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
-        Path target = tmp.newFile("albums.yaml").toPath();
+        assumeFalse(Utils.ISWINDOWS, "POSIX file permissions are not supported on Windows");
+        Path target = Files.createFile(tmp.resolve("albums.yaml"));
         Files.writeString(target, "the original\n");
         Files.setPosixFilePermissions(target, PosixFilePermissions.fromString("r--r--r--"));
         try {
@@ -179,7 +176,7 @@ public class AtomicWriteTest {
                     () -> AtomicWrite.writeString(target, "replacement\n"));
             assertEquals(target.toString(), e.getFile());
             assertEquals("the original\n", Files.readString(target, StandardCharsets.UTF_8));
-            assertEquals(Set.of("albums.yaml"), listNames(tmp.getRoot().toPath()));
+            assertEquals(Set.of("albums.yaml"), listNames(tmp));
         } finally {
             Files.setPosixFilePermissions(target, PosixFilePermissions.fromString("rw-r--r--"));
         }
@@ -189,23 +186,23 @@ public class AtomicWriteTest {
 
     @Test
     public void writesThroughASymlinkRatherThanReplacingIt() throws IOException {
-        Assume.assumeFalse("creating symlinks on Windows requires elevation or Developer Mode", Utils.ISWINDOWS);
-        Path real = tmp.newFolder("shared").toPath().resolve("passwords.yaml");
+        assumeFalse(Utils.ISWINDOWS, "creating symlinks on Windows requires elevation or Developer Mode");
+        Path real = Files.createDirectory(tmp.resolve("shared")).resolve("passwords.yaml");
         Files.writeString(real, "key: abc\n");
-        Path link = tmp.newFolder("config").toPath().resolve("passwords.yaml");
+        Path link = Files.createDirectory(tmp.resolve("config")).resolve("passwords.yaml");
         Files.createSymbolicLink(link, real);
 
         AtomicWrite.writeString(link, "key: xyz\n");
 
-        assertTrue("the link must survive the save", Files.isSymbolicLink(link));
+        assertTrue(Files.isSymbolicLink(link), "the link must survive the save");
         assertEquals("key: xyz\n", Files.readString(real, StandardCharsets.UTF_8));
     }
 
     @Test
     public void followsASymlinkToAFileThatDoesNotExistYet() throws IOException {
-        Assume.assumeFalse("creating symlinks on Windows requires elevation or Developer Mode", Utils.ISWINDOWS);
-        Path real = tmp.newFolder("shared").toPath().resolve("passwords.yaml");
-        Path link = tmp.newFolder("config").toPath().resolve("passwords.yaml");
+        assumeFalse(Utils.ISWINDOWS, "creating symlinks on Windows requires elevation or Developer Mode");
+        Path real = Files.createDirectory(tmp.resolve("shared")).resolve("passwords.yaml");
+        Path link = Files.createDirectory(tmp.resolve("config")).resolve("passwords.yaml");
         Files.createSymbolicLink(link, real);
 
         AtomicWrite.writeString(link, "key: xyz\n");
@@ -216,8 +213,8 @@ public class AtomicWriteTest {
 
     @Test
     public void followsARelativeSymlink() throws IOException {
-        Assume.assumeFalse("creating symlinks on Windows requires elevation or Developer Mode", Utils.ISWINDOWS);
-        Path dir = tmp.newFolder("config").toPath();
+        assumeFalse(Utils.ISWINDOWS, "creating symlinks on Windows requires elevation or Developer Mode");
+        Path dir = Files.createDirectory(tmp.resolve("config"));
         Path real = dir.resolve("passwords-real.yaml");
         Files.writeString(real, "key: abc\n");
         Path link = dir.resolve("passwords.yaml");
@@ -233,30 +230,30 @@ public class AtomicWriteTest {
 
     @Test
     public void preservesTheTargetsPermissions() throws IOException {
-        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
-        Path target = tmp.newFile("passwords.yaml").toPath();
+        assumeFalse(Utils.ISWINDOWS, "POSIX file permissions are not supported on Windows");
+        Path target = Files.createFile(tmp.resolve("passwords.yaml"));
         Files.writeString(target, "key: abc\n");
         Set<PosixFilePermission> locked = PosixFilePermissions.fromString("rw-------");
         Files.setPosixFilePermissions(target, locked);
 
         AtomicWrite.writeString(target, "key: xyz\n");
 
-        assertEquals("a deliberately private passwords.yaml must not be widened by a save",
-                locked, Files.getPosixFilePermissions(target));
+        assertEquals(locked, Files.getPosixFilePermissions(target),
+                "a deliberately private passwords.yaml must not be widened by a save");
         assertEquals("key: xyz\n", Files.readString(target, StandardCharsets.UTF_8));
     }
 
     @Test
     public void aNewFileIsReadableLikeAnyOtherNewFile() throws IOException {
-        Assume.assumeFalse("POSIX file permissions are not supported on Windows", Utils.ISWINDOWS);
-        Path target = tmp.getRoot().toPath().resolve("albums.yaml");
+        assumeFalse(Utils.ISWINDOWS, "POSIX file permissions are not supported on Windows");
+        Path target = tmp.resolve("albums.yaml");
         AtomicWrite.writeString(target, "a: 1\n");
 
-        Path reference = tmp.getRoot().toPath().resolve("reference.yaml");
+        Path reference = tmp.resolve("reference.yaml");
         Files.writeString(reference, "a: 1\n");
 
-        assertEquals("a new file should get the same permissions a plain write would give it",
-                Files.getPosixFilePermissions(reference), Files.getPosixFilePermissions(target));
+        assertEquals(Files.getPosixFilePermissions(reference), Files.getPosixFilePermissions(target),
+                "a new file should get the same permissions a plain write would give it");
     }
 
     private static Set<String> listNames(Path dir) throws IOException {

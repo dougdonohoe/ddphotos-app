@@ -1,6 +1,6 @@
 package com.donohoedigital.ddphotos.config;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
@@ -9,7 +9,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.NotDirectoryException;
 import java.nio.file.ReadOnlyFileSystemException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the file-failure explanations.  The interesting cases are the NIO exceptions

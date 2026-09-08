@@ -22,7 +22,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j2.version>2.26.1</log4j2.version>
-    <junit.version>4.13.2</junit.version>
+    <junit.version>5.14.4</junit.version>
     <flatlaf.version>3.7.2</flatlaf.version>
     <jdom2.version>2.0.6.1</jdom2.version>
     <commons-io.version>2.22.0</commons-io.version>
@@ -34,6 +34,15 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- boms -->
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <!-- internal modules -->
       <dependency>
         <groupId>com.donohoedigital</groupId>
@@ -91,11 +100,6 @@
         <groupId>org.snakeyaml</groupId>
         <artifactId>snakeyaml-engine</artifactId>
         <version>${snakeyaml-engine.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

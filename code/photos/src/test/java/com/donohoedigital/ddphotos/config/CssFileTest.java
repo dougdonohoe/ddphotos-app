@@ -1,21 +1,20 @@
 package com.donohoedigital.ddphotos.config;
 
-import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 public class CssFileTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     /** Matches infra/photos/donohoe/custom.css, which has no trailing newline. */
     private static final String SAMPLE =
@@ -100,14 +99,14 @@ public class CssFileTest {
 
     @Test
     public void loadInternal_reportsUnreadableFile() throws Exception {
-        Path dir = tmp.newFolder().toPath();
+        Path dir = Files.createTempDirectory(tmp, "dir");
         // A directory where a file is expected: readString fails, and the message names the path.
         Files.createDirectory(dir.resolve(CssFile.FILE_NAME));
         try {
             new CssFile(dir.resolve(CssFile.FILE_NAME)).loadInternal();
             fail("expected TextFileException");
         } catch (TextFileException e) {
-            assertTrue(e.getMessage(), e.getMessage().startsWith("read "));
+            assertTrue(e.getMessage().startsWith("read "), e.getMessage());
         }
     }
 
@@ -188,27 +187,27 @@ public class CssFileTest {
 
         boolean anyExists = false;
         for (Path p : files) anyExists |= Files.exists(p);
-        Assume.assumeTrue("Skipping real-file round-trip: none of the source files found (CI?)", anyExists);
+        assumeTrue(anyExists, "Skipping real-file round-trip: none of the source files found (CI?)");
 
         for (Path originalPath : files) {
             if (!Files.exists(originalPath)) {
                 System.out.println("[SKIP] " + originalPath + " not found");
                 continue;
             }
-            Path copy = tmp.newFolder().toPath().resolve(CssFile.FILE_NAME);
+            Path copy = Files.createTempDirectory(tmp, "dir").resolve(CssFile.FILE_NAME);
             Files.copy(originalPath, copy);
             String original = read(copy);
 
             new CssFile(copy).load().save();
 
-            assertEquals("round-trip differs: " + originalPath, original, read(copy));
+            assertEquals(original, read(copy), "round-trip differs: " + originalPath);
         }
     }
 
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private Path write(String content) throws Exception {
-        Path f = tmp.newFolder().toPath().resolve(CssFile.FILE_NAME);
+        Path f = Files.createTempDirectory(tmp, "dir").resolve(CssFile.FILE_NAME);
         Files.writeString(f, content, StandardCharsets.UTF_8);
         return f;
     }
@@ -219,6 +218,6 @@ public class CssFileTest {
 
     /** A CssFile pointing at a path that does not exist. */
     private CssFile absent() throws Exception {
-        return new CssFile(tmp.newFolder().toPath().resolve(CssFile.FILE_NAME)).load();
+        return new CssFile(Files.createTempDirectory(tmp, "dir").resolve(CssFile.FILE_NAME)).load();
     }
 }

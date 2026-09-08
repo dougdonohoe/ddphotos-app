@@ -1,8 +1,7 @@
 package com.donohoedigital.ddphotos.config;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -11,12 +10,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SitesFileTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     // ── load tests ──────────────────────────────────────────────────────────
 
@@ -101,7 +100,7 @@ public class SitesFileTest {
 
     @Test
     public void saveNewFile() throws Exception {
-        Path out = tmp.newFile("sites.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("sites.yaml"));
         SitesFile sf = new SitesFile(out);
         sf.getSites().add(new Site("My Site", "/data/mysite", "/data/mysite/config"));
 
@@ -118,7 +117,7 @@ public class SitesFileTest {
 
     @Test
     public void saveEmptySites() throws Exception {
-        Path out = tmp.newFile("sites.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("sites.yaml"));
         SitesFile sf = new SitesFile(out);
         sf.save();
 
@@ -130,7 +129,7 @@ public class SitesFileTest {
 
     @Test
     public void roundTrip_multipleSites() throws Exception {
-        Path out = tmp.newFile("sites.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("sites.yaml"));
         SitesFile sf = new SitesFile(out);
         sf.getSites().add(new Site("Trip One", "/photos/trip1", "/photos/trip1/config"));
         sf.getSites().add(new Site("Trip Two", "/photos/trip2", "/etc/trip2-config"));
@@ -273,7 +272,7 @@ public class SitesFileTest {
     }
 
     private Path writeYaml(String content) throws Exception {
-        File f = tmp.newFile("test.yaml");
+        File f = Files.createFile(tmp.resolve("test.yaml")).toFile();
         Files.writeString(f.toPath(), content, StandardCharsets.UTF_8);
         return f.toPath();
     }

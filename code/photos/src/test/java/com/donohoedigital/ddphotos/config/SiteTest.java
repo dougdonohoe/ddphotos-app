@@ -1,20 +1,19 @@
 package com.donohoedigital.ddphotos.config;
 
 import com.donohoedigital.base.ApplicationError;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SiteTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     // ── getAlbumsFilePath() ─────────────────────────────────────────────────
 
@@ -99,7 +98,7 @@ public class SiteTest {
 
     @Test
     public void getAlbumsFile_fromConfigPath() throws Exception {
-        Path configDir = tmp.newFolder("custom-config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("custom-config"));
         writeMinimalAlbums(configDir, "my-site");
 
         Site site = new Site("My Site", "/nonexistent/dir", configDir.toString());
@@ -110,7 +109,7 @@ public class SiteTest {
 
     @Test
     public void getAlbumsFile_fromDirPath() throws Exception {
-        Path configDir = tmp.newFolder("site", "config").toPath();
+        Path configDir = Files.createDirectories(tmp.resolve("site").resolve("config"));
         writeMinimalAlbums(configDir, "site-id");
 
         Path siteDir = configDir.getParent();
@@ -122,10 +121,10 @@ public class SiteTest {
 
     @Test
     public void getAlbumsFile_configPathTakesPrecedenceOverDirPath() throws Exception {
-        Path defaultConfigDir = tmp.newFolder("site", "config").toPath();
+        Path defaultConfigDir = Files.createDirectories(tmp.resolve("site").resolve("config"));
         writeMinimalAlbums(defaultConfigDir, "default-id");
 
-        Path customConfigDir = tmp.newFolder("custom-config").toPath();
+        Path customConfigDir = Files.createDirectory(tmp.resolve("custom-config"));
         writeMinimalAlbums(customConfigDir, "custom-id");
 
         Path siteDir = defaultConfigDir.getParent();
@@ -137,7 +136,7 @@ public class SiteTest {
 
     @Test
     public void getAlbumsFile_fileAbsent_returnsNull() throws Exception {
-        Path siteDir = tmp.newFolder("site").toPath();
+        Path siteDir = Files.createDirectory(tmp.resolve("site"));
         // No config subdir or albums.yaml created
         Site site = new Site("My Site", siteDir.toString(), null);
         assertNull(site.getAlbumsFile());
@@ -150,7 +149,7 @@ public class SiteTest {
 
     @Test
     public void getAlbumsFile_invalidYaml_throwsApplicationError() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         Files.writeString(configDir.resolve("albums.yaml"), ":\nnot: [valid", StandardCharsets.UTF_8);
 
         Site site = new Site("My Site", "/irrelevant", configDir.toString());
@@ -166,7 +165,7 @@ public class SiteTest {
 
     @Test
     public void tryReload_picksUpAnExternalEdit() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         writeMinimalAlbums(configDir, "before");
 
         Site site = new Site("My Site", "/irrelevant", configDir.toString());
@@ -181,7 +180,7 @@ public class SiteTest {
     public void tryReload_keepsInMemoryCopyWhenTheFileIsBroken() throws Exception {
         // The half-written-file case: an outside editor saves in stages, and we catch it midway.
         // Blowing up (as getAlbumsFile does) would be wrong for a reload nobody asked for.
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         writeMinimalAlbums(configDir, "good");
 
         Site site = new Site("My Site", "/irrelevant", configDir.toString());
@@ -190,13 +189,13 @@ public class SiteTest {
         Files.writeString(configDir.resolve("albums.yaml"), ":\nnot: [valid", StandardCharsets.UTF_8);
 
         assertFalse(site.tryReloadAlbumsFile());
-        assertSame("the previous model must survive a failed reload", before, site.getAlbumsFile());
+        assertSame(before, site.getAlbumsFile(), "the previous model must survive a failed reload");
         assertEquals("good", site.getAlbumsFile().getSettings().getId());
     }
 
     @Test
     public void tryReload_recoversOnceTheFileIsWholeAgain() throws Exception {
-        Path configDir = tmp.newFolder("config").toPath();
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
         writeMinimalAlbums(configDir, "good");
 
         Site site = new Site("My Site", "/irrelevant", configDir.toString());
@@ -219,7 +218,7 @@ public class SiteTest {
     @Test
     public void tryReload_setsDirsOnTheFreshModel() throws Exception {
         // Easy to lose in a reload: without setDirsOn, relative bases stop resolving.
-        Path siteDir = tmp.newFolder("site").toPath();
+        Path siteDir = Files.createDirectory(tmp.resolve("site"));
         Path configDir = Files.createDirectory(siteDir.resolve("config"));
         writeMinimalAlbums(configDir, "one");
 

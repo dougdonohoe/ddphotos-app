@@ -1,10 +1,11 @@
 package com.donohoedigital.config;
 
-import junit.framework.*;
+import org.junit.jupiter.api.Test;
 
 import java.awt.*;
 
 import static com.donohoedigital.config.StylesConfig.USE_DEFAULT_COLOR;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -13,10 +14,11 @@ import static com.donohoedigital.config.StylesConfig.USE_DEFAULT_COLOR;
  * Time: 9:49:51 AM
  * To change this template use File | Settings | File Templates.
  */
-public class StylesConfigTest extends TestCase
+public class StylesConfigTest
 {
     //private static Logger logger = LogManager.getLogger(StylesConfigTest.class);
 
+    @Test
     public void testLoad()
     {
         String[] modules = {"common", "testapp"};

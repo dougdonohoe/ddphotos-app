@@ -1,23 +1,22 @@
 package com.donohoedigital.ddphotos.config;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FileStampTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     private Path write(String name, String content) throws Exception {
-        Path p = tmp.getRoot().toPath().resolve(name);
+        Path p = tmp.resolve(name);
         Files.writeString(p, content, StandardCharsets.UTF_8);
         return p;
     }
@@ -31,14 +30,14 @@ public class FileStampTest {
 
     @Test
     public void of_absentFile_isMissing() {
-        Path p = tmp.getRoot().toPath().resolve("nope.yaml");
+        Path p = tmp.resolve("nope.yaml");
         assertEquals(FileStamp.MISSING, FileStamp.of(p));
     }
 
     @Test
     public void of_directory_isMissing() {
         // A directory is not a file we can hold in memory, so it reads as "nothing there".
-        assertEquals(FileStamp.MISSING, FileStamp.of(tmp.getRoot().toPath()));
+        assertEquals(FileStamp.MISSING, FileStamp.of(tmp));
     }
 
     // ── detecting changes ───────────────────────────────────────────────────
@@ -86,7 +85,7 @@ public class FileStampTest {
 
     @Test
     public void of_fileCreated_isDifferent() throws Exception {
-        Path p = tmp.getRoot().toPath().resolve("later.yaml");
+        Path p = tmp.resolve("later.yaml");
         FileStamp before = FileStamp.of(p);
         assertEquals(FileStamp.MISSING, before);
 
