@@ -1,18 +1,18 @@
 package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.ddphotos.PhotoChooserDialog.Entry;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 import static com.donohoedigital.ddphotos.PhotoChooserDialog.canGoUp;
 import static com.donohoedigital.ddphotos.PhotoChooserDialog.listEntries;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the photo chooser's listing and navigation rules.  These are the Swing-free part
@@ -20,14 +20,14 @@ import static org.junit.Assert.*;
  */
 public class PhotoChooserTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     private Path dir;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
-        dir = tmp.newFolder("photos").toPath();
+        dir = Files.createDirectory(tmp.resolve("photos"));
     }
 
     private void file(String name) throws IOException {

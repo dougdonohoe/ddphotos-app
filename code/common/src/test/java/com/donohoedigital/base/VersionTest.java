@@ -1,15 +1,15 @@
 package com.donohoedigital.base;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for parsing and ordering versions - what {@code UpdateCheck} in the photos module
@@ -35,7 +35,7 @@ public class VersionTest
     private static void assertRoundTrip(String s)
     {
         Version v = Version.parse(s);
-        assertTrue("did not parse: " + s, v != null);
+        assertTrue(v != null, "did not parse: " + s);
         assertEquals(s, v.toString());
     }
 
@@ -180,7 +180,7 @@ public class VersionTest
     {
         Version n = Version.parse(newer);
         Version o = Version.parse(older);
-        assertTrue(newer + " should be newer than " + older, n.isNewerThan(o));
-        assertFalse(older + " should not be newer than " + newer, o.isNewerThan(n));
+        assertTrue(n.isNewerThan(o), newer + " should be newer than " + older);
+        assertFalse(o.isNewerThan(n), older + " should not be newer than " + newer);
     }
 }

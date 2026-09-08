@@ -1,9 +1,7 @@
 package com.donohoedigital.ddphotos.config;
 
-import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -17,12 +15,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 public class PasswordsFileTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     /** Matches sample/config/passwords-all.yaml: header comments, site, and two albums. */
     private static final String SAMPLE_ALL =
@@ -86,7 +85,7 @@ public class PasswordsFileTest {
     public void roundTrip_isByteExact() throws Exception {
         Path f = write(SAMPLE_ALL);
         new PasswordsFile(f).load().save();
-        assertEquals("unchanged round-trip must be byte-for-byte identical", SAMPLE_ALL, read(f));
+        assertEquals(SAMPLE_ALL, read(f), "unchanged round-trip must be byte-for-byte identical");
     }
 
     @Test
@@ -124,7 +123,7 @@ public class PasswordsFileTest {
     @Test
     public void roundTrip_preservesComments() throws Exception {
         PasswordsFile pf = loadFixture("testdata/passwords.yaml");
-        Path out = tmp.newFile("out.yaml").toPath();
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
         PasswordsFile copy = new PasswordsFile(out);
         // Re-save the fixture through a fresh path to confirm comments survive the node tree.
         Files.copy(pf.getPath(), out, StandardCopyOption.REPLACE_EXISTING);
@@ -132,8 +131,8 @@ public class PasswordsFileTest {
         copy.setSiteHint("A different hint");
         copy.save();
         String saved = read(out);
-        assertTrue("header comment should survive round-trip", saved.contains("# Test fixture"));
-        assertTrue("edited value should be written", saved.contains("A different hint"));
+        assertTrue(saved.contains("# Test fixture"), "header comment should survive round-trip");
+        assertTrue(saved.contains("A different hint"), "edited value should be written");
     }
 
     // ── load tests ──────────────────────────────────────────────────────────
@@ -232,14 +231,14 @@ public class PasswordsFileTest {
         pf.setKey("some-key");
         pf.setSitePassword("hunter2");
         pf.save();
-        assertFalse("save() must not create an absent passwords.yaml", Files.exists(pf.getPath()));
+        assertFalse(Files.exists(pf.getPath()), "save() must not create an absent passwords.yaml");
     }
 
     @Test
     public void saveOrCreate_doesNothingWhenEmpty() throws Exception {
         PasswordsFile pf = absent();
         pf.saveOrCreate();
-        assertFalse("an untouched site must not get a stray passwords.yaml", Files.exists(pf.getPath()));
+        assertFalse(Files.exists(pf.getPath()), "an untouched site must not get a stray passwords.yaml");
     }
 
     @Test
@@ -284,10 +283,10 @@ public class PasswordsFileTest {
         pf.save();
 
         String saved = read(f);
-        assertFalse("site block should be gone", saved.contains("site:"));
-        assertFalse("orphaned site hint should be gone", saved.contains("What say you now?"));
-        assertTrue("albums should be untouched", saved.contains("uganda:"));
-        assertTrue("comments should survive", saved.contains("# COMMENT"));
+        assertFalse(saved.contains("site:"), "site block should be gone");
+        assertFalse(saved.contains("What say you now?"), "orphaned site hint should be gone");
+        assertTrue(saved.contains("uganda:"), "albums should be untouched");
+        assertTrue(saved.contains("# COMMENT"), "comments should survive");
     }
 
     @Test
@@ -299,9 +298,9 @@ public class PasswordsFileTest {
 
         String saved = read(f);
         assertTrue(saved.contains("password: silverback"));
-        assertTrue("existing hint untouched", saved.contains("hint: A big brown ape"));
-        assertTrue("other album untouched", saved.contains("password: penguin"));
-        assertTrue("comments survive an edit", saved.contains("# COMMENT"));
+        assertTrue(saved.contains("hint: A big brown ape"), "existing hint untouched");
+        assertTrue(saved.contains("password: penguin"), "other album untouched");
+        assertTrue(saved.contains("# COMMENT"), "comments survive an edit");
     }
 
     @Test
@@ -311,7 +310,7 @@ public class PasswordsFileTest {
         pf.setAlbumPassword("uganda", null);
 
         assertFalse(pf.hasAlbumEntry("uganda"));
-        assertTrue("removing an entry falls back to the site password", pf.isAlbumProtected("uganda"));
+        assertTrue(pf.isAlbumProtected("uganda"), "removing an entry falls back to the site password");
         pf.save();
 
         String saved = read(f);
@@ -328,7 +327,7 @@ public class PasswordsFileTest {
         pf.save();
 
         String saved = read(f);
-        assertFalse("empty albums node should not be emitted", saved.contains("albums:"));
+        assertFalse(saved.contains("albums:"), "empty albums node should not be emitted");
         assertTrue(saved.contains("site:"));
     }
 
@@ -371,7 +370,7 @@ public class PasswordsFileTest {
         PasswordsFile reloaded = new PasswordsFile(f).load();
         assertEquals("allgood", reloaded.getSitePassword());
         String saved = read(f);
-        assertTrue("site: must come before albums:", saved.indexOf("site:") < saved.indexOf("albums:"));
+        assertTrue(saved.indexOf("site:") < saved.indexOf("albums:"), "site: must come before albums:");
     }
 
     @Test
@@ -388,7 +387,7 @@ public class PasswordsFileTest {
         pf.clearSite();
         assertFalse(pf.isSiteProtected());
         assertNull(pf.getSite());
-        assertFalse("albums with no entry lose protection too", pf.isAlbumProtected("nepal"));
+        assertFalse(pf.isAlbumProtected("nepal"), "albums with no entry lose protection too");
     }
 
     /**
@@ -402,7 +401,7 @@ public class PasswordsFileTest {
         pf.removeAlbum("uganda");
         pf.save();
 
-        assertEquals("an emptied file must not become \"{}\"", "", read(f));
+        assertEquals("", read(f), "an emptied file must not become \"{}\"");
     }
 
     // ── rename tests ────────────────────────────────────────────────────────
@@ -414,8 +413,8 @@ public class PasswordsFileTest {
         pf.renameAlbum("uganda", "uganda-2024");
         pf.save();
 
-        assertEquals("only the key changes - position, comment and value block stay put",
-                SAMPLE_COMMENTED_ALBUMS.replace("  uganda:", "  uganda-2024:"), read(f));
+        assertEquals(SAMPLE_COMMENTED_ALBUMS.replace("  uganda:", "  uganda-2024:"), read(f),
+                "only the key changes - position, comment and value block stay put");
 
         PasswordsFile reloaded = new PasswordsFile(f).load();
         assertEquals("[uganda-2024, antarctica]", reloaded.getAlbumSlugs().toString());
@@ -450,8 +449,8 @@ public class PasswordsFileTest {
         assertEquals("gorilla", reloaded.getAlbumPassword("antarctica"));
 
         String saved = read(f);
-        assertEquals("the block must not end up with two antarctica keys",
-                saved.indexOf("antarctica:"), saved.lastIndexOf("antarctica:"));
+        assertEquals(saved.indexOf("antarctica:"), saved.lastIndexOf("antarctica:"),
+                "the block must not end up with two antarctica keys");
     }
 
     // ── key tests ───────────────────────────────────────────────────────────
@@ -468,7 +467,7 @@ public class PasswordsFileTest {
         for (String siteId : new String[] { null, "", "   " }) {
             String key = PasswordsFile.generateKey(siteId);
             assertFalse(key.isBlank());
-            assertEquals("bare UUID expected for site id " + siteId, 36, key.length());
+            assertEquals(36, key.length(), "bare UUID expected for site id " + siteId);
         }
     }
 
@@ -552,7 +551,7 @@ public class PasswordsFileTest {
         } catch (PasswordsFileException e) {
             assertTrue(e.getMessage().contains("must be at least"));
         }
-        assertEquals("a rejected save must not touch the file", SAMPLE_ALL, read(f));
+        assertEquals(SAMPLE_ALL, read(f), "a rejected save must not touch the file");
     }
 
     // ── real-file round-trip ────────────────────────────────────────────────
@@ -571,7 +570,7 @@ public class PasswordsFileTest {
         files.put("manly-man",     Paths.get("/Users/donohoe/work/infra/photos/manly-man/passwords.yaml"));
 
         boolean anyExists = files.values().stream().anyMatch(Files::exists);
-        Assume.assumeTrue("Skipping real-file round-trip: none of the source files found (CI?)", anyExists);
+        assumeTrue(anyExists, "Skipping real-file round-trip: none of the source files found (CI?)");
 
         List<String> failures = new ArrayList<>();
 
@@ -584,7 +583,7 @@ public class PasswordsFileTest {
                 continue;
             }
 
-            Path copy = tmp.newFolder(name).toPath().resolve(PasswordsFile.FILE_NAME);
+            Path copy = Files.createDirectory(tmp.resolve(name)).resolve(PasswordsFile.FILE_NAME);
             Files.copy(originalPath, copy);
             String original = read(copy);
 
@@ -618,7 +617,7 @@ public class PasswordsFileTest {
         pf.setAlbumPassword("alpha", "changed");
         pf.save();
 
-        assertFalse("saving must not read as somebody else's write", pf.isChangedOnDisk());
+        assertFalse(pf.isChangedOnDisk(), "saving must not read as somebody else's write");
     }
 
     @Test
@@ -680,8 +679,8 @@ public class PasswordsFileTest {
         fresh.save();
 
         PasswordsFile reread = new PasswordsFile(path).load();
-        assertEquals("this dialog's edit", "alpha-NEW", reread.getAlbumPassword("alpha"));
-        assertEquals("the other writer's edit", "beta-NEW", reread.getAlbumPassword("beta"));
+        assertEquals("alpha-NEW", reread.getAlbumPassword("alpha"), "this dialog's edit");
+        assertEquals("beta-NEW", reread.getAlbumPassword("beta"), "the other writer's edit");
         assertEquals("site-key", reread.getKey());
     }
 
@@ -723,7 +722,7 @@ public class PasswordsFileTest {
     }
 
     private Path write(String content) throws Exception {
-        Path f = tmp.newFolder().toPath().resolve(PasswordsFile.FILE_NAME);
+        Path f = Files.createTempDirectory(tmp, "dir").resolve(PasswordsFile.FILE_NAME);
         Files.writeString(f, content, StandardCharsets.UTF_8);
         return f;
     }
@@ -734,12 +733,12 @@ public class PasswordsFileTest {
 
     /** A PasswordsFile pointing at a path that does not exist. */
     private PasswordsFile absent() throws Exception {
-        return new PasswordsFile(tmp.newFolder().toPath().resolve(PasswordsFile.FILE_NAME)).load();
+        return new PasswordsFile(Files.createTempDirectory(tmp, "dir").resolve(PasswordsFile.FILE_NAME)).load();
     }
 
     private PasswordsFile loadFixture(String resourcePath) throws Exception {
         URL url = getClass().getClassLoader().getResource(resourcePath);
-        assertNotNull("test resource not found: " + resourcePath, url);
+        assertNotNull(url, "test resource not found: " + resourcePath);
         return new PasswordsFile(Paths.get(url.toURI())).load();
     }
 
@@ -748,8 +747,8 @@ public class PasswordsFileTest {
             pf.validate();
             fail("expected PasswordsFileException: " + expectedMessage);
         } catch (PasswordsFileException e) {
-            assertTrue("expected message containing \"" + expectedMessage + "\", got: " + e.getMessage(),
-                       e.getMessage().contains(expectedMessage));
+            assertTrue(e.getMessage().contains(expectedMessage),
+                    "expected message containing \"" + expectedMessage + "\", got: " + e.getMessage());
         }
     }
 }

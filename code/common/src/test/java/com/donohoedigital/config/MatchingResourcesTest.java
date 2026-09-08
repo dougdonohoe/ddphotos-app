@@ -1,14 +1,16 @@
 package com.donohoedigital.config;
 
-import junit.framework.*;
 import org.apache.logging.log4j.*;
+import org.junit.jupiter.api.Test;
 
 import java.net.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Doug Donohoe
  */
-public class MatchingResourcesTest extends TestCase
+public class MatchingResourcesTest
 {
     Logger logger = LogManager.getLogger(MatchingResourcesTest.class);
 
@@ -18,6 +20,7 @@ public class MatchingResourcesTest extends TestCase
     // resource that exists in many jars on the classpath (one per jar)
     private static final String MULTIPLE = "classpath*:META-INF/MANIFEST.MF";
 
+    @Test
     public void testFindResources()
     {
         MatchingResources mr = new MatchingResources(SINGLE);
@@ -30,6 +33,7 @@ public class MatchingResourcesTest extends TestCase
         assertEquals(0, none.length);
     }
 
+    @Test
     public void testFindResource()
     {
         URL thiz = new MatchingResources(SINGLE).getSingleRequiredResourceURL();
@@ -58,6 +62,7 @@ public class MatchingResourcesTest extends TestCase
         }
     }
 
+    @Test
     public void testToString()
     {
         MatchingResources mr = new MatchingResources(MULTIPLE);

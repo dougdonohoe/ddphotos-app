@@ -1,15 +1,15 @@
 package com.donohoedigital.gui;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.swing.JTextArea;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Covers {@link DDUndoManager}'s grouping rules - the part that turns Swing's one-edit-per-keystroke
@@ -40,7 +40,7 @@ public class DDUndoManagerTest
     /** "Now" as far as the manager under test is concerned; only ever moved by {@link #advance}. */
     private long now_;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         text_ = new JTextArea();

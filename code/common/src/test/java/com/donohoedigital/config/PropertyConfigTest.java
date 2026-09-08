@@ -1,6 +1,8 @@
 package com.donohoedigital.config;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -9,8 +11,9 @@ import junit.framework.TestCase;
  * Time: 4:43:12 PM
  * To change this template use File | Settings | File Templates.
  */
-public class PropertyConfigTest extends TestCase
+public class PropertyConfigTest
 {
+    @Test
     public void testLoadClient()
     {
         System.getProperties().setProperty("user.name", "unit-tester");

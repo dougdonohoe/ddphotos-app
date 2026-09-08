@@ -3,11 +3,11 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.ddphotos.PublishSettings.Step;
 import com.donohoedigital.ddphotos.PublishSettings.Target;
 import com.donohoedigital.ddphotos.PublishSettings.Uploader;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Unit tests for the publish step plan.  Exercises the record directly - the preference and

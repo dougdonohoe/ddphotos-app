@@ -1,9 +1,11 @@
 package com.donohoedigital.config;
 
 import com.donohoedigital.base.*;
-import junit.framework.*;
+import org.junit.jupiter.api.Test;
 
 import java.awt.image.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -12,10 +14,11 @@ import java.awt.image.*;
  * Time: 9:49:51 AM
  * To change this template use File | Settings | File Templates.
  */
-public class ImageConfigTest extends TestCase
+public class ImageConfigTest
 {
     //private static Logger logger = LogManager.getLogger(ImageConfigTest.class);
 
+    @Test
     public void testLoad()
     {
         String[] modules = {"common", "testapp"};

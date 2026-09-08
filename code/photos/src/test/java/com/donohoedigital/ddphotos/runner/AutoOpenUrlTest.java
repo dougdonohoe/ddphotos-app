@@ -1,10 +1,10 @@
 package com.donohoedigital.ddphotos.runner;
 
 import com.donohoedigital.ddphotos.PhotosUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Unit tests for the preview-URL matchers behind {@link CommandRunner#autoOpenUrl}.  No Swing,

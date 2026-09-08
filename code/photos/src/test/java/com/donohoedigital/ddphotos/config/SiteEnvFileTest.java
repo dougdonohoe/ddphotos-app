@@ -1,14 +1,13 @@
 package com.donohoedigital.ddphotos.config;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * {@link TextFile}'s own behaviour is covered by {@link CssFileTest}; this pins down the bits
@@ -17,8 +16,8 @@ import static org.junit.Assert.*;
  */
 public class SiteEnvFileTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     /** Matches ddphotos/sample/config/site.env in shape. */
     private static final String SAMPLE =
@@ -87,7 +86,7 @@ public class SiteEnvFileTest {
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private Path write(String content) throws Exception {
-        Path f = tmp.newFolder().toPath().resolve(SiteEnvFile.FILE_NAME);
+        Path f = Files.createTempDirectory(tmp, "dir").resolve(SiteEnvFile.FILE_NAME);
         Files.writeString(f, content, StandardCharsets.UTF_8);
         return f;
     }
@@ -98,6 +97,6 @@ public class SiteEnvFileTest {
 
     /** A SiteEnvFile pointing at a path that does not exist. */
     private SiteEnvFile absent() throws Exception {
-        return new SiteEnvFile(tmp.newFolder().toPath().resolve(SiteEnvFile.FILE_NAME)).load();
+        return new SiteEnvFile(Files.createTempDirectory(tmp, "dir").resolve(SiteEnvFile.FILE_NAME)).load();
     }
 }

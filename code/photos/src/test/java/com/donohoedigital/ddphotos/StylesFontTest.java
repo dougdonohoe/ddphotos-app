@@ -2,9 +2,8 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.StylesConfig;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -18,9 +17,10 @@ import java.util.List;
 
 import static java.awt.RenderingHints.VALUE_FRACTIONALMETRICS_OFF;
 import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Guards the font choice in {@code styles.xml}: every font must be a system/logical family
@@ -65,7 +65,7 @@ public class StylesFontTest {
 
     private static final String STYLES = "/config/ddphotos/styles.xml";
 
-    @BeforeClass
+    @BeforeAll
     public static void loadStyles() {
         new StylesConfig(new String[]{"common", "ddphotos"});
     }
@@ -75,25 +75,24 @@ public class StylesFontTest {
         // See the class javadoc: only macOS has a font path that can satisfy this.  Every family
         // drifts on Linux/Windows regardless of what styles.xml says, so this would be a
         // permanent CI failure there rather than a signal about our font choice.
-        Assume.assumeTrue("measurement check is macOS-only (no CoreText elsewhere)", Utils.ISMAC);
+        assumeTrue(Utils.ISMAC, "measurement check is macOS-only (no CoreText elsewhere)");
 
         List<String> names = fontStyleNames();
-        assertFalse("no <font> entries found in " + STYLES, names.isEmpty());
+        assertFalse(names.isEmpty(), "no <font> entries found in " + STYLES);
 
         for (String name : names) {
             Font font = StylesConfig.getFont(name);
-            assertNotNull("font not loaded: " + name, font);
+            assertNotNull(font, "font not loaded: " + name);
 
             double model = width(font, null);
             for (double scale : SCALES) {
                 double device = width(font, AffineTransform.getScaleInstance(scale, scale));
-                assertEquals(
+                assertEquals(model, device, TOLERANCE,
                         name + " (" + font.getFontName() + " " + font.getSize() + "pt) measures "
                         + model + "px but renders " + device + "px at " + scale + "x, so glyphs "
                         + "will not sit where Swing thinks they do - carets and selection in "
                         + "editable fields drift.  styles.xml needs a system/logical font family "
-                        + "(SansSerif, Monospaced), not a bundled .ttf.",
-                        model, device, TOLERANCE);
+                        + "(SansSerif, Monospaced), not a bundled .ttf.");
             }
         }
     }
@@ -103,10 +102,10 @@ public class StylesFontTest {
     public void noStyleReferencesABundledFontFile() throws Exception {
         for (Element font : fontElements()) {
             String fontname = font.getAttribute("fontname");
-            assertFalse(font.getAttribute("name") + " references bundled font file '" + fontname
-                        + "' - use a system/logical family instead (see the FONTS note in "
-                        + STYLES + ")",
-                    fontname.toLowerCase().endsWith(".ttf"));
+            assertFalse(fontname.toLowerCase().endsWith(".ttf"),
+                    font.getAttribute("name") + " references bundled font file '" + fontname
+                    + "' - use a system/logical family instead (see the FONTS note in "
+                    + STYLES + ")");
         }
     }
 
@@ -128,7 +127,7 @@ public class StylesFontTest {
     private static List<Element> fontElements() throws Exception {
         List<Element> elements = new ArrayList<>();
         try (InputStream in = StylesFontTest.class.getResourceAsStream(STYLES)) {
-            assertNotNull("missing resource " + STYLES, in);
+            assertNotNull(in, "missing resource " + STYLES);
             NodeList fonts = DocumentBuilderFactory.newInstance()
                     .newDocumentBuilder().parse(in).getElementsByTagName("font");
             for (int i = 0; i < fonts.getLength(); i++) elements.add((Element) fonts.item(i));

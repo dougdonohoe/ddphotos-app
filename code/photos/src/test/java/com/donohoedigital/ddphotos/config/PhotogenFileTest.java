@@ -1,20 +1,19 @@
 package com.donohoedigital.ddphotos.config;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PhotogenFileTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    Path tmp;
 
     /** Representative content: entries, a subfolder placeholder, blank lines, and comments. */
     private static final String SAMPLE =
@@ -35,7 +34,7 @@ public class PhotogenFileTest {
         Path dir = write(SAMPLE);
         PhotogenFile pf = new PhotogenFile(dir).load();
         pf.save();
-        assertEquals("unchanged round-trip must be byte-for-byte identical", SAMPLE, read(dir));
+        assertEquals(SAMPLE, read(dir), "unchanged round-trip must be byte-for-byte identical");
     }
 
     @Test
@@ -196,19 +195,19 @@ public class PhotogenFileTest {
 
     @Test
     public void save_doesNotCreateFileThatWasAbsent() throws Exception {
-        Path dir = tmp.newFolder("empty").toPath();
+        Path dir = Files.createDirectory(tmp.resolve("empty"));
         PhotogenFile pf = new PhotogenFile(dir).load();
         assertFalse(pf.existsOnDisk());
         pf.setCaption("img_1", "One"); // mutate in memory
         pf.save();
-        assertFalse("save() must not create an absent photogen.txt", Files.exists(pf.getPath()));
+        assertFalse(Files.exists(pf.getPath()), "save() must not create an absent photogen.txt");
     }
 
     // ── saveOrCreate tests ──────────────────────────────────────────────────
 
     @Test
     public void saveOrCreate_createsFileWhenAbsentWithContent() throws Exception {
-        Path dir = tmp.newFolder("new").toPath();
+        Path dir = Files.createDirectory(tmp.resolve("new"));
         PhotogenFile pf = new PhotogenFile(dir).load();
         assertFalse(pf.existsOnDisk());
         pf.setCaption("img_1", "One");
@@ -219,10 +218,10 @@ public class PhotogenFileTest {
 
     @Test
     public void saveOrCreate_doesNothingWhenAbsentAndEmpty() throws Exception {
-        Path dir = tmp.newFolder("empty").toPath();
+        Path dir = Files.createDirectory(tmp.resolve("empty"));
         PhotogenFile pf = new PhotogenFile(dir).load();
         pf.saveOrCreate();
-        assertFalse("empty absent folder must not gain a photogen.txt", Files.exists(pf.getPath()));
+        assertFalse(Files.exists(pf.getPath()), "empty absent folder must not gain a photogen.txt");
     }
 
     @Test
@@ -235,7 +234,7 @@ public class PhotogenFileTest {
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private Path write(String content) throws Exception {
-        Path dir = tmp.newFolder().toPath();
+        Path dir = Files.createTempDirectory(tmp, "dir");
         Files.writeString(dir.resolve(PhotogenFile.FILE_NAME), content, StandardCharsets.UTF_8);
         return dir;
     }
