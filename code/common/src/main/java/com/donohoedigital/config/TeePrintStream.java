@@ -4,7 +4,6 @@ import org.apache.commons.io.output.TeeOutputStream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 public class TeePrintStream {
@@ -15,17 +14,12 @@ public class TeePrintStream {
         originalOut = System.out;
         baos = new ByteArrayOutputStream();
         TeeOutputStream tee = new TeeOutputStream(System.out, baos);
-        PrintStream ps = new PrintStream(tee);
+        PrintStream ps = new PrintStream(tee, true, StandardCharsets.UTF_8);
         System.setOut(ps);
     }
 
     public String[] getCapturedLines() {
-        String capturedOutput;
-        try {
-            capturedOutput = baos.toString(StandardCharsets.UTF_8.toString());
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        String capturedOutput = baos.toString(StandardCharsets.UTF_8);
         if (capturedOutput == null || capturedOutput.isEmpty()) {
             return new String[0];
         }

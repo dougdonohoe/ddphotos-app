@@ -35,9 +35,9 @@ public class ConfigUtils
         logger = LogManager.getLogger(ConfigUtils.class);
     }
 
-    ///
-    /// Convenience functions for loading classes
-    ///
+    //
+    // Convenience functions for loading classes
+    //
 
     /**
      * Get a class given a class name
@@ -169,7 +169,7 @@ public class ConfigUtils
             throw new ApplicationError(fnfe);
         }
 
-        return new InputStreamReader(fis);
+        return new InputStreamReader(fis, Utils.newDecoder());
     }
 
     /**
@@ -215,24 +215,7 @@ public class ConfigUtils
     public static String readFile(File file)
     {
         verifyFile(file);
-        Reader reader = getReader(file);
-        BufferedReader sreader = new BufferedReader(reader);
-        StringBuilder sb = new StringBuilder();
-        String sLine;
-        try
-        {
-            while ((sLine = sreader.readLine()) != null)
-            {
-                sb.append(sLine);
-                sb.append('\n');
-            }
-            close(reader);
-        }
-        catch (IOException ioe)
-        {
-            throw new ApplicationError(ioe);
-        }
-        return sb.toString();
+        return readLines(getReader(file));
     }
 
     /**
@@ -242,12 +225,19 @@ public class ConfigUtils
      */
     public static String readURL(URL url)
     {
-        Reader reader = getReader(url);
-        BufferedReader sreader = new BufferedReader(reader);
+        return readLines(getReader(url));
+    }
+
+    /**
+     * Read a reader by lines, appending a newline to each one (including the last).
+     * Closes the reader.
+     */
+    private static String readLines(Reader reader)
+    {
         StringBuilder sb = new StringBuilder();
-        String sLine;
-        try
+        try (BufferedReader sreader = new BufferedReader(reader))
         {
+            String sLine;
             while ((sLine = sreader.readLine()) != null)
             {
                 sb.append(sLine);
@@ -257,10 +247,6 @@ public class ConfigUtils
         catch (IOException ioe)
         {
             throw new ApplicationError(ioe);
-        }
-        finally
-        {
-            close(reader);
         }
         return sb.toString();
     }

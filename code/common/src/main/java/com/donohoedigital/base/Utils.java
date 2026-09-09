@@ -39,12 +39,9 @@ public class Utils
         boolean islinux = false;
         boolean iswindows = false;
 
-        Properties props = System.getProperties();
-        props.setProperty("file.encoding", CHARSET_NAME);
-
         // java/os version info
-        String osVersion = (String) props.get("os.version");
-        String os = (String) props.get("os.name");
+        String osVersion = System.getProperty("os.version");
+        String os = System.getProperty("os.name");
         if (os == null) os = "";
         OS = os + " " + osVersion;
         os = os.toLowerCase();
@@ -60,8 +57,6 @@ public class Utils
         else if (isLinux(os))
         {
             islinux = true;
-            // BUG 360 - use dns for host lookup
-            props.setProperty("sun.net.spi.nameservice.provider.1", "dns,sun");
         }
         // windows
         else if (isWindows(os))
@@ -134,11 +129,9 @@ public class Utils
     {
         if (e == null) return "null";
         ByteArrayOutputStream ostr = new ByteArrayOutputStream();
-        e.printStackTrace(new PrintStream(ostr));
-        //return "Exception: " + e.toString() + "\n" + ostr.toString();
-        return ostr.toString(); // this includes the message
+        e.printStackTrace(new PrintStream(ostr, true, CHARSET));
+        return ostr.toString(CHARSET); // this includes the message
     }
-
 
     /**
      * Get #FF00FF style hex string representation of this color
@@ -244,7 +237,7 @@ public class Utils
      */
     public static void openURL(String sURL)
     {
-        // Prefer java.awt.Desktop — works on macOS, Windows, and modern Linux with a DE
+        // Prefer java.awt.Desktop - works on macOS, Windows, and modern Linux with a DE
         if (Desktop.isDesktopSupported())
         {
             Desktop desktop = Desktop.getDesktop();

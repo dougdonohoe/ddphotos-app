@@ -397,9 +397,9 @@ public class GuiUtils
         }
     }
 
-    ////
-    //// Layout Helpers
-    ////
+    //
+    // Layout Helpers
+    //
 
     // debugging borders
     public static final Border REDBORDER = BorderFactory.createLineBorder(Color.red);
@@ -708,7 +708,6 @@ public class GuiUtils
         }
     }
 
-    /** Lower-case extension of the file, or "png" if it has none. */
     /**
      * Build an HTML report of the display scale factors in play.  A scale other than 1.0 means
      * the JDK is upscaling everything drawn in logical pixels to device pixels, which is what
@@ -783,6 +782,7 @@ public class GuiUtils
           .append(value == null ? "&lt;unset&gt;" : value).append("<br>");
     }
 
+    /** Lower-case extension of the file, or "png" if it has none. */
     private static String formatFor(File file)
     {
         String name = file.getName();

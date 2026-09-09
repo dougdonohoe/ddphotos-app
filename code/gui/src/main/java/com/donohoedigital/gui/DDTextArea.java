@@ -256,9 +256,10 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
         if (!GuiUtils.repaint(this)) super.repaint();
     }
 
-    ////
-    //// Key listener
-    ////
+    //
+    // Key listener
+    //
+
     private boolean keypressed = false;
 
     public void keyPressed(KeyEvent e)
@@ -403,9 +404,9 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
         addPropertyChangeListener("value", _ -> onChange.run());
     }
 
-    ////
-    //// DocumentListener methods
-    ////
+    //
+    // DocumentListener methods
+    //
 
     /**
      * calls regexpValidate()

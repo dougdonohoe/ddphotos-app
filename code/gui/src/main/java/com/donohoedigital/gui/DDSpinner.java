@@ -70,9 +70,9 @@ public class DDSpinner extends JSpinner implements DDTextVisibleComponent, DDTex
         repaint();
     }
 
-    ////
-    //// DDText
-    ////
+    //
+    // DDText
+    //
 
     public void setText(String s)
     {
@@ -84,9 +84,9 @@ public class DDSpinner extends JSpinner implements DDTextVisibleComponent, DDTex
         return text_.getText();
     }
 
-    ////
-    //// DDCustomHelp
-    ////
+    //
+    // DDCustomHelp
+    //
 
     public String getHelpText()
     {
@@ -98,9 +98,9 @@ public class DDSpinner extends JSpinner implements DDTextVisibleComponent, DDTex
         sHelp_ = s;
     }
 
-    ////
-    //// DDValidatable
-    ////
+    //
+    // DDValidatable
+    //
 
     public boolean isValidData()
     {

@@ -261,9 +261,9 @@ public class EngineWindow extends BaseFrame {
         super.toFront();
     }
 
-    ////
-    //// Listen for window events
-    ////
+    //
+    // Listen for window events
+    //
 
     /**
      * Class to handle window closing events plus state changes issues

@@ -359,9 +359,9 @@ public abstract class DialogPhase extends BasePhase implements InternalDialog.Di
                     });
         }
 
-        ///
-        /// Handle Window close / delete events - typically cancel
-        ///
+        //
+        // Handle Window close / delete events - typically cancel
+        //
         String sCloseButton = phase_.getString("dialog-window-close-activates-button", null);
         if (sCloseButton != null && !sCloseButton.isEmpty())
         {
@@ -381,9 +381,9 @@ public abstract class DialogPhase extends BasePhase implements InternalDialog.Di
                                   KeyEvent.VK_DELETE, 0);
         }
 
-        ///
-        /// Handle ENTER key presses - typically okay
-        ///
+        //
+        // Handle ENTER key presses - typically okay
+        //
         String sEnterButton = phase_.getString(ButtonBox.PARAM_DEFAULT_BUTTON, null);
         if (sEnterButton != null && !sEnterButton.isEmpty())
         {

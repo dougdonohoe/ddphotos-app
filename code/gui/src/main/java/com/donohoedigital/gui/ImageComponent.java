@@ -730,9 +730,9 @@ public class ImageComponent extends JComponent implements Icon
         return grayimage_;
     }
 
-    ////
-    //// image filter for highlight
-    ////
+    //
+    // image filter for highlight
+    //
 
     /**
      * Create image used to highlight this one
@@ -811,9 +811,9 @@ public class ImageComponent extends JComponent implements Icon
     }
 
 
-    ////
-    //// Icon methods
-    ////
+    //
+    // Icon methods
+    //
 
     private double dIconScale_ = 1.0d;
 

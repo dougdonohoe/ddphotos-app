@@ -8,7 +8,6 @@ package com.donohoedigital.gui;
 
 import com.donohoedigital.base.ApplicationError;
 import com.donohoedigital.base.ErrorCodes;
-import com.donohoedigital.config.Perf;
 
 import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
@@ -32,8 +31,6 @@ public class InternalDialog extends JInternalFrame implements DDWindow
     private final boolean bModal_;
     private final DialogType dialogType_;
     private Component previousFocusOwner_;
-    @SuppressWarnings("FieldCanBeLocal")
-    private final boolean PERF = false;
 
     /**
      * Creates a new InternalDialog with the given type - set BaseFrame later
@@ -60,7 +57,6 @@ public class InternalDialog extends JInternalFrame implements DDWindow
         bModal_ = bModal;
         dialogType_ = type;
         setName(sName);
-        if (PERF) Perf.construct(this, getName());
 
         // store frame
         setBaseFrame(frame);
@@ -127,17 +123,12 @@ public class InternalDialog extends JInternalFrame implements DDWindow
      * specified in last call to setNotObscuredLocation()
      */
     public static final int POSITION_NOT_OBSCURED = 3;
-    
+
     /**
-     * USed in showDialog - position dialog centered, but adjust by x,y
-     * specified in last call to setCenterAdjust()
+     * Used in showDialog - leave the dialog where it is, moving it only if it would
+     * otherwise be off-screen
      */
-    public static final int POSITION_CENTER_ADJUST = 4;
-    
-    /**
-     * Used in showDialog - don't position dialog at all
-     */
-    public static final int POSITION_NONE = 5; 
+    public static final int POSITION_NONE = 4;
     
     /**
      * Overridden to reset focus on setVisible(false)
@@ -187,12 +178,7 @@ public class InternalDialog extends JInternalFrame implements DDWindow
                     if (focus_ == null) return;
 
                     //logger.debug("Setting focus to: " +focus_);
-                    // BUG 133 - turn off requesting of focus to
-                    // avoid apparent memory leak in KeyboardFocusManager.newFocusOwner
-                    if (!Perf.isOn())
-                    {
-                        focus_.requestFocus();
-                    }
+                    focus_.requestFocus();
                 }
         );
     }
@@ -295,11 +281,10 @@ public class InternalDialog extends JInternalFrame implements DDWindow
                 frame_.getLayeredPane().add(this, JLayeredPane.DEFAULT_LAYER);
             }
 
-            int xadjust = 0;
             int buffer = 0;
             int y_ = 0;
             int x_ = 0;
-            int yadjust = 0;
+
             switch (nPOS)
             {
                 case POSITION_CENTER:
@@ -319,11 +304,6 @@ public class InternalDialog extends JInternalFrame implements DDWindow
                     pack();
                     setNotObscured(x_, y_, buffer);
                     break;
-
-                case POSITION_CENTER_ADJUST:
-                    validate();
-                    pack();
-                    centerAdjust(xadjust, yadjust);
 
                 default:
                     // make sure dialog is (still) visible
@@ -525,15 +505,6 @@ public class InternalDialog extends JInternalFrame implements DDWindow
     }
 
     /**
-     * Center this and then adjust by x,y set with setCenterAdjust()
-     */
-    public void centerAdjust(int xadjust, int yadjust)
-    {
-        center();
-        setLocation(getX() + xadjust, getY() + yadjust);
-    }
-    
-    /**
      * Center this pane within parent frame, near the top
      */
     public void centerTop()
@@ -670,9 +641,9 @@ public class InternalDialog extends JInternalFrame implements DDWindow
     }
 
 
-    ////
-    //// Help widget stuff - delegated to HelpTextManager (shared with BaseFrame)
-    ////
+    //
+    // Help widget stuff - delegated to HelpTextManager (shared with BaseFrame)
+    //
 
     private final HelpTextManager helpText_ = new HelpTextManager();
 

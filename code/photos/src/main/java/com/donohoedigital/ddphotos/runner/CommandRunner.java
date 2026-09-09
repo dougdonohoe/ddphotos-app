@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -237,7 +238,7 @@ public abstract class CommandRunner {
             Process p = DockerStatus.dockerProcessBuilder(verb, name)
                     .redirectErrorStream(true)
                     .start();
-            String out = new String(p.getInputStream().readAllBytes());
+            String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             p.waitFor();
             logger.info("{}: docker {} {} exit={}", verb, verb, name, p.exitValue());
             // docker echoes the container name on success, or "No such container" if already gone.

@@ -129,9 +129,9 @@ public class DDCheckBox extends JCheckBox implements DDHasLabelComponent, DDVali
         addActionListener(_ -> onChange.run());
     }
 
-    ///
-    /// Custom help
-    ///
+    //
+    // Custom help
+    //
 
     private String sHelp_;
 

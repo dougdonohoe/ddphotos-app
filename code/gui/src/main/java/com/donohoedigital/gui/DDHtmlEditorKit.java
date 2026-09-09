@@ -34,7 +34,7 @@ public class DDHtmlEditorKit extends HTMLEditorKit {
     }
 
     public static class HTMLFactoryX extends HTMLFactory {
-        Class<?>[] ctorArgs_ = new Class[]{Element.class};
+        private static final Class<?>[] ctorArgs_ = new Class<?>[]{Element.class};
 
         public View create(Element elem) {
             Object o = elem.getAttributes().getAttribute(StyleConstants.NameAttribute);

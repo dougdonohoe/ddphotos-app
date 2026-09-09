@@ -19,7 +19,6 @@ import org.jdom2.Namespace;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.input.sax.XMLReaders;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import java.net.URL;
@@ -29,26 +28,25 @@ import java.util.List;
 /**
  * @author donohoe
  */
-@SuppressWarnings({"unchecked"})
 public class XMLConfigFileLoader implements ErrorHandler
 {
     static Logger logger = LogManager.getLogger(XMLConfigFileLoader.class);
 
     /**
-     * Standard Donohoe Digital name space - http://www.donohoedigital.com
+     * Standard Donohoe Digital name space - <a href="http://www.donohoedigital.com">...</a>
      */
     public static final String DDNAMESPACE = "http://www.donohoedigital.com";
-    protected Namespace ns_ = Namespace.getNamespace(DDNAMESPACE);
-    private int nWarn_ = 0;
-    private int nError_ = 0;
-    private int nFatal_ = 0;
+    protected Namespace ns_;
+    private int nWarn_;
+    private int nError_;
+    private int nFatal_;
 
     /**
      * Creates a new instance of XMLConfigFileLoader
      */
     public XMLConfigFileLoader()
     {
-        ns_ = Namespace.getNamespace(XMLConfigFileLoader.DDNAMESPACE);
+        ns_ = Namespace.getNamespace(DDNAMESPACE);
     }
 
     /**
@@ -68,27 +66,11 @@ public class XMLConfigFileLoader implements ErrorHandler
     }
 
     /**
-     * Load document and validate against given schema in the DDNAMESPACE name space
-     */
-    public Document loadXMLUrl(URL url, String sValidationSchema, String sAppName)
-    {
-        return loadXMLUrl(url, DDNAMESPACE, sValidationSchema, sAppName, null);
-    }
-
-    /**
-     * Load document and validate against given schema in the DDNAMESPACE name space
-     */
-    public Document loadXMLUrl(URL url, String sValidationSchema, String sAppName, String sModule)
-    {
-        return loadXMLUrl(url, DDNAMESPACE, sValidationSchema, sAppName, sModule);
-    }
-
-    /**
      * Load document and validate against given schema in given namespace using
-     * http://apache.org/xml/properties/schema/external-schemaLocation.
+     * <a href="http://apache.org/xml/properties/schema/external-schemaLocation">...</a>.
      * If sNameSpace
      * is null, then parser configured to use
-     * http://apache.org/xml/properties/schema/external-noNamespaceSchemaLocation with
+     * <a href="http://apache.org/xml/properties/schema/external-noNamespaceSchemaLocation">...</a> with
      * given schema.
      */
     public Document loadXMLUrl(URL url, String sNameSpace, String sValidationSchema, String sAppName, String sModule)
@@ -113,17 +95,17 @@ public class XMLConfigFileLoader implements ErrorHandler
 
         if (nWarn_ > 0)
         {
-            logger.warn("Summary: " + nWarn_ + " warnings found loading document");
+            logger.warn("Summary: {} warnings found loading document", nWarn_);
         }
 
         if (nError_ > 0)
         {
-            logger.error("Summary: " + nError_ + " errors found loading document");
+            logger.error("Summary: {} errors found loading document", nError_);
         }
 
         if (nFatal_ > 0)
         {
-            logger.fatal("Summary: " + nFatal_ + " fatal errors found loading document");
+            logger.fatal("Summary: {} fatal errors found loading document", nFatal_);
         }
 
         if (nError_ > 0 || nFatal_ > 0 || jde != null || e != null)
@@ -161,7 +143,7 @@ public class XMLConfigFileLoader implements ErrorHandler
         parser.setFeature("http://apache.org/xml/features/validation/schema-full-checking", true);
 
         // If validation schema passed in, set it.  This is used to ensure correct schema is
-        // used to validate and avoid catch wrong xml file type
+        // used to validate and avoid catch wrong XML file type
 
         if (sValidationSchema != null)
         {
@@ -189,8 +171,7 @@ public class XMLConfigFileLoader implements ErrorHandler
 
             if (schemaurl == null)
             {
-                logger.warn("XML Schema file " + valsubpath +
-                            " could not be found in classpath.  Defaulting to that specified in the document");
+                logger.warn("XML Schema file {} could not be found in classpath.  Defaulting to that specified in the document", valsubpath);
             }
             else
             {
@@ -219,8 +200,7 @@ public class XMLConfigFileLoader implements ErrorHandler
     public void warning(SAXParseException ex)
     {
         nWarn_++;
-        logger.warn(getLocationString(ex) + "\n" +
-                    ex.getMessage());
+        logger.warn("{}\n{}", getLocationString(ex), ex.getMessage());
         //logger.warn(Utils.formatExceptionText(ex));
     }
 
@@ -230,18 +210,16 @@ public class XMLConfigFileLoader implements ErrorHandler
     public void error(SAXParseException ex)
     {
         nError_++;
-        logger.error(getLocationString(ex) + "\n" +
-                     ex.getMessage());
+        logger.error("{}\n{}", getLocationString(ex), ex.getMessage());
     }
 
     /**
      * Handle SAX Fatal Error
      */
-    public void fatalError(SAXParseException ex) throws SAXException
+    public void fatalError(SAXParseException ex)
     {
         nFatal_++;
-        logger.fatal(getLocationString(ex) + "\n" +
-                     ex.getMessage());
+        logger.fatal("{}\n{}", getLocationString(ex), ex.getMessage());
     }
 
     /**
@@ -262,15 +240,13 @@ public class XMLConfigFileLoader implements ErrorHandler
         str.append(", line ");
         str.append(ex.getLineNumber());
         // leave column info off as it is generally inaccurate
-        //str.append(", col ");
-        //str.append(ex.getColumnNumber());
 
         return str.toString();
     }
 
-    ///
-    /// Convienence functions for parsing documents
-    ///
+    //
+    // Convenience functions for parsing documents
+    //
 
     /**
      * Return String array of contents of children with given name
@@ -302,7 +278,7 @@ public class XMLConfigFileLoader implements ErrorHandler
 
         Boolean[] values = new Boolean[nSize];
         Boolean value;
-        String sValue = null;
+        String sValue;
         for (int i = 0; i < nSize; i++)
         {
             sValue = children.get(i).getTextTrim();
@@ -375,39 +351,6 @@ public class XMLConfigFileLoader implements ErrorHandler
                                            "Element " + sChildName + " does not contain a valid double value in " + parent.getName(),
                                            "Value=" + sValue,
                                            "Make sure value is an double at " + sErrLocation);
-            }
-        }
-        return values;
-    }
-
-    /**
-     * Return Integer array of attribute value of children with given name
-     */
-    public static Integer[] getChildAttributeIntegerArray(Element parent, String sChildName,
-                                                          String sAttrName, Namespace ns,
-                                                          boolean bRequired, String sErrLocation)
-    {
-        List<Element> children = getChildren(parent, sChildName, ns, bRequired, sErrLocation);
-        int nSize = children.size();
-        if (nSize == 0) return null;
-
-        Integer[] values = new Integer[nSize];
-        String sValue = null;
-        for (int i = 0; i < nSize; i++)
-        {
-            try
-            {
-                values[i] = getIntegerAttributeValue((children.get(i)),
-                                                     sAttrName, bRequired, sErrLocation +
-                                                                           " (" + sChildName + " #" + i + ")");
-            }
-            catch (NumberFormatException ne)
-            {
-                throw new ApplicationError(ErrorCodes.ERROR_VALIDATION,
-                                           "Element " + sChildName + " #" + i +
-                                           " does not contain a valid integer value in " + parent.getName(),
-                                           "Value=" + sValue,
-                                           "Make sure value is an integer at " + sErrLocation);
             }
         }
         return values;
@@ -565,128 +508,6 @@ public class XMLConfigFileLoader implements ErrorHandler
     {
         return getStringAttributeValue(element, sAttrName, bRequired, sErrLocation, null);
     }
-
-    /**
-     * Return boolean value of child from given element
-     */
-    public static Boolean getChildBooleanValue(Element element, String sChildName,
-                                               Namespace ns, boolean bRequired, String sErrLocation,
-                                               Boolean bDefault)
-    {
-        String sValue = element.getChildTextTrim(sChildName, ns);
-
-        if (bRequired && sValue == null)
-        {
-            throw new ApplicationError(ErrorCodes.ERROR_NOT_FOUND,
-                                       getErrorMessage(sChildName, "element",
-                                                       element.getName(), sErrLocation),
-                                       null);
-        }
-
-        if (sValue == null) return bDefault;
-
-        Boolean value = Utils.parseBoolean(sValue);
-        if (value == null)
-        {
-            throw new ApplicationError(ErrorCodes.ERROR_VALIDATION,
-                                       "Element " + sChildName + " does not contain a valid boolean value.",
-                                       "Value=" + sValue,
-                                       "Make sure value is 0, 1, true or false");
-        }
-        return value;
-    }
-
-    /**
-     * Pass null for default
-     */
-    public static Boolean getChildBooleanValue(Element element, String sChildName,
-                                               Namespace ns, boolean bRequired, String sErrLocation)
-    {
-        return getChildBooleanValue(element, sChildName, ns, bRequired, sErrLocation, null);
-    }
-
-    /**
-     * Return integer value of child from given element
-     */
-    public static Integer getChildIntegerValue(Element element, String sChildName,
-                                               Namespace ns, boolean bRequired, String sErrLocation,
-                                               Integer nDefault)
-    {
-        String sValue = element.getChildTextTrim(sChildName, ns);
-
-        if (bRequired && sValue == null)
-        {
-            throw new ApplicationError(ErrorCodes.ERROR_NOT_FOUND,
-                                       getErrorMessage(sChildName, "element",
-                                                       element.getName(), sErrLocation),
-                                       null);
-        }
-
-        if (sValue == null) return nDefault;
-
-        try
-        {
-            return Integer.valueOf(sValue);
-        }
-        catch (NumberFormatException ne)
-        {
-            throw new ApplicationError(ErrorCodes.ERROR_VALIDATION,
-                                       "Element " + sChildName + " does not contain a valid integer value.",
-                                       "Value=" + sValue,
-                                       "Make sure value is a integer");
-        }
-    }
-
-    /**
-     * Pass null for default
-     */
-    public static Integer getChildIntegerValue(Element element, String sChildName,
-                                               Namespace ns, boolean bRequired, String sErrLocation)
-    {
-        return getChildIntegerValue(element, sChildName, ns, bRequired, sErrLocation, null);
-    }
-
-    /**
-     * Return double value of child from given element
-     */
-    public static Double getChildDoubleValue(Element element, String sChildName,
-                                             Namespace ns, boolean bRequired, String sErrLocation,
-                                             Double dDefault)
-    {
-        String sValue = element.getChildTextTrim(sChildName, ns);
-
-        if (bRequired && sValue == null)
-        {
-            throw new ApplicationError(ErrorCodes.ERROR_NOT_FOUND,
-                                       getErrorMessage(sChildName, "element",
-                                                       element.getName(), sErrLocation),
-                                       null);
-        }
-
-        if (sValue == null) return dDefault;
-
-        try
-        {
-            return Double.valueOf(sValue);
-        }
-        catch (NumberFormatException ne)
-        {
-            throw new ApplicationError(ErrorCodes.ERROR_VALIDATION,
-                                       "Element " + sChildName + " does not contain a valid double value.",
-                                       "Value=" + sValue,
-                                       "Make sure value is a double");
-        }
-    }
-
-    /**
-     * Pass null for default
-     */
-    public static Double getChildDoubleValue(Element element, String sChildName,
-                                             Namespace ns, boolean bRequired, String sErrLocation)
-    {
-        return getChildDoubleValue(element, sChildName, ns, bRequired, sErrLocation, null);
-    }
-
     /**
      * Return string value of child (trimmed) from given element
      */
@@ -719,26 +540,6 @@ public class XMLConfigFileLoader implements ErrorHandler
     }
 
     /**
-     * Return child of given element
-     */
-    protected static Element getChild(Element element, String sChildName,
-                                      Namespace ns, boolean bRequired, String sErrLocation)
-    {
-        // always returns non-null (if none, size=0)
-        Element child = element.getChild(sChildName, ns);
-
-        if (bRequired && child == null)
-        {
-            throw new ApplicationError(ErrorCodes.ERROR_NOT_FOUND,
-                                       getErrorMessage(sChildName, "element",
-                                                       element.getName(), sErrLocation),
-                                       null);
-        }
-
-        return child;
-    }
-
-    /**
      * Return children of given element
      */
     public static List<Element> getChildren(Element element, String sChildName,
@@ -747,7 +548,7 @@ public class XMLConfigFileLoader implements ErrorHandler
         // always returns non-null (if none, size=0)
         List<Element> children = element.getChildren(sChildName, ns);
 
-        if (bRequired && children.size() <= 0)
+        if (bRequired && children.isEmpty())
         {
             throw new ApplicationError(ErrorCodes.ERROR_NOT_FOUND,
                                        getErrorMessage(sChildName, "element(s)",
@@ -816,7 +617,7 @@ public class XMLConfigFileLoader implements ErrorHandler
         {
             sAttrErrorDesc = "Paramlist #" + (i + 1) + " of " + sErrLocation;
             param = paramlist.get(i);
-            list = new ArrayList<Object>();
+            list = new ArrayList<>();
 
             sName = getStringAttributeValue(param, "name", true, sAttrErrorDesc);
 
@@ -857,39 +658,5 @@ public class XMLConfigFileLoader implements ErrorHandler
         if (sErrLocation != null) sLocation = " in " + sErrLocation;
 
         return sName + " " + sType + " missing in " + sElementName + sLocation;
-    }
-
-    ///
-    /// Debugging functions
-    ///
-
-    /**
-     * Print Jdom element and its children
-     */
-    public void debugListChildren(Element current, int depth)
-    {
-        logger.debug(genSpaces(depth) + current.getName() + " (" + current.getClass().getName() + ") - " +
-                     current.getTextTrim());
-        List<Element> children = current.getChildren();
-        for (Element child : children)
-        {
-            debugListChildren(child, depth + 1);
-        }
-
-    }
-
-    /**
-     * Used to generate spaces for output
-     */
-    private String genSpaces(int n)
-    {
-        StringBuilder spaces = new StringBuilder();
-        spaces.setLength(n * 3);
-
-        for (int i = 0; i < spaces.length(); i++)
-        {
-            spaces.setCharAt(i, ' ');
-        }
-        return spaces.toString();
     }
 }

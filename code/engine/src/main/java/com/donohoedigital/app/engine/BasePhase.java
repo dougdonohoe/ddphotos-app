@@ -6,7 +6,6 @@
 
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.config.Perf;
 import com.donohoedigital.app.config.*;
 
 /**
@@ -28,7 +27,6 @@ public abstract class BasePhase implements Phase
      * Creates a new instance of BasePhase 
      */
     public BasePhase() {
-        if (Perf.JPROFILER) Perf.construct(this, null);
     }
 
     /**

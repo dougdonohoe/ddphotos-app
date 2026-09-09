@@ -194,9 +194,9 @@ public class BaseFrame extends JFrame implements DDWindow
         restoreTo.requestFocus();
     }
 
-    ////
-    //// Convenience methods
-    ////
+    //
+    // Convenience methods
+    //
 
     /**
      * Get DisplayMode
@@ -206,9 +206,9 @@ public class BaseFrame extends JFrame implements DDWindow
         return device_.getDisplayMode();
     }
 
-    ///
-    /// Help widget stuff - delegated to HelpTextManager (shared with InternalDialog)
-    ///
+    //
+    // Help widget stuff - delegated to HelpTextManager (shared with InternalDialog)
+    //
 
     private final HelpTextManager helpText_ = new HelpTextManager();
 
@@ -247,9 +247,9 @@ public class BaseFrame extends JFrame implements DDWindow
         helpText_.ignoreNextHelp();
     }
 
-    ///
-    /// Modal stuff
-    ///
+    //
+    // Modal stuff
+    //
 
     // list of all logged modals
     private final List<Modal> logged_ = new ArrayList<>();

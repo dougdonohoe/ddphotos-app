@@ -17,7 +17,6 @@ public class EngineConstants
     public static final int TESTING_CHANGE_SIZE_HEIGHT = 992;
 
     // debug settings configured in common.properties file
-    public static final String TESTING_PERFORMANCE = "settings.debug.performance";
     public static final String TESTING_CHANGE_STARTING_SIZE = "settings.debug.changesize";
     public static final String TESTING_NO_EXTERNAL = "settings.debug.no.external";
 

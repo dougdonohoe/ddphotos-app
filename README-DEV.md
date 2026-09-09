@@ -108,6 +108,14 @@ mvn -f code/pom.xml package -DskipTests=true
 mvn -f code/pom.xml test
 ```
 
+The build compiles with `-Xlint:deprecation,removal`, configured on the
+`maven-compiler-plugin` in `code/pom.xml`.  Any use of a deprecated JDK API is reported
+with its file and line number.  The tree is currently free of them, so please keep it that
+way rather than letting the warnings pile up again.
+
+Warnings do not fail the build.  A dependency bump can deprecate an API and would
+otherwise turn CI red for a reason unrelated to the change under review.
+
 ### Running DD Photos
 
 Running the app takes two steps.  First install the modules it depends on into your local
