@@ -1,6 +1,6 @@
 package com.donohoedigital.gui;
 
-import javax.swing.*;
+import javax.swing.DefaultListModel;
 import java.util.prefs.Preferences;
 
 /**

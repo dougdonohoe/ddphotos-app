@@ -1,7 +1,10 @@
 package com.donohoedigital.gui;
 
-import javax.swing.text.*;
-import java.awt.*;
+import javax.swing.text.Element;
+import javax.swing.text.Position;
+import javax.swing.text.View;
+import java.awt.Rectangle;
+import java.awt.Shape;
 
 /**
  * Created by IntelliJ IDEA.

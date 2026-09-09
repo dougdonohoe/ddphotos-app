@@ -6,15 +6,21 @@
 
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.config.*;
-import com.donohoedigital.app.config.*;
-import com.donohoedigital.gui.*;
-import org.apache.logging.log4j.*;
+import com.donohoedigital.config.ImageConfig;
+import com.donohoedigital.config.StylesConfig;
+import com.donohoedigital.app.config.AppPhase;
+import com.donohoedigital.gui.BaseFrame;
+import com.donohoedigital.gui.CenterLayout;
+import com.donohoedigital.gui.ImageComponent;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.LayoutManager;
+import java.awt.image.BufferedImage;
 
 /**
  * @author Doug Donohoe

@@ -1,6 +1,7 @@
 package com.donohoedigital.gui;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import java.awt.event.KeyEvent;

@@ -8,8 +8,12 @@ package com.donohoedigital.gui;
 
 import com.donohoedigital.config.ImageConfig;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.SwingConstants;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
 /**
  * @author Doug Donohoe

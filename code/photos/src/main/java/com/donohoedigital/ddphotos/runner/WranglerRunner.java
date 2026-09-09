@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import static com.donohoedigital.ddphotos.runner.FlagVisibility.*;
+import static com.donohoedigital.ddphotos.runner.FlagVisibility.EDITABLE;
+import static com.donohoedigital.ddphotos.runner.FlagVisibility.VIEW_ONLY;
 import static com.donohoedigital.ddphotos.runner.Prerequisite.Result.*;
 
 public class WranglerRunner extends DdphotosRunner {

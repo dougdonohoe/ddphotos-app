@@ -18,7 +18,10 @@ import com.donohoedigital.gui.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

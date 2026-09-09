@@ -2,7 +2,7 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.gui.DDTabPanel;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
 
 public class CommandLineTab extends DDTabPanel
 {

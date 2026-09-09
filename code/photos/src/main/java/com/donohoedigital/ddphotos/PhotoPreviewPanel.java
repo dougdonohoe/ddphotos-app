@@ -2,7 +2,8 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.gui.RenderUtils;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.nio.file.Path;

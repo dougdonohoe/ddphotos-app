@@ -7,9 +7,12 @@
 package com.donohoedigital.gui;
 
 
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 
 /**
  *

@@ -1,9 +1,9 @@
 package com.donohoedigital.config;
 
-import com.donohoedigital.base.*;
+import com.donohoedigital.base.ApplicationError;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.Properties;
 
 /**
  * Created by IntelliJ IDEA.

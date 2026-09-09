@@ -8,7 +8,6 @@ package com.donohoedigital.app.engine;
 
 import com.donohoedigital.base.ApplicationError;
 import com.donohoedigital.base.ErrorCodes;
-import com.donohoedigital.config.Prefs;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.app.config.AppButton;
 import com.donohoedigital.app.config.AppPhase;
@@ -19,13 +18,13 @@ import com.donohoedigital.gui.DialogType;
 import com.donohoedigital.gui.GuiUtils;
 import com.donohoedigital.gui.InternalDialog;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
-import java.awt.*;
+import java.awt.Component;
 import java.awt.event.KeyEvent;
 import java.util.List;
-import java.util.prefs.Preferences;
 
 /**
  * @author Doug Donohoe

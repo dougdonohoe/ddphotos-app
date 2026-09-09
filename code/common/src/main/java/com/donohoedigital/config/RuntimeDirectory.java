@@ -1,6 +1,6 @@
 package com.donohoedigital.config;
 
-import java.io.*;
+import java.io.File;
 
 /**
  * Created by IntelliJ IDEA.

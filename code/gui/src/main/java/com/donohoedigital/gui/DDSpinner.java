@@ -4,8 +4,11 @@
 
 package com.donohoedigital.gui;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFormattedTextField;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.MouseListener;
 
 /**

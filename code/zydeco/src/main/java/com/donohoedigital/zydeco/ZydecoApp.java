@@ -2,7 +2,7 @@ package com.donohoedigital.zydeco;
 
 import com.formdev.flatlaf.FlatLightLaf;
 
-import javax.swing.*;
+import javax.swing.SwingUtilities;
 
 public class ZydecoApp
 {

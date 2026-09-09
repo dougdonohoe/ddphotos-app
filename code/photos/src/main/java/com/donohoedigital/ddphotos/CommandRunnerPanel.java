@@ -8,10 +8,10 @@ import com.donohoedigital.ddphotos.runner.CommandRunner;
 import com.donohoedigital.ddphotos.runner.Prerequisite;
 import com.donohoedigital.gui.DDTabbedPane;
 
-import javax.swing.*;
+import javax.swing.SwingUtilities;
 import java.io.IOException;
-import java.util.*;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tabbed runner panel: drives a single {@link CommandRunner} against the site selected in the

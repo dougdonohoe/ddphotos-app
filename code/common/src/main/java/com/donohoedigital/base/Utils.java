@@ -1,6 +1,7 @@
 package com.donohoedigital.base;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Desktop;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;

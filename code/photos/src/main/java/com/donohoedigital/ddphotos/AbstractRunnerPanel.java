@@ -15,7 +15,10 @@ import com.donohoedigital.ddphotos.runner.FlagDef;
 import com.donohoedigital.gui.*;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.*;

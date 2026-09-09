@@ -1,10 +1,15 @@
 package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.engine.DialogPhase;
-import com.donohoedigital.gui.*;
+import com.donohoedigital.gui.DDHtmlArea;
+import com.donohoedigital.gui.DDPanel;
+import com.donohoedigital.gui.DDValidatable;
+import com.donohoedigital.gui.GuiUtils;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 
