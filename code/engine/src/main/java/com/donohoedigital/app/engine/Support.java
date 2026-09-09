@@ -1,14 +1,16 @@
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.base.*;
+import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.*;
-import com.donohoedigital.app.config.*;
+import com.donohoedigital.app.config.AppPhase;
+import com.donohoedigital.app.config.EngineConstants;
 import com.donohoedigital.gui.*;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.*;
-import java.util.*;
+import javax.swing.BorderFactory;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.io.File;
+import java.util.Properties;
 
 /**
  * Standalone support window - shows version/log info and provides
@@ -17,7 +19,7 @@ import java.util.*;
 public class Support extends BasePhase {
     private LogoWindowPanel base_;
     private DDTextArea log_;
-    private boolean bRunning_ = false;
+    private boolean bRunning_;
 
     /**
      * init data

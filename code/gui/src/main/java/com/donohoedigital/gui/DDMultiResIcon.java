@@ -5,7 +5,8 @@ package com.donohoedigital.gui;
 
 import com.donohoedigital.config.ImageConfig;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -35,7 +36,7 @@ import java.util.TreeMap;
  *
  * @author Doug Donohoe
  */
-public class DDMultiResIcon implements Icon
+public final class DDMultiResIcon implements Icon
 {
     /**
      * Variant sizes looked for in images.xml.  Covers the common scales for the ~20px artwork

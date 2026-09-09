@@ -6,11 +6,13 @@
 
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.config.*;
+import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.gui.*;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import java.awt.BorderLayout;
+import java.awt.Component;
 
 import static com.donohoedigital.app.engine.EngineUtils.STANDARD_BORDER_GAP;
 

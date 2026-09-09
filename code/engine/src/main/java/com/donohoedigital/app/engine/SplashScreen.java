@@ -6,15 +6,24 @@
 
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.config.*;
+import com.donohoedigital.config.ImageConfig;
+import com.donohoedigital.config.ImageDef;
+import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.gui.*;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
-import java.net.*;
+import java.awt.Dimension;
+import java.awt.GraphicsEnvironment;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.net.URL;
 
 /**
  * Splash screen.  Displayed from AppEngine as soon as possible, then later updated

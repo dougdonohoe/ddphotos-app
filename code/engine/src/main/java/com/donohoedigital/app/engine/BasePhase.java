@@ -6,7 +6,8 @@
 
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.app.config.*;
+import com.donohoedigital.app.config.AppButton;
+import com.donohoedigital.app.config.AppPhase;
 
 /**
  *
@@ -63,7 +64,7 @@ public abstract class BasePhase implements Phase
     /**
      * Must declare - logic of phase goes in here
      */
-    abstract public void start();
+    public abstract void start();
     
     /**
      * Called when a phase is removed as the main component (

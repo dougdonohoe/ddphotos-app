@@ -6,17 +6,21 @@ import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.DebugConfig;
 import com.donohoedigital.config.PropertyConfig;
-import com.donohoedigital.app.config.*;
+import com.donohoedigital.app.config.AppButton;
+import com.donohoedigital.app.config.AppPhase;
+import com.donohoedigital.app.config.EngineConstants;
 import com.donohoedigital.gui.DDWindow;
 import com.donohoedigital.gui.GuiUtils;
 import com.donohoedigital.gui.HelpTextManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JMenuBar;
+import javax.swing.SwingUtilities;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
-import java.awt.*;
+import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -41,12 +45,12 @@ public class AppContext
     private EngineDialog dialog_;
 
     // Holds last phase to be set as main panel in this context
-    private Phase currentMainUIPhase_ = null;
+    private Phase currentMainUIPhase_;
 
     // Current phase being executed - this is set whenever a phase is
     // run unless the definition of the phase says it is transient (typically
     // set for info dialog type phases
-    private Phase currentPhase_ = null;
+    private Phase currentPhase_;
 
     // Cached phases are Phase instances that are saved
     // for reuse because they typically retain state (e.g., loop phases and
@@ -224,7 +228,7 @@ public class AppContext
     /**
      * Runnable for processing phase later in swing loop
      */
-    private class ProcessPhaseRunnable implements Runnable
+    private final class ProcessPhaseRunnable implements Runnable
     {
         String _sPhaseName;
         TypedHashMap _params;
@@ -293,7 +297,7 @@ public class AppContext
 
     // guards against recursion: displaying the error dialog runs another
     // phase, which could itself fail and route back here
-    private boolean handlingException_ = false;
+    private boolean handlingException_;
 
     /**
      * subclass logging catch

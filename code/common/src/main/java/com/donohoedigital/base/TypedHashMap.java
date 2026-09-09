@@ -1,6 +1,9 @@
 package com.donohoedigital.base;
 
-import java.util.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TreeMap;
 
 /**
  * This class is used to make hashtable access easier (less casting by

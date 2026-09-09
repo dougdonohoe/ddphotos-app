@@ -1,7 +1,8 @@
 package com.donohoedigital.gui;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JScrollPane;
+import java.awt.Component;
 
 /**
  * Created by IntelliJ IDEA.

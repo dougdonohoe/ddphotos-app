@@ -1,7 +1,11 @@
 package com.donohoedigital.ddphotos;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JPanel;
+import javax.swing.JViewport;
+import javax.swing.Scrollable;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 
 /** Form that fills the viewport width but scrolls horizontally once it can't shrink further. */
 final class ScrollableForm extends JPanel implements Scrollable {

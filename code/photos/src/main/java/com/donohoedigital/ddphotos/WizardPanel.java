@@ -18,7 +18,10 @@ import com.donohoedigital.gui.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,12 +68,12 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
     private final int         startIndex_;   // first step shown; the user cannot go back past it
 
     private int     stepIndex_;
-    private Path    initDir_       = null;   // set in INIT step, forwarded to SiteDialog
+    private Path    initDir_;   // set in INIT step, forwarded to SiteDialog
 
-    private boolean dockerOk_  = false;
-    private boolean scriptOk_  = false;
-    private boolean initOk_    = false;
-    private boolean justRanInit_ = false;   // true right after a successful "Run Init"
+    private boolean dockerOk_;
+    private boolean scriptOk_;
+    private boolean initOk_;
+    private boolean justRanInit_;   // true right after a successful "Run Init"
 
     // ── Layout ────────────────────────────────────────────────────────────────
 

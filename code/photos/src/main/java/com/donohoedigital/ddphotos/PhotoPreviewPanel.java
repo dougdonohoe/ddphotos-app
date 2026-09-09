@@ -2,7 +2,8 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.gui.RenderUtils;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.nio.file.Path;
@@ -19,7 +20,7 @@ public class PhotoPreviewPanel extends JPanel {
     private BufferedImage image;
     /** Redone per file, since a clip gets video-off where an undecodable photo gets camera-off. */
     private Icon placeholderIcon;
-    private boolean isLoading = false;
+    private boolean isLoading;
     private Future<BufferedImage> loadWorker;
 
     public PhotoPreviewPanel(int maxWidth, int maxHeight) {

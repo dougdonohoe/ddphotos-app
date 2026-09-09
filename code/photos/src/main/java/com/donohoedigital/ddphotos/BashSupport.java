@@ -18,7 +18,7 @@ import java.util.List;
  * field from {@link #findBashBinary()} and stores the chosen path in prefs; runtime invocations
  * use {@link #bashPath()} / {@link #wrap} / {@link #applyBashEnv}.
  */
-public class BashSupport {
+public final class BashSupport {
 
     /** Prefs key (under {@link PhotosConstants#PREFS_NODE_APP}) where the bash binary path is stored. */
     public static final String PREFS_KEY_BASH_BINARY = "wizard.bashbinary";

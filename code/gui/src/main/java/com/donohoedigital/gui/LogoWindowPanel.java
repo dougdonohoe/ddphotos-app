@@ -1,7 +1,11 @@
 package com.donohoedigital.gui;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JComponent;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Insets;
 
 /**
  * The standard DD Photos window layout, shared by the main window, the photogen.txt editor and the

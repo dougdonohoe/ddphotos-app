@@ -6,9 +6,10 @@
 
 package com.donohoedigital.gui;
 
-import org.apache.logging.log4j.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
+import javax.swing.JPanel;
 import java.awt.*;
 
 /**
@@ -78,7 +79,7 @@ public class DDPanel extends JPanel implements DDComponent
 
     Rectangle bounds_ = new Rectangle();
     private static final Logger logger = LogManager.getLogger(DDPanel.class);
-    private static int CNT = 0;
+    private static int CNT;
 
     /**
      * Override to set antialiasing hit if isAntiAlias() is true
@@ -104,7 +105,7 @@ public class DDPanel extends JPanel implements DDComponent
         super.paintComponent(g);
     }
 
-    private boolean debug = false;
+    private boolean debug;
 
     public void setDebug(boolean debug)
     {

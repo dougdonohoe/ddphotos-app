@@ -8,8 +8,12 @@ package com.donohoedigital.gui;
 
 import com.donohoedigital.config.DataElement;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.UIManager;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Arrays;
@@ -29,7 +33,7 @@ public class DDComboBox<E> extends JComboBox<E> implements
     Color cSelectionForeground_;
     Color cSelectionBackground_;
     private boolean bRequired_ = true;
-    private boolean bDisplayOnly_ = false;
+    private boolean bDisplayOnly_;
     private MouseListener[] savedArrowListeners_;
     private Color savedBackground_;
 
@@ -250,7 +254,7 @@ public class DDComboBox<E> extends JComboBox<E> implements
     /**
      * remember last selection
      */
-    private Object oLast_ = null;
+    private Object oLast_;
     private void rememberLast()
     {
         oLast_ = getSelectedItem();

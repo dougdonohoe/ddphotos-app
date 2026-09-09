@@ -6,15 +6,19 @@
 
 package com.donohoedigital.gui;
 
-import com.donohoedigital.base.*;
+import com.donohoedigital.base.Utils;
 
-import javax.swing.*;
 import javax.swing.FocusManager;
-import javax.swing.event.*;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
-import java.awt.*;
+import java.awt.Color;
 import java.awt.event.*;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Doug Donohoe
@@ -28,8 +32,8 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
     //static Logger logger = LogManager.getLogger(DDTextArea.class);
 
     private Caret cNormal_;
-    private boolean bDisplayOnly_ = false;
-    private boolean bTabChangesFocus_ = false;
+    private boolean bDisplayOnly_;
+    private boolean bTabChangesFocus_;
     private boolean bSelectAllOnFocus_ = true;
     private Color bgNormal_;
     private Color bgDisplayOnly_;
@@ -37,7 +41,7 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
     private Color bgError_ = Color.black;
     private Pattern pattern_;
     private boolean bValid_ = true;
-    private JScrollPane scroll_ = null;
+    private JScrollPane scroll_;
     private DDUndoManager undo_;
 
     /**
@@ -260,7 +264,7 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
     // Key listener
     //
 
-    private boolean keypressed = false;
+    private boolean keypressed;
 
     public void keyPressed(KeyEvent e)
     {
@@ -449,7 +453,7 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
         firePropertyChange("value", null, e);
     }
 
-    boolean bMouse_ = false;
+    boolean bMouse_;
 
     public void mouseClicked(MouseEvent e)
     {

@@ -6,8 +6,8 @@
 
 package com.donohoedigital.gui;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JCheckBox;
+import java.awt.Color;
 import java.awt.event.MouseEvent;
 
 /**
@@ -15,7 +15,7 @@ import java.awt.event.MouseEvent;
  */
 public class DDCheckBox extends JCheckBox implements DDHasLabelComponent, DDValidatable, DDCustomHelp, DDDisplayOnly
 {
-    private Color cCheckColor_ = null;
+    private Color cCheckColor_;
 
     /**
      * Creates a new instance of DDCheckBox - sets name to sName
@@ -85,7 +85,7 @@ public class DDCheckBox extends JCheckBox implements DDHasLabelComponent, DDVali
         if (!GuiUtils.repaint(this, x, y, width, height)) super.repaint(tm, x, y, width, height);
     }
 
-    private boolean bDisplayOnly_ = false;
+    private boolean bDisplayOnly_;
 
     @Override
     public void setEnabled(boolean b) {

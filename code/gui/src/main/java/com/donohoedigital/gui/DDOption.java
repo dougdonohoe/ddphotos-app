@@ -6,16 +6,22 @@
 
 package com.donohoedigital.gui;
 
-import com.donohoedigital.base.*;
-import com.donohoedigital.config.*;
+import com.donohoedigital.base.TypedHashMap;
+import com.donohoedigital.config.Prefs;
+import com.donohoedigital.config.PropertyConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.prefs.*;
+import javax.swing.JComponent;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.EventListenerList;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.OutputStream;
+import java.util.prefs.NodeChangeListener;
+import java.util.prefs.PreferenceChangeListener;
+import java.util.prefs.Preferences;
 
 /**
  *
@@ -30,7 +36,7 @@ public abstract class DDOption extends DDPanel implements MouseListener, DDDispl
     protected String STYLE;
     protected Preferences prefs_;
     protected TypedHashMap map_;
-    protected boolean bIgnored_ = false;
+    protected boolean bIgnored_;
 
     /**
      * Creates a new instance of DDOption.  If sPrefNode is null,

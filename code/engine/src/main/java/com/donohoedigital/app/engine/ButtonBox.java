@@ -6,15 +6,24 @@
 
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.base.*;
-import com.donohoedigital.app.config.*;
-import com.donohoedigital.gui.*;
-import org.apache.logging.log4j.*;
+import com.donohoedigital.base.ApplicationError;
+import com.donohoedigital.app.config.AppPhase;
+import com.donohoedigital.gui.CenterLayout;
+import com.donohoedigital.gui.DDButton;
+import com.donohoedigital.gui.DDPanel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.*;
-import java.util.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JRootPane;
+import javax.swing.SwingUtilities;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.util.HashMap;
 import java.util.List;
 
 /**

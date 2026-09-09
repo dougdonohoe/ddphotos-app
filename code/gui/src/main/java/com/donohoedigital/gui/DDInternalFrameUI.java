@@ -6,7 +6,8 @@
 
 package com.donohoedigital.gui;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JInternalFrame;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
 
 /**

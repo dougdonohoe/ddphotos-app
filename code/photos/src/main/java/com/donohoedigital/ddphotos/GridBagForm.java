@@ -3,9 +3,13 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.gui.DDLabel;
 import com.donohoedigital.gui.DDPanel;
 
-import javax.swing.*;
+import javax.swing.Box;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 /**
  * Builds the three-column [leading] [field] [trailing] rows used by the detail panels and

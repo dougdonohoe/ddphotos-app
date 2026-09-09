@@ -7,9 +7,10 @@
 package com.donohoedigital.config;
 
 
-import com.donohoedigital.base.*;
+import com.donohoedigital.base.Utils;
 
-import java.util.prefs.*;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 /**
  * @author Doug Donohoe
@@ -29,7 +30,7 @@ public class Prefs
     }
 
     // store root node override
-    private static String ROOT = null;
+    private static String ROOT;
     public static final String NODE_OPTIONS = "options/";
 
     /**

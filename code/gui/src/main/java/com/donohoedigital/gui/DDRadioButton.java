@@ -6,8 +6,8 @@
 
 package com.donohoedigital.gui;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JRadioButton;
+import java.awt.Color;
 import java.awt.event.MouseEvent;
 
 /**
@@ -17,7 +17,7 @@ import java.awt.event.MouseEvent;
 public class DDRadioButton extends JRadioButton implements DDHasLabelComponent, DDDisplayOnly
 {
     //static Logger logger = LogManager.getLogger(DDRadioButton.class);
-    private Color cDotColor_ = null;
+    private Color cDotColor_;
 
     /** 
      * Creates a new instance of DDRadioButton - sets name to sName
@@ -66,7 +66,7 @@ public class DDRadioButton extends JRadioButton implements DDHasLabelComponent, 
         GuiUtils.applyFlatIconStyle(this, cDotColor_, !isEnabled() || bDisplayOnly_);
     }
 
-    private boolean bDisplayOnly_ = false;
+    private boolean bDisplayOnly_;
 
     @Override
     public void setEnabled(boolean b) {

@@ -12,8 +12,11 @@ import com.donohoedigital.gui.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JList;
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +39,7 @@ public class SiteBarPanel extends DDPanel
     private final List<Consumer<Site>> siteListeners_ = new ArrayList<>();
     private BooleanSupplier dirtyChecker_;
     private Site lastSelectedSite_;
-    private boolean suppressSiteChange_ = false;
+    private boolean suppressSiteChange_;
 
     public SiteBarPanel(AppContext context, SitesFile sitesFile, Site selectSite)
     {

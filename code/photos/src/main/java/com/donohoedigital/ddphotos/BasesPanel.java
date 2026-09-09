@@ -15,7 +15,9 @@ import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import java.util.*;
 import java.util.List;
 

@@ -13,9 +13,12 @@ import com.donohoedigital.gui.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -38,7 +41,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
     private AlbumEntry currentEntry_;
     private AlbumEntry originalEntry_;
-    private boolean populating_ = false;
+    private boolean populating_;
 
     // Base combo — backed by mutable lists so resetValues() picks up site changes
     private final List<String> baseKeys_ = new ArrayList<>();

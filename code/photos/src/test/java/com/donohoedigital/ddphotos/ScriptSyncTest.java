@@ -15,7 +15,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 /**
  * Unit tests for the site-script refresh.  Exercises {@link ScriptSync#syncOne} directly against

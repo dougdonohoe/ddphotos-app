@@ -22,7 +22,10 @@ import com.install4j.api.launcher.StartupNotification;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
+import javax.swing.JDesktopPane;
+import javax.swing.JMenuBar;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import java.awt.*;
 import java.net.URL;
 import java.util.ArrayList;
@@ -38,7 +41,7 @@ public abstract class AppEngine extends BaseApp {
     private final Logger logger;
 
     // private stuff - does not change once created
-    private static AppEngine engine_ = null;
+    private static AppEngine engine_;
     private AppdefConfig appdef_;
     private final String sMainModule_;
 

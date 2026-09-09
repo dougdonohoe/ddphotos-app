@@ -7,23 +7,23 @@ import com.donohoedigital.config.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.SwingUtilities;
+import java.awt.Desktop;
 import java.util.Locale;
 
 public abstract class BaseApp
 {
     private final Logger logger;
 
-    static Thread mainThread_ = null;
-    protected static BaseApp app_ = null;
+    static Thread mainThread_;
+    protected static BaseApp app_;
 
-    protected String sLocale_ = null;
+    protected String sLocale_;
     protected BaseFrame frame_;
     protected TypedHashMap htOptions_;
     protected String sAppName;
 
-    private boolean bReady_ = false;
+    private boolean bReady_;
     private String sMajorVersion;
     private final String[] args;
 

@@ -8,7 +8,6 @@ package com.donohoedigital.app.engine;
 
 import com.donohoedigital.base.ApplicationError;
 import com.donohoedigital.base.ErrorCodes;
-import com.donohoedigital.config.Prefs;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.app.config.AppButton;
 import com.donohoedigital.app.config.AppPhase;
@@ -19,13 +18,13 @@ import com.donohoedigital.gui.DialogType;
 import com.donohoedigital.gui.GuiUtils;
 import com.donohoedigital.gui.InternalDialog;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
-import java.awt.*;
+import java.awt.Component;
 import java.awt.event.KeyEvent;
 import java.util.List;
-import java.util.prefs.Preferences;
 
 /**
  * @author Doug Donohoe
@@ -40,7 +39,7 @@ public abstract class DialogPhase extends BasePhase implements InternalDialog.Di
     /**
      * "dialog-no-show-option" prop value
      */
-    protected boolean bNoShowOption_ = false;
+    protected boolean bNoShowOption_;
 
     /**
      * "dialog-no-show-key" prop value
@@ -50,7 +49,7 @@ public abstract class DialogPhase extends BasePhase implements InternalDialog.Di
     /**
      * "style" prop value
      */
-    protected String STYLE = null;
+    protected String STYLE;
 
     /**
      * "dialog-type" prop value (info/warn/error) - drives title-bar color
@@ -98,11 +97,11 @@ public abstract class DialogPhase extends BasePhase implements InternalDialog.Di
     public static final String PARAM_STYLE = "style";
 
     // set if we don't show this because user asked not to see it again
-    private boolean bDontShow_ = false;
-    private boolean bCheckCreateNoShow_ = false;
+    private boolean bDontShow_;
+    private boolean bCheckCreateNoShow_;
 
     // key used for question
-    private String sNoShowCheckboxName_ = null;
+    private String sNoShowCheckboxName_;
 
     /**
      * Init phase, storing engine and phase.  Called createUI()
@@ -354,9 +353,8 @@ public abstract class DialogPhase extends BasePhase implements InternalDialog.Di
         if (bNoShowOption_)
         {
             back_.getNoShowCheckBox().addActionListener(
-                    _ -> {
-                        EnginePrefs.getDialogPrefs().putBoolean(sNoShowKey_, back_.getNoShowCheckBox().isSelected());
-                    });
+                    _ ->
+                        EnginePrefs.getDialogPrefs().putBoolean(sNoShowKey_, back_.getNoShowCheckBox().isSelected()));
         }
 
         //

@@ -5,13 +5,16 @@
  */
 package com.donohoedigital.gui;
 
-import com.donohoedigital.config.*;
-import org.apache.logging.log4j.*;
+import com.donohoedigital.config.ImageConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import javax.swing.text.*;
-import javax.swing.text.html.*;
+import javax.swing.text.Element;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.View;
+import javax.swing.text.html.HTML;
 import java.awt.*;
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
 
 /**
  *
@@ -23,9 +26,9 @@ public class DDImageView extends DDView
 
     BufferedImage image_;
     static Logger logger = LogManager.getLogger(DDImageView.class);
-    int nWidth_ = 0;
-    int nHeight_= 0;
-    int nYadj_ = 0;
+    int nWidth_;
+    int nHeight_;
+    int nYadj_;
 
     /**
      * Creates a new instance of DDImageView 

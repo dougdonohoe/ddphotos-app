@@ -6,16 +6,19 @@
 
 package com.donohoedigital.config;
 
-import com.donohoedigital.base.*;
-import org.apache.logging.log4j.*;
-import org.jdom2.*;
+import com.donohoedigital.base.ApplicationError;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jdom2.Document;
+import org.jdom2.Element;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.image.*;
-import java.util.*;
+import javax.swing.ImageIcon;
+import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.net.*;
+import java.util.Map;
+import java.net.URL;
 
 /**
  * Loads image.xml files in the module directories defined by
@@ -29,7 +32,7 @@ public class ImageConfig extends XMLConfigFileLoader
     
     private static final String IMAGE_CONFIG = "images.xml";
 
-    private static ImageConfig imageConfig = null;
+    private static ImageConfig imageConfig;
     
     private final Map<String, ImageDef> images_ = new HashMap<>();
     

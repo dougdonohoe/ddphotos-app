@@ -6,15 +6,19 @@
 
 package com.donohoedigital.gui;
 
-import com.donohoedigital.base.*;
-import org.apache.logging.log4j.*;
+import com.donohoedigital.base.Utils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JEditorPane;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
-import javax.swing.text.*;
-import javax.swing.text.html.*;
-import java.awt.*;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.StyleSheet;
+import java.awt.Color;
+import java.awt.Font;
 
 /**
  * @author Doug Donohoe
@@ -24,7 +28,7 @@ public class DDHtmlArea extends JEditorPane implements DDTextVisibleComponent, D
     static Logger logger = LogManager.getLogger(DDHtmlArea.class);
 
     private DDHtmlEditorKit htmlKit_;
-    private boolean bDisplayOnly_ = false;
+    private boolean bDisplayOnly_;
 
     /**
      * Creates a new instance of DDTextField, sets name to sName

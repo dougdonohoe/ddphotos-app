@@ -7,7 +7,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.time.Instant;
@@ -156,7 +158,7 @@ public class FileBrowserPanel extends JPanel
     private static class FileTreeNode extends DefaultMutableTreeNode
     {
         final File file;
-        private boolean loaded = false;
+        private boolean loaded;
 
         FileTreeNode(File file)
         {

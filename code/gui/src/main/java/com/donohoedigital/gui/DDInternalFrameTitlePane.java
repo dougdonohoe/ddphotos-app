@@ -6,11 +6,15 @@
 
 package com.donohoedigital.gui;
 
-import com.donohoedigital.config.*;
+import com.donohoedigital.config.StylesConfig;
 
-import javax.swing.plaf.metal.*;
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.plaf.metal.MetalInternalFrameTitlePane;
+import javax.swing.Icon;
+import javax.swing.SwingUtilities;
+import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Rectangle;
 
 /**
  * Title pane for our internal dialogs.  Draws a Metal-style "bumpy" title bar

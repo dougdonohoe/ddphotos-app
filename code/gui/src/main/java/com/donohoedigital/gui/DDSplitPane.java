@@ -2,8 +2,10 @@ package com.donohoedigital.gui;
 
 import org.intellij.lang.annotations.MagicConstant;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JSplitPane;
+import java.awt.Color;
+import java.awt.Component;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,7 +16,7 @@ import java.awt.*;
  */
 public class DDSplitPane extends JSplitPane implements DDComponent
 {
-    private Color thumbFocusOverlay_=  null;
+    private Color thumbFocusOverlay_;
 
     public DDSplitPane(String sName, String sStyle,
                        @MagicConstant(intValues = {JSplitPane.HORIZONTAL_SPLIT,JSplitPane.VERTICAL_SPLIT})

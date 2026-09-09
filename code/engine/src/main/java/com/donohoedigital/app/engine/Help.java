@@ -6,16 +6,24 @@
 
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.base.*;
-import com.donohoedigital.config.*;
-import com.donohoedigital.app.config.*;
+import com.donohoedigital.base.Utils;
+import com.donohoedigital.config.HelpConfig;
+import com.donohoedigital.config.HelpTopic;
+import com.donohoedigital.config.PropertyConfig;
+import com.donohoedigital.app.config.AppButton;
+import com.donohoedigital.app.config.AppPhase;
+import com.donohoedigital.app.config.EngineConstants;
 import com.donohoedigital.gui.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,9 +37,9 @@ public class Help extends BasePhase implements ListSelectionListener,
     private OptionList<HelpTopic> list_;
     private DefaultListModel<HelpTopic> listModel_;
     private DDButton bak_, fwd_;
-    private int nHistIndex_ = 0;
+    private int nHistIndex_;
     private final List<HelpTopic> history_ = new ArrayList<>();
-    private boolean bRunning_ = false;
+    private boolean bRunning_;
 
     /**
      * init data
@@ -227,7 +235,7 @@ public class Help extends BasePhase implements ListSelectionListener,
         return false;
     }
 
-    HelpTopic selected_ = null;
+    HelpTopic selected_;
 
     /**
      * Called whenever the value of the selection changes.
@@ -295,7 +303,7 @@ public class Help extends BasePhase implements ListSelectionListener,
         fwd_.setEnabled(nHistIndex_ < (history_.size() - 1));
     }
 
-    private boolean bSkipHist_ = false;
+    private boolean bSkipHist_;
 
     private void displaySelectedHelpTopic()
     {

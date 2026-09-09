@@ -4,7 +4,8 @@
 
 package com.donohoedigital.gui;
 
-import javax.swing.*;
+import javax.swing.JList;
+import javax.swing.ListModel;
 
 /**
  * A JList that participates in the DD styling/help framework.  Colors, font and

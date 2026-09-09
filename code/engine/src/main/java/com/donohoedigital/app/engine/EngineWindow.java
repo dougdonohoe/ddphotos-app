@@ -10,8 +10,12 @@ import com.donohoedigital.gui.InternalDialog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
+import javax.swing.WindowConstants;
+import java.awt.Dimension;
+import java.awt.DisplayMode;
+import java.awt.Point;
 import java.awt.event.*;
 
 import static com.donohoedigital.config.DebugConfig.TESTING;

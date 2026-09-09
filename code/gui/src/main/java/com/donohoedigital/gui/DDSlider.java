@@ -6,8 +6,8 @@
 
 package com.donohoedigital.gui;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JSlider;
+import java.awt.Color;
 
 /**
  *
@@ -17,8 +17,8 @@ public class DDSlider extends JSlider implements DDComponent
 {
     //static Logger logger = LogManager.getLogger(DDSlider.class);
 
-    private Color thumbFocusOverlay_=  null;
-    private Color thumbBg_ = null;
+    private Color thumbFocusOverlay_;
+    private Color thumbBg_;
 
     public DDSlider(String sName, String sStyle)
     {

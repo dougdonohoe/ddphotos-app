@@ -15,7 +15,10 @@ import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +38,7 @@ public class AlbumsListPanel extends DDPanel {
 
     private final List<Consumer<AlbumEntry>> selectionListeners_ = new ArrayList<>();
     private BooleanSupplier dirtyChecker_;
-    private boolean suppressSelectionChange_ = false;
+    private boolean suppressSelectionChange_;
     private int lastLoadedIndex_ = -1;
 
     public AlbumsListPanel(AppContext context, SiteBarPanel siteBar) {

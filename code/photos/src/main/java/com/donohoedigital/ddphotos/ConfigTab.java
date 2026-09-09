@@ -10,8 +10,10 @@ import com.donohoedigital.gui.OptionSplitPane;
 import com.donohoedigital.gui.DDTabPanel;
 import com.donohoedigital.gui.DDTabbedPane;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JSplitPane;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.nio.file.Path;
 
 public class ConfigTab extends DDTabPanel implements AppEngine.CloseListener

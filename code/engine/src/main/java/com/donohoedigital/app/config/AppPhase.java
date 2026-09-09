@@ -6,11 +6,16 @@
 
 package com.donohoedigital.app.config;
 
-import com.donohoedigital.base.*;
-import com.donohoedigital.config.*;
+import com.donohoedigital.base.ApplicationError;
+import com.donohoedigital.base.ErrorCodes;
+import com.donohoedigital.base.TypedHashMap;
+import com.donohoedigital.config.ConfigUtils;
+import com.donohoedigital.config.XMLConfigFileLoader;
 import com.donohoedigital.app.engine.Phase;
-import org.apache.logging.log4j.*;
-import org.jdom2.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jdom2.Element;
+import org.jdom2.Namespace;
 
 /**
  *
@@ -29,7 +34,7 @@ public class AppPhase extends TypedHashMap
     private Boolean bTransient_;
     private String sWindow_;
 
-    private static AppPhases allPhases_ = null;
+    private static AppPhases allPhases_;
     static void setAppPhases(AppPhases phases)
     {
         allPhases_ = phases;

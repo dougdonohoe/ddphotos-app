@@ -5,7 +5,8 @@ import com.donohoedigital.gui.DDOption;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +17,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
-public class DockerStatus {
+public final class DockerStatus {
 
     private static final Logger logger = LogManager.getLogger(DockerStatus.class);
     private static final int POLL_INTERVAL_MS = 10_000;
@@ -28,8 +29,8 @@ public class DockerStatus {
         void onDockerStatusChanged(boolean running);
     }
 
-    private static volatile boolean running_ = false;
-    private static volatile boolean initialized_ = false;
+    private static volatile boolean running_;
+    private static volatile boolean initialized_;
 
     private static final List<Listener> listeners_ = new CopyOnWriteArrayList<>();
 
