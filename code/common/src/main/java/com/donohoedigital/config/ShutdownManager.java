@@ -111,7 +111,7 @@ public final class ShutdownManager implements Thread.UncaughtExceptionHandler
      */
     public void uncaughtException(Thread t, Throwable e)
     {
-        logger.fatal("Uncaught exception in thread " + t.getName(), e);
+        logger.fatal("Uncaught exception in thread {}", t.getName(), e);
         exitAbnormal(UNCAUGHTEXCEPTION, "uncaught exception: " + e.getMessage());
     }
 
@@ -136,14 +136,14 @@ public final class ShutdownManager implements Thread.UncaughtExceptionHandler
         // log message if non-normal or if we ran shutdown hooks
         boolean log = verbose && (shutdownType != NORMAL || !listeners.isEmpty());
         if (log) {
-            logger.info("Shutting down (" + shutdownType + "): " + shutdownDetails + " ...");
+            logger.info("Shutting down ({}): {} ...", shutdownType, shutdownDetails);
         }
 
         // run listeners
         Collections.reverse(listeners);
         for (ShutdownListener listener : listeners) {
             try {
-                if (log) logger.info("Calling shutdown listener: " + listener);
+                if (log) logger.info("Calling shutdown listener: {}", listener);
                 listener.shutdown(shutdownType, shutdownDetails);
             }
             catch (Throwable t) {

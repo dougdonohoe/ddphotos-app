@@ -90,7 +90,7 @@ public class StylesConfig extends XMLConfigFileLoader
         {
             if (!sName.contains("default"))
             {
-                sLogger.warn("Color not found:" + sName);
+                sLogger.warn("Color not found:{}", sName);
             }
             return cDefault;
         }
@@ -115,7 +115,7 @@ public class StylesConfig extends XMLConfigFileLoader
         {
             if (!sName.contains("default"))
             {
-                sLogger.warn("Font not found:" + sName);
+                sLogger.warn("Font not found:{}", sName);
             }
             return fDefault;
         }
@@ -282,7 +282,7 @@ public class StylesConfig extends XMLConfigFileLoader
                 Font basefont = fontdefs_.get(sFontname);
                 if (basefont == null)
                 {
-                    if (DEBUG_FONT) sLogger.debug("Loading custom font: " + fontUrl);
+                    if (DEBUG_FONT) sLogger.debug("Loading custom font: {}", fontUrl);
                     InputStream is = null;
                     try
                     {
@@ -292,7 +292,7 @@ public class StylesConfig extends XMLConfigFileLoader
                     }
                     catch (Exception e)
                     {
-                        sLogger.error("Error processing font " + fontUrl);
+                        sLogger.error("Error processing font {}", fontUrl);
                         sLogger.error(Utils.formatExceptionText(e));
                     }
                     finally
