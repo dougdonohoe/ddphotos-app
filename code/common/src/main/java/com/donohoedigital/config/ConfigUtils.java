@@ -169,7 +169,7 @@ public class ConfigUtils
             throw new ApplicationError(fnfe);
         }
 
-        return new InputStreamReader(fis);
+        return new InputStreamReader(fis, Utils.newDecoder());
     }
 
     /**
