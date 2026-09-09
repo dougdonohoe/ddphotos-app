@@ -215,18 +215,15 @@ public class ConfigUtils
     public static String readFile(File file)
     {
         verifyFile(file);
-        Reader reader = getReader(file);
-        BufferedReader sreader = new BufferedReader(reader);
         StringBuilder sb = new StringBuilder();
-        String sLine;
-        try
+        try (BufferedReader sreader = new BufferedReader(getReader(file)))
         {
+            String sLine;
             while ((sLine = sreader.readLine()) != null)
             {
                 sb.append(sLine);
                 sb.append('\n');
             }
-            close(reader);
         }
         catch (IOException ioe)
         {
@@ -242,12 +239,10 @@ public class ConfigUtils
      */
     public static String readURL(URL url)
     {
-        Reader reader = getReader(url);
-        BufferedReader sreader = new BufferedReader(reader);
         StringBuilder sb = new StringBuilder();
-        String sLine;
-        try
+        try (BufferedReader sreader = new BufferedReader(getReader(url)))
         {
+            String sLine;
             while ((sLine = sreader.readLine()) != null)
             {
                 sb.append(sLine);
@@ -257,10 +252,6 @@ public class ConfigUtils
         catch (IOException ioe)
         {
             throw new ApplicationError(ioe);
-        }
-        finally
-        {
-            close(reader);
         }
         return sb.toString();
     }
