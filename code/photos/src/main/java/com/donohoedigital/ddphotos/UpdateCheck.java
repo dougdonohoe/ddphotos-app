@@ -35,7 +35,7 @@ import java.util.prefs.Preferences;
  * when it fails - an offline laptop is not an error the user needs a dialog about.  The manual
  * {@code Help > Check for Updates...} does report a failure, because there someone asked.
  */
-public class UpdateCheck {
+public final class UpdateCheck {
 
     private static final Logger logger = LogManager.getLogger(UpdateCheck.class);
 

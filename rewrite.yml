@@ -71,9 +71,9 @@ name: com.donohoedigital.StringsAndCollections
 displayName: String and collection API modernization
 description: >
   isEmpty() over size() == 0, contains() over indexOf(), valueOf() over wrapper
-  constructors, explicit charsets, and friends.  Very little surface in this repo - zero
-  size() == 0, zero wrapper constructors, zero bare getBytes() - so this group may produce
-  an empty patch.
+  constructors, explicit charsets, and friends.  Surveyed on 2026-09-09: PRODUCES AN EMPTY
+  PATCH on this repo - zero size() == 0, zero wrapper constructors, zero bare getBytes().
+  Nothing to do here; kept for future code.
   NOT here, deliberately:
   - ReplaceStringBufferWithStringBuilder.  The only StringBuffer in this code base is
     deliberate.  RunnerConsole.pumpStreamCapturing takes a StringBuffer because
@@ -187,11 +187,21 @@ displayName: Redundant type casts
 description: >
   Drop casts left over from pre-generics code, e.g. (DDOption) options_.get(i) where
   options_ is already List<DDOption>.
-  REVIEW EVERY CHANGE.  This recipe does not understand overload resolution.  In ddpoker
-  it removed the cast from init(sName, (String) null) in gui/DDImageButton.java, where the
-  cast was disambiguating init(String,Icon) inherited from AbstractButton against the local
-  init(String,String).  That one failed to compile, but a cast whose removal silently
-  selects a different overload would not.  Kept opt-in for that reason.
+  DO NOT RUN THIS ON THIS REPO.  Surveyed on 2026-09-09: it produces exactly two changes
+  and both are wrong.
+    gui/DDImageButton.java  rename()
+        Removes the cast from init(sName, (String) null).  DDButton extends JButton, so
+        DDImageButton inherits init(String,Icon) from AbstractButton alongside its own
+        init(String,String).  init(sName, null) is ambiguous between them - String and
+        Icon are unrelated, so neither overload is more specific.  Compile error.  This is
+        the same failure, in the same file, that the recipe caused in ddpoker.
+    common/DataElement.java  getDisplayValue()
+        Removes ((List<?>) values_) even though the line carries an explicit
+        @SuppressWarnings("RedundantCast") and a comment explaining the cast.  The recipe
+        ignores the suppression and leaves the now-pointless annotation behind.
+  The first case is caught by the compiler; a cast whose removal silently selects a
+  different overload would not be.  Kept defined here so the finding is not re-litigated,
+  but it is not part of the sweep.
 recipeList:
   - org.openrewrite.staticanalysis.RemoveRedundantTypeCast
 
@@ -202,7 +212,8 @@ displayName: Method references
 description: >
   Replace lambdas that merely delegate with method references, e.g. () -> updateAll()
   becomes this::updateAll.  Run only after Lambdas - most of these sites do not exist
-  before it.
+  before it.  Surveyed on 2026-09-09, both before and after Lambdas was applied: PRODUCES
+  AN EMPTY PATCH on this repo.  Kept for future code, and for the warning below.
   REVIEW EVERY CHANGE.  This recipe confuses a superclass with an enclosing class.  In
   ddpoker's gameengine/SendMessageDialog.java, which extends DialogPhase, it emitted
   "DialogPhase.this::removeDialog" - illegal, because DialogPhase is a supertype rather

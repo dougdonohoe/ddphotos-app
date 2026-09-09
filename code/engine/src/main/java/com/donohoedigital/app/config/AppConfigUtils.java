@@ -30,7 +30,7 @@ public class AppConfigUtils
      * the returned value is cached in the ConfigManager, so there is only
      * one per application (useful for locking)
      */
-    public synchronized static File getSaveDir()
+    public static synchronized File getSaveDir()
     {
         if (saveDir == null)
         {
@@ -43,7 +43,7 @@ public class AppConfigUtils
      * Get the location for the app's private bin dir, creating the directory if not there.
      * The returned value is cached.
      */
-    public synchronized static File getBinDir()
+    public static synchronized File getBinDir()
     {
         if (binDir == null)
         {
@@ -56,7 +56,7 @@ public class AppConfigUtils
      * Get the location for the app's cache dir, creating the directory if not there.
      * Intended for regenerable data (e.g. thumbnails). The returned value is cached.
      */
-    public synchronized static File getCacheDir()
+    public static synchronized File getCacheDir()
     {
         if (cacheDir == null)
         {

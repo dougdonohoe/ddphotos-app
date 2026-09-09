@@ -15,9 +15,9 @@ import java.util.Map;
  */
 public class DebugConfig
 {
-    private static Logger logger = LogManager.getLogger(DebugConfig.class);
+    private static final Logger logger = LogManager.getLogger(DebugConfig.class);
     private static Boolean TESTING_ENABLED = null;
-    private static final Map<String, Boolean> cache = new HashMap<String, Boolean>();
+    private static final Map<String, Boolean> cache = new HashMap<>();
 
     /**
      * Return true if given debug testing property is on.

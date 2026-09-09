@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
-public class DockerStatus {
+public final class DockerStatus {
 
     private static final Logger logger = LogManager.getLogger(DockerStatus.class);
     private static final int POLL_INTERVAL_MS = 10_000;

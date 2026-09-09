@@ -353,9 +353,8 @@ public abstract class DialogPhase extends BasePhase implements InternalDialog.Di
         if (bNoShowOption_)
         {
             back_.getNoShowCheckBox().addActionListener(
-                    _ -> {
-                        EnginePrefs.getDialogPrefs().putBoolean(sNoShowKey_, back_.getNoShowCheckBox().isSelected());
-                    });
+                    _ ->
+                        EnginePrefs.getDialogPrefs().putBoolean(sNoShowKey_, back_.getNoShowCheckBox().isSelected()));
         }
 
         //
