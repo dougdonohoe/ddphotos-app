@@ -6,8 +6,8 @@
 
 package com.donohoedigital.gui;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JLabel;
+import java.awt.Dimension;
 
 /**
  * @author Doug Donohoe

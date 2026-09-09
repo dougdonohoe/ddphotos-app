@@ -3,8 +3,10 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.gui.DDButton;
 import com.donohoedigital.gui.DDPanel;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 
 /**
  * The Cancel / Save / Save &amp; Close / Close row shared by the standalone editor windows.  The

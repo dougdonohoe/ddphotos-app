@@ -22,7 +22,10 @@ import com.install4j.api.launcher.StartupNotification;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
+import javax.swing.JDesktopPane;
+import javax.swing.JMenuBar;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import java.awt.*;
 import java.net.URL;
 import java.util.ArrayList;

@@ -6,15 +6,19 @@
 
 package com.donohoedigital.gui;
 
-import com.donohoedigital.base.*;
+import com.donohoedigital.base.Utils;
 
-import javax.swing.*;
 import javax.swing.FocusManager;
-import javax.swing.event.*;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
-import java.awt.*;
+import java.awt.Color;
 import java.awt.event.*;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Doug Donohoe

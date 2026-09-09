@@ -2,8 +2,9 @@ package com.donohoedigital.zydeco;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.Icon;
+import javax.swing.UIManager;
+import java.awt.Color;
 
 public class Icons
 {

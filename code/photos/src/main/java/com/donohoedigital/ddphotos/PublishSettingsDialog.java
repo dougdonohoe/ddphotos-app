@@ -6,8 +6,10 @@ import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.gui.*;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JComponent;
+import java.awt.BorderLayout;
 
 /**
  * Chooses which commands {@link PublishController} runs for one site - the checkboxes for

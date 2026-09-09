@@ -3,7 +3,7 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.config.StylesConfig;
 import com.donohoedigital.gui.LogoWindowPanel;
 
-import javax.swing.*;
+import javax.swing.JComponent;
 
 /**
  * The window chrome shared by the standalone editor windows ({@link PhotogenEditorPhase},

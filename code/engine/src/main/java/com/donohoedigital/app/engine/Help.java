@@ -6,16 +6,24 @@
 
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.base.*;
-import com.donohoedigital.config.*;
-import com.donohoedigital.app.config.*;
+import com.donohoedigital.base.Utils;
+import com.donohoedigital.config.HelpConfig;
+import com.donohoedigital.config.HelpTopic;
+import com.donohoedigital.config.PropertyConfig;
+import com.donohoedigital.app.config.AppButton;
+import com.donohoedigital.app.config.AppPhase;
+import com.donohoedigital.app.config.EngineConstants;
 import com.donohoedigital.gui.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 /**

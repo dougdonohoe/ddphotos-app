@@ -6,11 +6,18 @@
 
 package com.donohoedigital.app.engine;
 
-import com.donohoedigital.app.config.*;
-import com.donohoedigital.gui.*;
+import com.donohoedigital.app.config.AppPhase;
+import com.donohoedigital.gui.DDCheckBox;
+import com.donohoedigital.gui.DDPanel;
+import com.donohoedigital.gui.ImageComponent;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
 
 /**
  *

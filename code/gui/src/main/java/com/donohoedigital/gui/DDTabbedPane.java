@@ -6,13 +6,19 @@
 
 package com.donohoedigital.gui;
 
-import com.donohoedigital.config.*;
+import com.donohoedigital.config.PropertyConfig;
 import org.intellij.lang.annotations.MagicConstant;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.*;
-import java.awt.event.*;
+import javax.swing.Icon;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 /**
  *

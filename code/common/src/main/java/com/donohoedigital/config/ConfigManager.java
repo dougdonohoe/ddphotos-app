@@ -1,9 +1,9 @@
 package com.donohoedigital.config;
 
-import com.donohoedigital.base.*;
-import static com.donohoedigital.config.ApplicationType.*;
+import com.donohoedigital.base.ApplicationError;
+import static com.donohoedigital.config.ApplicationType.CLIENT;
 
-import java.io.*;
+import java.io.File;
 
 public class ConfigManager
 {

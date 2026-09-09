@@ -2,8 +2,8 @@ package com.donohoedigital.gui;
 
 import org.intellij.lang.annotations.MagicConstant;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JSplitPane;
+import java.awt.Component;
 import java.util.prefs.Preferences;
 
 /**

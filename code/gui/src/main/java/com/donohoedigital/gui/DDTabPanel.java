@@ -1,10 +1,10 @@
 package com.donohoedigital.gui;
 
-import javax.swing.*;
+import javax.swing.Icon;
 import javax.swing.border.Border;
-import javax.swing.event.*;
-import java.awt.*;
-import java.util.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
+import java.util.ArrayList;
 import java.util.List;
 
 /**

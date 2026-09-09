@@ -10,8 +10,9 @@ import com.formdev.flatlaf.FlatLightLaf;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.UIManager;
+import java.awt.AWTEvent;
+import java.awt.Dimension;
 import java.util.Collections;
 
 public class PhotosMain extends AppEngine

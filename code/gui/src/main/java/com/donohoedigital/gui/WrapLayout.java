@@ -2,7 +2,8 @@ package com.donohoedigital.gui;
 
 import org.intellij.lang.annotations.MagicConstant;
 
-import javax.swing.*;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 import java.awt.*;
 
 /**

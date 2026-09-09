@@ -1,8 +1,8 @@
 package com.donohoedigital.gui;
 
-import javax.swing.*;
+import javax.swing.JDialog;
 import javax.swing.text.JTextComponent;
-import java.awt.*;
+import java.awt.Frame;
 
 /**
  * A JDialog that implements DDWindow so that DD widgets inside it can

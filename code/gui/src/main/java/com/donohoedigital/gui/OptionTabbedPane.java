@@ -2,7 +2,7 @@ package com.donohoedigital.gui;
 
 import org.intellij.lang.annotations.MagicConstant;
 
-import javax.swing.*;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import java.util.prefs.Preferences;
 

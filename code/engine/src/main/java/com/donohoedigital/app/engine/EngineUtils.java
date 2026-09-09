@@ -7,12 +7,9 @@
 package com.donohoedigital.app.engine;
 
 import com.donohoedigital.base.TypedHashMap;
-import com.donohoedigital.app.config.*;
+import com.donohoedigital.app.config.AppButton;
 import com.donohoedigital.gui.DialogType;
 import com.donohoedigital.gui.GuiUtils;
-
-import javax.swing.*;
-import java.awt.*;
 
 /**
  *

@@ -4,7 +4,8 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.FileDialog;
+import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.io.File;
 

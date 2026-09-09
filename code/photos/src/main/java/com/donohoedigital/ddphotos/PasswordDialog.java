@@ -8,12 +8,14 @@ import com.donohoedigital.ddphotos.config.AlbumsFileException;
 import com.donohoedigital.ddphotos.config.PasswordsFile;
 import com.donohoedigital.ddphotos.config.PasswordsFileException;
 import com.donohoedigital.ddphotos.config.Site;
-import com.donohoedigital.gui.*;
+import com.donohoedigital.gui.DDCheckBox;
+import com.donohoedigital.gui.DDTextField;
+import com.donohoedigital.gui.DDValidatable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JComponent;
+import java.awt.Component;
 
 /**
  * Edits the {@code passwords.yaml} file's {@code key} plus one password/hint pair — the

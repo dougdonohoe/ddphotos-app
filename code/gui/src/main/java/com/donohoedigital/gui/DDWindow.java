@@ -1,6 +1,6 @@
 package com.donohoedigital.gui;
 
-import javax.swing.text.*;
+import javax.swing.text.JTextComponent;
 
 /**
  * Created by IntelliJ IDEA.

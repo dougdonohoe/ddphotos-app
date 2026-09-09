@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.donohoedigital.ddphotos.runner.FlagVisibility.*;
+import static com.donohoedigital.ddphotos.runner.FlagVisibility.VIEW_ONLY;
 
 public class InstallScriptRunner extends CommandRunner {
 

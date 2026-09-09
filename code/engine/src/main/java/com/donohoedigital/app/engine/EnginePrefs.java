@@ -7,8 +7,6 @@
 package com.donohoedigital.app.engine;
 
 import com.donohoedigital.config.Prefs;
-import com.donohoedigital.config.PropertyConfig;
-import com.donohoedigital.gui.DDOption;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

@@ -2,7 +2,8 @@ package com.donohoedigital.config;
 
 import org.junit.jupiter.api.Test;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
 
 import static com.donohoedigital.config.StylesConfig.USE_DEFAULT_COLOR;
 import static org.junit.jupiter.api.Assertions.*;

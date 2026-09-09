@@ -1,11 +1,11 @@
 package com.donohoedigital.config;
 
-import com.donohoedigital.base.*;
+import com.donohoedigital.base.Utils;
 import org.junit.jupiter.api.Test;
 
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Created by IntelliJ IDEA.

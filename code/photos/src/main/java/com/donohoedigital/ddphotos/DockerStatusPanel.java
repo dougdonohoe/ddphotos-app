@@ -9,8 +9,11 @@ import com.donohoedigital.gui.DDIconButtons;
 import com.donohoedigital.gui.DDPanel;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 

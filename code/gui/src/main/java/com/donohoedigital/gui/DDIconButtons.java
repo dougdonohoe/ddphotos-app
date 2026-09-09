@@ -2,8 +2,12 @@ package com.donohoedigital.gui;
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.Icon;
+import javax.swing.UIManager;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.util.function.Supplier;
 
 /**

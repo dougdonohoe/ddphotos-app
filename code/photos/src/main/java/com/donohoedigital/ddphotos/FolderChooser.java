@@ -2,8 +2,9 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.base.Utils;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFileChooser;
+import java.awt.FileDialog;
+import java.awt.Frame;
 import java.io.File;
 
 public class FolderChooser {

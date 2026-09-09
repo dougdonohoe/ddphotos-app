@@ -7,12 +7,15 @@ import com.donohoedigital.ddphotos.config.AlbumsFileException;
 import com.donohoedigital.ddphotos.config.HeroEntry;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.config.PropertyConfig;
-import com.donohoedigital.gui.*;
+import com.donohoedigital.gui.DDButton;
+import com.donohoedigital.gui.DDIconButtons;
+import com.donohoedigital.gui.DDTextField;
+import com.donohoedigital.gui.DDValidatable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JComponent;
+import java.awt.Component;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;

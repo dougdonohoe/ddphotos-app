@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import static com.donohoedigital.ddphotos.PathValidation.evaluateCover;
 import static com.donohoedigital.ddphotos.PathValidation.evaluateUnderBase;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 /**
  * Unit tests for the path-validation rule engine.  No Swing or config dependency - exercises

@@ -7,9 +7,11 @@
 package com.donohoedigital.gui;
 
 
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
+import javax.swing.Icon;
+import javax.swing.JMenu;
+import javax.swing.SwingConstants;
+import javax.swing.border.Border;
+import java.awt.Graphics;
 
 /**
  * Should be identical to DDMenuItem since JMenu extends JMenuItem
