@@ -11,12 +11,12 @@ import org.apache.logging.log4j.Logger;
 
 public class ApplicationError extends RuntimeException
 {
-    private String sMessage_ = null;
-    private String sDetails_ = null;
-    private String sSuggestedResolution_ = null;
+    private String sMessage_;
+    private String sDetails_;
+    private String sSuggestedResolution_;
     private final int nErrorCode_;
-    boolean bDetailsIsException_ = false;
-    private Throwable exception_ = null;
+    boolean bDetailsIsException_;
+    private Throwable exception_;
 
     /**
      * Default - code error
@@ -128,7 +128,7 @@ public class ApplicationError extends RuntimeException
         }
     }
     
-    boolean bSkipToString = false;
+    boolean bSkipToString;
 
     private void init()
     {

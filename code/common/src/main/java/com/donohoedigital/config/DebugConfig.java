@@ -16,7 +16,7 @@ import java.util.Map;
 public class DebugConfig
 {
     private static final Logger logger = LogManager.getLogger(DebugConfig.class);
-    private static Boolean TESTING_ENABLED = null;
+    private static Boolean TESTING_ENABLED;
     private static final Map<String, Boolean> cache = new HashMap<>();
 
     /**

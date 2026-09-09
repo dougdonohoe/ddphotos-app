@@ -36,7 +36,7 @@ public class OptionFileChooser extends DDOption implements PropertyChangeListene
     private Supplier<String> startDirSupplier_;
     private UnaryOperator<String> pathProcessor_;
     private String chooserTitle_;
-    private boolean directoryMode_ = false;
+    private boolean directoryMode_;
     private Picker picker_;
 
     /**

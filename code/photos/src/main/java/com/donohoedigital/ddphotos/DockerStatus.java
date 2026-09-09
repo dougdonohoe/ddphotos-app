@@ -29,8 +29,8 @@ public final class DockerStatus {
         void onDockerStatusChanged(boolean running);
     }
 
-    private static volatile boolean running_ = false;
-    private static volatile boolean initialized_ = false;
+    private static volatile boolean running_;
+    private static volatile boolean initialized_;
 
     private static final List<Listener> listeners_ = new CopyOnWriteArrayList<>();
 

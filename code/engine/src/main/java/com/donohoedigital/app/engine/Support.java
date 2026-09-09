@@ -19,7 +19,7 @@ import java.util.Properties;
 public class Support extends BasePhase {
     private LogoWindowPanel base_;
     private DDTextArea log_;
-    private boolean bRunning_ = false;
+    private boolean bRunning_;
 
     /**
      * init data

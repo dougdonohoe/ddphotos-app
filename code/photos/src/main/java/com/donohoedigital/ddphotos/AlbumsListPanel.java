@@ -38,7 +38,7 @@ public class AlbumsListPanel extends DDPanel {
 
     private final List<Consumer<AlbumEntry>> selectionListeners_ = new ArrayList<>();
     private BooleanSupplier dirtyChecker_;
-    private boolean suppressSelectionChange_ = false;
+    private boolean suppressSelectionChange_;
     private int lastLoadedIndex_ = -1;
 
     public AlbumsListPanel(AppContext context, SiteBarPanel siteBar) {

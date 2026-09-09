@@ -204,11 +204,11 @@ public class InternalDialog extends JInternalFrame implements DDWindow
     }
 
     // close listener for dialog
-    private InternalFrameListener close_ = null;
+    private InternalFrameListener close_;
     
     // stuff for modal dialogs
     private BaseFrame.Modal modalUtil_;
-    private JPanel mouseBlocker_ = null;
+    private JPanel mouseBlocker_;
 
     // Listeners for modal mouse blocker layer
     private static final MouseAdapter MY_MOUSE = new MouseAdapter() {};
@@ -633,7 +633,7 @@ public class InternalDialog extends JInternalFrame implements DDWindow
         void blockerFinished(JPanel panel);
     }
     
-    private static ModalBlockerListener blockerListener_ = null;
+    private static ModalBlockerListener blockerListener_;
     
     /**
      * Set the blocker listener

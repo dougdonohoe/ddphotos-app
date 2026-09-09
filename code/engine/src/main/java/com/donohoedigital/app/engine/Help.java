@@ -37,9 +37,9 @@ public class Help extends BasePhase implements ListSelectionListener,
     private OptionList<HelpTopic> list_;
     private DefaultListModel<HelpTopic> listModel_;
     private DDButton bak_, fwd_;
-    private int nHistIndex_ = 0;
+    private int nHistIndex_;
     private final List<HelpTopic> history_ = new ArrayList<>();
-    private boolean bRunning_ = false;
+    private boolean bRunning_;
 
     /**
      * init data
@@ -235,7 +235,7 @@ public class Help extends BasePhase implements ListSelectionListener,
         return false;
     }
 
-    HelpTopic selected_ = null;
+    HelpTopic selected_;
 
     /**
      * Called whenever the value of the selection changes.
@@ -303,7 +303,7 @@ public class Help extends BasePhase implements ListSelectionListener,
         fwd_.setEnabled(nHistIndex_ < (history_.size() - 1));
     }
 
-    private boolean bSkipHist_ = false;
+    private boolean bSkipHist_;
 
     private void displaySelectedHelpTopic()
     {

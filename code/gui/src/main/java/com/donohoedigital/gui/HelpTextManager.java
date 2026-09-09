@@ -22,7 +22,7 @@ public class HelpTextManager
      * get their own help widget, so without this fallback their hover-help is
      * silently dropped.  Set once by the main phase (see PhotosBasePhase).
      */
-    private static JTextComponent globalHelp_ = null;
+    private static JTextComponent globalHelp_;
 
     /**
      * Set the global fallback help widget (see globalHelp_)
@@ -40,8 +40,8 @@ public class HelpTextManager
         return globalHelp_;
     }
 
-    private JTextComponent tHelp_ = null;
-    private boolean bIgnore_ = false;
+    private JTextComponent tHelp_;
+    private boolean bIgnore_;
 
     /**
      * Set widget used to display help text

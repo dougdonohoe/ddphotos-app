@@ -45,12 +45,12 @@ public class AppContext
     private EngineDialog dialog_;
 
     // Holds last phase to be set as main panel in this context
-    private Phase currentMainUIPhase_ = null;
+    private Phase currentMainUIPhase_;
 
     // Current phase being executed - this is set whenever a phase is
     // run unless the definition of the phase says it is transient (typically
     // set for info dialog type phases
-    private Phase currentPhase_ = null;
+    private Phase currentPhase_;
 
     // Cached phases are Phase instances that are saved
     // for reuse because they typically retain state (e.g., loop phases and
@@ -297,7 +297,7 @@ public class AppContext
 
     // guards against recursion: displaying the error dialog runs another
     // phase, which could itself fail and route back here
-    private boolean handlingException_ = false;
+    private boolean handlingException_;
 
     /**
      * subclass logging catch

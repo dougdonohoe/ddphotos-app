@@ -36,7 +36,7 @@ public class PropertyConfig extends Properties
     private static final String PROPS_CONFIG_CMDLINE = "cmdline.properties";
 
     // the one instance
-    private static PropertyConfig propConfig = null;
+    private static PropertyConfig propConfig;
 
     // testing - don't throw missing exceptions
     private static final boolean testing = false;

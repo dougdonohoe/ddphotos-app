@@ -26,9 +26,9 @@ public class DDImageView extends DDView
 
     BufferedImage image_;
     static Logger logger = LogManager.getLogger(DDImageView.class);
-    int nWidth_ = 0;
-    int nHeight_= 0;
-    int nYadj_ = 0;
+    int nWidth_;
+    int nHeight_;
+    int nYadj_;
 
     /**
      * Creates a new instance of DDImageView 

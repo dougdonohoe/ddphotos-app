@@ -34,7 +34,7 @@ public class StylesConfig extends XMLConfigFileLoader
 
     private static final String STYLE_CONFIG = "styles.xml";
     private static final boolean DEBUG_FONT = false;
-    private static StylesConfig stylesConfig = null;
+    private static StylesConfig stylesConfig;
 
     static final Color USE_DEFAULT_COLOR = new Color(0, 0, 0, 0);
 

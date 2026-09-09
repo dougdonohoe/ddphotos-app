@@ -36,7 +36,7 @@ public abstract class DDOption extends DDPanel implements MouseListener, DDDispl
     protected String STYLE;
     protected Preferences prefs_;
     protected TypedHashMap map_;
-    protected boolean bIgnored_ = false;
+    protected boolean bIgnored_;
 
     /**
      * Creates a new instance of DDOption.  If sPrefNode is null,

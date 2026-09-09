@@ -21,9 +21,9 @@ public class AppConfigUtils
     public static final String BIN_DIR = "bin";
     public static final String CACHE_DIR = "cache";
 
-    private static File saveDir = null;
-    private static File binDir = null;
-    private static File cacheDir = null;
+    private static File saveDir;
+    private static File binDir;
+    private static File cacheDir;
 
     /**
      * Get the location for save files, creating the directory if not there.

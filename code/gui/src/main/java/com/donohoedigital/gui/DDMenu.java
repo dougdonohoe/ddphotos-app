@@ -39,7 +39,7 @@ public class DDMenu extends JMenu implements DDHasLabelComponent, DDDisplayOnly
         return "menu";
     }
     
-    boolean bDisplayOnly_ = false;
+    boolean bDisplayOnly_;
     
     /**
      * Set item display only - useful for

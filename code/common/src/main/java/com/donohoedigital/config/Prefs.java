@@ -30,7 +30,7 @@ public class Prefs
     }
 
     // store root node override
-    private static String ROOT = null;
+    private static String ROOT;
     public static final String NODE_OPTIONS = "options/";
 
     /**

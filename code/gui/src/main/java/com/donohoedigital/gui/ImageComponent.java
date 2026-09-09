@@ -34,28 +34,28 @@ public class ImageComponent extends JComponent implements Icon
 
     protected String sName_;
     protected BufferedImage bimage_;
-    protected boolean bComposite_ = false;
+    protected boolean bComposite_;
     protected BufferedImage[] composites_;
     protected int[] compositeXs_;
     protected int[] compositeYs_;
     protected int nCompositeHeight_, nCompositeWidth_;
     protected Image grayimage_;
     protected Image hiliteimage_;
-    protected boolean bHighlighted_ = false;
+    protected boolean bHighlighted_;
     protected double dScaleFactor_;
 
     private Dimension dInitialSize_;
     private boolean scaleToFit_ = true;
-    private boolean bTile_ = false;
+    private boolean bTile_;
     private Rectangle imagebounds_;
-    private boolean bHidden_ = false;
+    private boolean bHidden_;
     private CustomImage custom_;
-    private boolean bUseCustom_ = false;
-    private ImageComponent parentTile_ = null;
-    private ComponentAdapter parentAdapter_ = null;
-    private boolean bBuffer_ = false;
-    private boolean bRefreshBuffer_ = false;
-    private BufferedImage buffer_ = null;
+    private boolean bUseCustom_;
+    private ImageComponent parentTile_;
+    private ComponentAdapter parentAdapter_;
+    private boolean bBuffer_;
+    private boolean bRefreshBuffer_;
+    private BufferedImage buffer_;
     private boolean bCenter_ = true;
     private Object interpolation_ = RenderingHints.VALUE_INTERPOLATION_BILINEAR;
     static int nColor_ = -1;
@@ -845,8 +845,8 @@ public class ImageComponent extends JComponent implements Icon
         return dIconScale_;
     }
 
-    Integer dIconHeight_ = null;
-    Integer dIconWidth_ = null;
+    Integer dIconHeight_;
+    Integer dIconWidth_;
     int nVerticalAlignment_ = SwingConstants.CENTER;
     int nHorizontalAlignment_ = SwingConstants.CENTER;
 

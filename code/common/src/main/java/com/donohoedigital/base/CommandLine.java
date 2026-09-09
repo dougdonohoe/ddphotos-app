@@ -10,17 +10,17 @@ import java.util.*;
 public class CommandLine
 {
     // members
-    private static String sUsage_ = null;
-    private static Integer nMinRequiredParams_ = null;  // min number of non-option params
-    private static Integer nMaxRequiredParams_ = null;  // max number of non-option params
+    private static String sUsage_;
+    private static Integer nMinRequiredParams_;  // min number of non-option params
+    private static Integer nMaxRequiredParams_;  // max number of non-option params
     private static String sParamName_ = "[file]";
     private static String sParamUsage_ = "[file 1] ... [file N]";
     private static String sParamDesc_ = "a file";
     private static final Map<String, Option> htOpts_ = new HashMap<>(); // options to gather
 
     private static TypedHashMap htValues_ = new TypedHashMap(); // options gathered
-    private static String[] saRemainingArgs_ = null; // command line values not part of args
-    private static String sMacFileArg_ = null; // filename passed into a Mac
+    private static String[] saRemainingArgs_; // command line values not part of args
+    private static String sMacFileArg_; // filename passed into a Mac
 
     // types
     private static final int OPT_UNSPECIFIED = 0;
@@ -33,11 +33,11 @@ public class CommandLine
     private static class Option
     {
         int nType = OPT_UNSPECIFIED;
-        boolean bRequired = false;
-        String sName = null;
-        String sDesc = null;
-        String sExample = null;
-        Object oDefault = null;
+        boolean bRequired;
+        String sName;
+        String sDesc;
+        String sExample;
+        Object oDefault;
     }
 
     // setup methods

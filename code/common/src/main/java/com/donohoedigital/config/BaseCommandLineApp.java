@@ -11,8 +11,8 @@ import com.donohoedigital.base.TypedHashMap;
 
 public abstract class BaseCommandLineApp
 {
-    protected String sAppName_ = null;
-    protected String sConfigDir_ = null;
+    protected String sAppName_;
+    protected String sConfigDir_;
     protected TypedHashMap htOptions_;
             
     public BaseCommandLineApp(String sAppName, String[] args)

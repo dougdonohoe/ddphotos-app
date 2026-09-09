@@ -41,7 +41,7 @@ public abstract class AppEngine extends BaseApp {
     private final Logger logger;
 
     // private stuff - does not change once created
-    private static AppEngine engine_ = null;
+    private static AppEngine engine_;
     private AppdefConfig appdef_;
     private final String sMainModule_;
 

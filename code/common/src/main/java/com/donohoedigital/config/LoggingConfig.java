@@ -36,8 +36,8 @@ public class LoggingConfig
     private final boolean allowUserOverrides;
 
     private LoggerContext loggerContext;
-    private File logDir = null;
-    private File logFile = null;
+    private File logDir;
+    private File logFile;
 
     /**
      * Default constructor

@@ -41,7 +41,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
     private AlbumEntry currentEntry_;
     private AlbumEntry originalEntry_;
-    private boolean populating_ = false;
+    private boolean populating_;
 
     // Base combo — backed by mutable lists so resetValues() picks up site changes
     private final List<String> baseKeys_ = new ArrayList<>();

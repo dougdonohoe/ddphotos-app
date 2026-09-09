@@ -28,7 +28,7 @@ public class DDHtmlArea extends JEditorPane implements DDTextVisibleComponent, D
     static Logger logger = LogManager.getLogger(DDHtmlArea.class);
 
     private DDHtmlEditorKit htmlKit_;
-    private boolean bDisplayOnly_ = false;
+    private boolean bDisplayOnly_;
 
     /**
      * Creates a new instance of DDTextField, sets name to sName

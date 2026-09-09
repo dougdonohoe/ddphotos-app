@@ -21,7 +21,7 @@ public final class CachedEntityResolver implements EntityResolver
 {
     private final Map<String, URL> matches = new HashMap<>();
 
-    private static CachedEntityResolver resolver = null;
+    private static CachedEntityResolver resolver;
 
     public static synchronized CachedEntityResolver instance()
     {
