@@ -129,7 +129,20 @@ name: com.donohoedigital.ParameterizedLogging
 displayName: Parameterized logging
 description: >
   Rewrite log.debug("x " + y) as log.debug("x {}", y) so the concatenation no longer
-  happens when the level is disabled.  Roughly 43 such calls here.
+  happens when the level is disabled.
+  NOT RUN ON THIS REPO - the 8 conversions were done by hand instead.  Surveyed on
+  2026-09-09: there are only 11 concatenating log calls in 4 files, and 2 of them
+  (StylesConfig 302 and 316) start with a non-literal, which forces the crash-avoidance
+  exclusion to skip StylesConfig entirely - and StylesConfig holds 6 of the 11.  Running
+  the recipe would therefore have converted 5 calls and silently left 6.  At that size,
+  hand-editing all of them is both cheaper and more complete.  Three were deliberately
+  left alone:
+    StylesConfig 302, 316  seven placeholders each, behind a "DEBUG_FONT" static-false
+        guard, so the concatenation never runs.  Arity risk for no gain.
+    EnginePrefs 58         concatenates NODE_DIALOG_PHASE, a private static final String.
+        javac folds that into a single literal at compile time, so parameterizing it
+        would replace zero cost with a runtime format call.
+  The recipe is kept defined for future code, with its caveats below.
   ParameterizedLogging is not zero-config - it requires a methodPattern, and silently
   does nothing without one (it logs a validation error but still reports BUILD SUCCESS).
   This code base logs exclusively through log4j2 (org.apache.logging.log4j.Logger, 44
