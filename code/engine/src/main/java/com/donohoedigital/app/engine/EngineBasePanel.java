@@ -6,7 +6,6 @@
 
 package com.donohoedigital.app.engine;
 
-import static com.donohoedigital.config.DebugConfig.*;
 import com.donohoedigital.config.*;
 import com.donohoedigital.app.config.*;
 import com.donohoedigital.gui.*;
@@ -22,8 +21,6 @@ import java.awt.image.*;
  */
 public class EngineBasePanel extends JPanel
 {
-    static Logger logger = LogManager.getLogger(EngineBasePanel.class);
-
     JComponent bottom_;
     Component center_ = null;
     Component focus_ = null;
@@ -64,16 +61,6 @@ public class EngineBasePanel extends JPanel
 
         setBackground(StylesConfig.getColor(sBackGroundImage, Color.black));
         setForeground(Color.white);
-
-        if (TESTING(EngineConstants.TESTING_PERFORMANCE))
-        {
-            GuiUtils.addKeyAction(this, JComponent.WHEN_IN_FOCUSED_WINDOW,
-                                  "perf", new DebugPerf(), KeyEvent.VK_P, 0);
-            GuiUtils.addKeyAction(this, JComponent.WHEN_IN_FOCUSED_WINDOW,
-                                  "gc", new DebugGC(), KeyEvent.VK_G, 0);
-            GuiUtils.addKeyAction(this, JComponent.WHEN_IN_FOCUSED_WINDOW,
-                                  "objcount", new DebugCount(), KeyEvent.VK_O, 0);
-        }
     }
 
     /**
@@ -136,46 +123,5 @@ public class EngineBasePanel extends JPanel
     public BaseFrame getBaseFrame()
     {
         return frame_;
-    }
-
-    /**
-     * Called when 'p' pressed - toggles Perf on/off
-     */
-    private static class DebugPerf extends AbstractAction
-    {
-        public void actionPerformed(ActionEvent e)
-        {
-            if (Perf.isStarted())
-            {
-                Perf.stop();
-            }
-            else
-            {
-                Perf.start();
-            }
-        }
-    }
-
-    /**
-     * Called when 'o' pressed - display object count
-     */
-    private static class DebugCount extends AbstractAction
-    {
-        public void actionPerformed(ActionEvent e)
-        {
-            Perf.displayCurrentCount();
-        }
-    }
-
-    /**
-     * Called when 'g' pressed - run GC
-     */
-    private static class DebugGC extends AbstractAction
-    {
-        public void actionPerformed(ActionEvent e)
-        {
-            System.gc();
-            logger.debug("Running GC....");
-        }
     }
 }

@@ -100,8 +100,13 @@ public class AppPhase extends TypedHashMap
             throw new ApplicationError(ErrorCodes.ERROR_VALIDATION, sMsg, "Define a class for this phase");
         }
 
-        //noinspection unchecked
-        class_ = (Class<? extends Phase>) ConfigUtils.getClass(sClassname_, false);
+        // The cast is unchecked on purpose.  AppContext checks it for real when it
+        // instantiates the phase, and turns the ClassCastException into an ApplicationError
+        // naming the offending class.  Checking here with asSubclass would throw outside
+        // that handler.
+        @SuppressWarnings("unchecked")
+        Class<? extends Phase> clazz = (Class<? extends Phase>) ConfigUtils.getClass(sClassname_, false);
+        class_ = clazz;
         
         // params and paramlist in phase
         XMLConfigFileLoader.loadParams(phase, ns, this, false, false,
