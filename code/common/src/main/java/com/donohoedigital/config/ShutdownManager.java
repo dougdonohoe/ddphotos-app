@@ -20,7 +20,7 @@ public final class ShutdownManager implements Thread.UncaughtExceptionHandler
     private static final Logger logger = LogManager.getLogger(ShutdownManager.class);
 
     // the manager
-    private static ShutdownManager manager = null;
+    private static ShutdownManager manager;
 
     // verbosity
     private static boolean verbose = true;

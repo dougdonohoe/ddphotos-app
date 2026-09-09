@@ -30,14 +30,14 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
     public static final Color DISABLE_BG = new Color(204, 204, 204, 178);
 
     // members
-    private boolean bDisplayOnly_ = false;
+    private boolean bDisplayOnly_;
     private Color bgNormal_;
     private Color bgDisplayOnly_;
     private Color bgDisabled_;
     private Color bgError_ = Color.black;
     private Pattern pattern_;
     private boolean bValid_ = true;
-    private JButton defaultOverride_ = null;
+    private JButton defaultOverride_;
     private DDUndoManager undo_;
 
     /**
@@ -221,7 +221,7 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
     // Key listener
     //
 
-    private int keypressed = 0;
+    private int keypressed;
 
     /**
      * note a key pressed
@@ -479,7 +479,7 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
         firePropertyChange("value", null, e);
     }
 
-    boolean bMouse_ = false;
+    boolean bMouse_;
 
     public void mouseClicked(MouseEvent e)
     {

@@ -30,7 +30,7 @@ public class HelpConfig extends XMLConfigFileLoader
     
     private String HELP_CONFIG = "help.xml";
 
-    private static HelpConfig helpConfig = null;
+    private static HelpConfig helpConfig;
     
     private final Map<String, HelpTopic> helps_ = new HashMap<>();
     private final List<HelpTopic> helparray_ = new ArrayList<>();

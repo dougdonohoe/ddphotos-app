@@ -68,7 +68,7 @@ public class RunnerConsole extends JPanel {
     private int current_ = -1;
     // Document offset from which the next incremental match scan resumes, so streamed
     // output can be searched live without rescanning the whole document each append.
-    private int searchFrom_ = 0;
+    private int searchFrom_;
 
     public RunnerConsole() {
         super(new BorderLayout());

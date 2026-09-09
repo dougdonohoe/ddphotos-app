@@ -34,7 +34,7 @@ public class AppPhase extends TypedHashMap
     private Boolean bTransient_;
     private String sWindow_;
 
-    private static AppPhases allPhases_ = null;
+    private static AppPhases allPhases_;
     static void setAppPhases(AppPhases phases)
     {
         allPhases_ = phases;

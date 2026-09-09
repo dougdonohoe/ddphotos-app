@@ -77,7 +77,7 @@ public class DDMenuItem extends JMenuItem implements DDHasLabelComponent, DDDisp
         return "menuitem";
     }
     
-    boolean bDisplayOnly_ = false;
+    boolean bDisplayOnly_;
     
     /**
      * Set item display only - useful for

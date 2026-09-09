@@ -16,7 +16,7 @@ import java.awt.Component;
  */
 public class DDSplitPane extends JSplitPane implements DDComponent
 {
-    private Color thumbFocusOverlay_=  null;
+    private Color thumbFocusOverlay_;
 
     public DDSplitPane(String sName, String sStyle,
                        @MagicConstant(intValues = {JSplitPane.HORIZONTAL_SPLIT,JSplitPane.VERTICAL_SPLIT})

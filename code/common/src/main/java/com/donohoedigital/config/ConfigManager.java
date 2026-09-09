@@ -7,8 +7,8 @@ import java.io.File;
 
 public class ConfigManager
 {
-    private static ConfigManager configMgr = null;
-    private static String appName = null;
+    private static ConfigManager configMgr;
+    private static String appName;
 
     // config things we load/store
     private final String locale;

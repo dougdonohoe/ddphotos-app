@@ -32,7 +32,7 @@ public class ImageConfig extends XMLConfigFileLoader
     
     private static final String IMAGE_CONFIG = "images.xml";
 
-    private static ImageConfig imageConfig = null;
+    private static ImageConfig imageConfig;
     
     private final Map<String, ImageDef> images_ = new HashMap<>();
     

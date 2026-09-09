@@ -221,8 +221,8 @@ public class ImageDef
         return buf;
     }
 
-    private static long totalSize_ = 0;
-    private static long totalSizeCached_ = 0;
+    private static long totalSize_;
+    private static long totalSizeCached_;
     /**
      * Log size for debugging
      */

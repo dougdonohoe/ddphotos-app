@@ -20,7 +20,7 @@ public class PhotoPreviewPanel extends JPanel {
     private BufferedImage image;
     /** Redone per file, since a clip gets video-off where an undecodable photo gets camera-off. */
     private Icon placeholderIcon;
-    private boolean isLoading = false;
+    private boolean isLoading;
     private Future<BufferedImage> loadWorker;
 
     public PhotoPreviewPanel(int maxWidth, int maxHeight) {

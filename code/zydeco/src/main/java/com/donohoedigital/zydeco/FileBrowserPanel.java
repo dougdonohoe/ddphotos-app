@@ -158,7 +158,7 @@ public class FileBrowserPanel extends JPanel
     private static class FileTreeNode extends DefaultMutableTreeNode
     {
         final File file;
-        private boolean loaded = false;
+        private boolean loaded;
 
         FileTreeNode(File file)
         {

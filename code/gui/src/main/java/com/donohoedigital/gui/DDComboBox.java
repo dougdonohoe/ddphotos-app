@@ -33,7 +33,7 @@ public class DDComboBox<E> extends JComboBox<E> implements
     Color cSelectionForeground_;
     Color cSelectionBackground_;
     private boolean bRequired_ = true;
-    private boolean bDisplayOnly_ = false;
+    private boolean bDisplayOnly_;
     private MouseListener[] savedArrowListeners_;
     private Color savedBackground_;
 
@@ -254,7 +254,7 @@ public class DDComboBox<E> extends JComboBox<E> implements
     /**
      * remember last selection
      */
-    private Object oLast_ = null;
+    private Object oLast_;
     private void rememberLast()
     {
         oLast_ = getSelectedItem();

@@ -40,7 +40,7 @@ public class DockerStatusPanel extends DDPanel implements DockerStatus.Listener 
     private final FlatSVGIcon iconStopped_;
     private final FlatSVGIcon iconStoppedHover_;
 
-    private boolean hovering_ = false;
+    private boolean hovering_;
 
     public DockerStatusPanel(AppContext context) {
         this(context, DEFAULT_ICON_SIZE);

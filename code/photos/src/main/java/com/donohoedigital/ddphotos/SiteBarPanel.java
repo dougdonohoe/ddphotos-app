@@ -39,7 +39,7 @@ public class SiteBarPanel extends DDPanel
     private final List<Consumer<Site>> siteListeners_ = new ArrayList<>();
     private BooleanSupplier dirtyChecker_;
     private Site lastSelectedSite_;
-    private boolean suppressSiteChange_ = false;
+    private boolean suppressSiteChange_;
 
     public SiteBarPanel(AppContext context, SitesFile sitesFile, Site selectSite)
     {

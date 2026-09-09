@@ -28,8 +28,8 @@ import java.awt.image.BufferedImage;
 public class EngineBasePanel extends JPanel
 {
     JComponent bottom_;
-    Component center_ = null;
-    Component focus_ = null;
+    Component center_;
+    Component focus_;
     CenterLayout centerLayout_ = new CenterLayout();
     BorderLayout borderLayout_ = new BorderLayout();
     BaseFrame frame_;

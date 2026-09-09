@@ -14,7 +14,7 @@ public class OptionTabbedPane extends DDTabbedPane {
 
     private final Preferences prefs_;
     private final String      name_;
-    private boolean           active_ = false;
+    private boolean           active_;
 
     public OptionTabbedPane(String sStyle,
                             @MagicConstant(intValues = {SwingConstants.TOP, SwingConstants.BOTTOM,
