@@ -228,7 +228,7 @@ public class AppContext
     /**
      * Runnable for processing phase later in swing loop
      */
-    private class ProcessPhaseRunnable implements Runnable
+    private final class ProcessPhaseRunnable implements Runnable
     {
         String _sPhaseName;
         TypedHashMap _params;

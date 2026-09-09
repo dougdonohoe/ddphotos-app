@@ -19,7 +19,7 @@ import java.awt.event.MouseListener;
 /**
  * @author Doug Donohoe
  */
-public class GuiManager implements MouseListener
+public final class GuiManager implements MouseListener
 {
     //static Logger logger = LogManager.getLogger(GuiManager.class);
 

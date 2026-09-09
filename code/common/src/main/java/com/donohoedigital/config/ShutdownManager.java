@@ -15,7 +15,7 @@ import java.util.List;
  * Time: 4:30:42 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ShutdownManager implements Thread.UncaughtExceptionHandler
+public final class ShutdownManager implements Thread.UncaughtExceptionHandler
 {
     private static final Logger logger = LogManager.getLogger(ShutdownManager.class);
 
@@ -34,7 +34,7 @@ public class ShutdownManager implements Thread.UncaughtExceptionHandler
     }
 
     // shutdown listeners
-    private final List<ShutdownListener> listeners = new ArrayList<ShutdownListener>();
+    private final List<ShutdownListener> listeners = new ArrayList<>();
 
     // shutdown type and reason (default to normal)
     private Type shutdownType = NORMAL;
@@ -43,7 +43,7 @@ public class ShutdownManager implements Thread.UncaughtExceptionHandler
     /**
      * Install our own shutdown manager.
      */
-    public synchronized static void install()
+    public static synchronized void install()
     {
         if (manager == null) {
             manager = new ShutdownManager();
@@ -68,7 +68,7 @@ public class ShutdownManager implements Thread.UncaughtExceptionHandler
      *
      * @param shutdownListener listener which will be called on shutdown
      */
-    public synchronized static void addShutdownListener(final ShutdownListener shutdownListener)
+    public static synchronized void addShutdownListener(final ShutdownListener shutdownListener)
     {
         install(); // make sure we have a shutdown manager
         manager.listeners.add(shutdownListener);
@@ -79,7 +79,7 @@ public class ShutdownManager implements Thread.UncaughtExceptionHandler
      *
      * @param details
      */
-    public synchronized static void exitAbnormal(String details)
+    public static synchronized void exitAbnormal(String details)
     {
         install(); // make sure we have a shutdown manager
         manager.exitAbnormal(ABNORMAL_BY_USER, details);
