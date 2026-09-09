@@ -114,6 +114,9 @@
         <configuration>
           <release>25</release>
           <fork>true</fork>
+          <compilerArgs>
+            <arg>-Xlint:deprecation,removal</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
 
