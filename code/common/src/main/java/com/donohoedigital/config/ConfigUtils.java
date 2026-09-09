@@ -215,21 +215,7 @@ public class ConfigUtils
     public static String readFile(File file)
     {
         verifyFile(file);
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader sreader = new BufferedReader(getReader(file)))
-        {
-            String sLine;
-            while ((sLine = sreader.readLine()) != null)
-            {
-                sb.append(sLine);
-                sb.append('\n');
-            }
-        }
-        catch (IOException ioe)
-        {
-            throw new ApplicationError(ioe);
-        }
-        return sb.toString();
+        return readLines(getReader(file));
     }
 
     /**
@@ -239,8 +225,17 @@ public class ConfigUtils
      */
     public static String readURL(URL url)
     {
+        return readLines(getReader(url));
+    }
+
+    /**
+     * Read a reader by lines, appending a newline to each one (including the last).
+     * Closes the reader.
+     */
+    private static String readLines(Reader reader)
+    {
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader sreader = new BufferedReader(getReader(url)))
+        try (BufferedReader sreader = new BufferedReader(reader))
         {
             String sLine;
             while ((sLine = sreader.readLine()) != null)
