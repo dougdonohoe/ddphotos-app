@@ -215,9 +215,10 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
         if (!GuiUtils.repaint(this)) super.repaint();
     }
 
-    ////
-    //// Key listener
-    ////
+    //
+    // Key listener
+    //
+
     private int keypressed = 0;
 
     /**
@@ -430,9 +431,9 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
         addPropertyChangeListener("value", _ -> onChange.run());
     }
 
-    ////
-    //// DocumentListener methods
-    ////
+    //
+    // DocumentListener methods
+    //
 
     /**
      * calls regexpValidate()
@@ -501,9 +502,9 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
         bMouse_ = false;
     }
 
-    ////
-    //// Custom help
-    ////
+    //
+    // Custom help
+    //
 
     private String sHelp_;
 

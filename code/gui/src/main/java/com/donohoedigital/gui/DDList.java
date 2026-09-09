@@ -37,9 +37,9 @@ public class DDList<E> extends JList<E> implements DDTextVisibleComponent, DDLis
         return "list";
     }
 
-    ///
-    /// Custom help
-    ///
+    //
+    // Custom help
+    //
 
     private String sHelp_;
 

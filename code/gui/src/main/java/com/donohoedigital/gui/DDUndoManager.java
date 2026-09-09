@@ -187,9 +187,9 @@ public class DDUndoManager extends UndoManager implements UndoableEditListener
         }
     }
 
-    ////
-    //// Recording
-    ////
+    //
+    // Recording
+    //
 
     public void undoableEditHappened(UndoableEditEvent e)
     {
@@ -266,9 +266,9 @@ public class DDUndoManager extends UndoManager implements UndoableEditListener
         if (group.isSignificant()) super.addEdit(group);
     }
 
-    ////
-    //// UndoManager
-    ////
+    //
+    // UndoManager
+    //
 
     /**
      * The run still being typed is undoable even though it hasn't been handed over yet.
@@ -316,9 +316,9 @@ public class DDUndoManager extends UndoManager implements UndoableEditListener
         super.discardAllEdits();
     }
 
-    ////
-    //// Actions
-    ////
+    //
+    // Actions
+    //
 
     private final Action undoAction_ = new AbstractAction()
     {

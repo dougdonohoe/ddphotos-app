@@ -132,9 +132,9 @@ public class DDTabbedPane extends JTabbedPane implements DDHasLabelComponent, Ch
         if (!GuiUtils.repaint(this, x, y, width, height)) super.repaint(tm, x, y, width, height);
     }
 
-    ///
-    /// mouse events to do mouse over help
-    ///
+    //
+    // mouse events to do mouse over help
+    //
 
     public void mouseDragged(MouseEvent e)
     {

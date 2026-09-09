@@ -641,9 +641,9 @@ public class InternalDialog extends JInternalFrame implements DDWindow
     }
 
 
-    ////
-    //// Help widget stuff - delegated to HelpTextManager (shared with BaseFrame)
-    ////
+    //
+    // Help widget stuff - delegated to HelpTextManager (shared with BaseFrame)
+    //
 
     private final HelpTextManager helpText_ = new HelpTextManager();
 

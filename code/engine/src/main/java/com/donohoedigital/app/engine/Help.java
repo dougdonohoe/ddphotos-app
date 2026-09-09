@@ -18,7 +18,6 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
-
 /**
  * @author Doug Donohoe
  */
@@ -51,7 +50,7 @@ public class Help extends BasePhase implements ListSelectionListener,
     {
         String STYLE = phase_.getString(DialogPhase.PARAM_STYLE, GuiManager.DEFAULT);
 
-        // contents - white center area (the html reads better on white than on the standard grey)
+        // contents - white center area (the html reads better on white than on the standard gray)
         base_ = new LogoWindowPanel("icon48", phase_.getString(EngineConstants.PARAM_HELP_STYLE, null));
         base_.setContentInsets(0, 10, 10, 10);
         base_.setTopComponent(new DDLabel("helpwindow", STYLE));
@@ -88,9 +87,7 @@ public class Help extends BasePhase implements ListSelectionListener,
         wrapper.add(scroll, BorderLayout.CENTER);
         content.add(wrapper, BorderLayout.CENTER);
 
-        ////
-        //// Topic list
-        ////
+        // Topic list
         listModel_ = new DefaultListModel<>();
         for (HelpTopic topic : HelpConfig.getHelpTopics())
         {
