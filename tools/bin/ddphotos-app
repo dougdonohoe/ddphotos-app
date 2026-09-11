@@ -19,7 +19,7 @@ fi
 
 runjava photos \
   $JAVAOPTS \
-  -Dsun.java2d.noddraw=true -Dverbose:gc \
+  -Dverbose:gc \
   -Dlog4j.rootLogger="DEBUG, Console" \
   -Xms32m -Xmx256m com.donohoedigital.ddphotos.PhotosMain "$@"
 echo

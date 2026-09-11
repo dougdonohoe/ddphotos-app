@@ -64,7 +64,6 @@
           <executable>${java.home}/bin/java</executable>
           <arguments>
             <argument>-Dfile.encoding=UTF-8</argument>
-            <argument>-Dsun.java2d.noddraw=true</argument>
             <argument>--enable-native-access=ALL-UNNAMED</argument>
             <argument>-Xms32m</argument>
             <argument>-Xmx256m</argument>
