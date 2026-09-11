@@ -65,11 +65,11 @@ The remaining tabs are used to publish your site.  Use **Export** with **Wrangle
 ## Installation
 
 <!-- installers:begin (updated by tools/bin/buildall.pl -github) -->
-Download the latest release, **1.0.8**:
+Download the latest release, **1.0.9**:
 
-- **Mac**: [ddphotos_mac_1_0_8.dmg](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.8/ddphotos_mac_1_0_8.dmg)
-- **Windows**: [ddphotos_windows_1_0_8.exe](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.8/ddphotos_windows_1_0_8.exe)
-- **Linux**: [ddphotos_linux_1_0_8.sh](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.8/ddphotos_linux_1_0_8.sh)
+- **Mac**: [ddphotos_mac_1_0_9.dmg](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.9/ddphotos_mac_1_0_9.dmg)
+- **Windows**: [ddphotos_windows_1_0_9.exe](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.9/ddphotos_windows_1_0_9.exe)
+- **Linux**: [ddphotos_linux_1_0_9.sh](https://github.com/dougdonohoe/ddphotos-app/releases/download/1.0.9/ddphotos_linux_1_0_9.sh)
 <!-- installers:end -->
 
 See [Releases](https://github.com/dougdonohoe/ddphotos-app/releases) for release notes,
