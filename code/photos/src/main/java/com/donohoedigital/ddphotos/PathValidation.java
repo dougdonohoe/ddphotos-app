@@ -37,13 +37,13 @@ public final class PathValidation {
     // pkg/photogen/video.go).  The two sets are kept apart because they are not interchangeable:
     // a hero image, for instance, accepts photos only.
     private static final Pattern IMAGE_EXTENSION =
-            Pattern.compile(".*\\.(?i)(png|jpe?g|webp|tiff?|hei[cf])");
+            Pattern.compile(".*\\.(?i)(png|jpe?g|webp|avif|tiff?|hei[cf])");
 
     private static final Pattern VIDEO_EXTENSION =
             Pattern.compile(".*\\.(?i)(mov|mp4|m4v)");
 
     /**
-     * True if blank or the path ends in a recognized image extension (png, jpg, jpeg, webp, tif, tiff,
+     * True if blank or the path ends in a recognized image extension (png, jpg, jpeg, webp, avif, tif, tiff,
      * heic, heif).  Note this and {@link #isMediaFile} answer "not disqualified" - blank passes - for
      * the benefit of the {@code evaluate*} methods below; {@link #isVideoFile} answers the stricter
      * "this <em>is</em> a clip", since callers use it to pick an icon.

@@ -33,8 +33,8 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * **Video previews in the app** - videos (`.mov`, `.mp4`, `.m4v`) are now captionable, reorderable and
   selectable as an album cover, but they show a `video-off` placeholder rather than a real thumbnail. This is
   bigger than video alone. Verified on Java 25: `ImageIO.getReaderFormatNames()` returns only
-  JPG/PNG/GIF/BMP/TIFF/WBMP. **There is no reader for `mp4`, `mov`, `webp` *or* `heic`**, so `Thumbs.load`
-  short-circuits a video and HEIC falls through to the same null result. Any fix should be chosen to solve
+  JPG/PNG/GIF/BMP/TIFF/WBMP. **There is no reader for `mp4`, `mov`, `webp`, `avif`, *or* `heic`**, so `Thumbs.load`
+  short-circuits a video and HEIC/AVIF/WEBP falls through to the same null result. Any fix should be chosen to solve
   HEIC, WebP and video together rather than one at a time.
     * **Note this kills the existing idea above** of reusing photogen's `grid/` files for caption-editor
       thumbnails: those are **WebP**, which ImageIO also cannot read.

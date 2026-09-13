@@ -83,8 +83,9 @@ public class PhotoChooserTest {
         file("f.tiff");
         file("g.heic");
         file("h.heif");
+        file("h.avif");
 
-        assertEquals(8, listPhotos(dir).size());
+        assertEquals(9, listPhotos(dir).size());
     }
 
     @Test
