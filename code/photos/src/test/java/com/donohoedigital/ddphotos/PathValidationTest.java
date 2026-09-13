@@ -43,6 +43,7 @@ public class PathValidationTest {
         assertTrue(PathValidation.isImageFile("a.png"));
         assertTrue(PathValidation.isImageFile("a.webp"));
         assertTrue(PathValidation.isImageFile("a.heic"));
+        assertTrue(PathValidation.isImageFile("a.avif"));
         assertTrue(PathValidation.isImageFile(""));     // blank is permissive
         assertTrue(PathValidation.isImageFile(null));
         assertFalse(PathValidation.isImageFile("README.md"));
@@ -65,6 +66,7 @@ public class PathValidationTest {
     public void isMediaFile_acceptsPhotosAndVideos() {
         assertTrue(PathValidation.isMediaFile("a.jpg"));
         assertTrue(PathValidation.isMediaFile("a.heic"));
+        assertTrue(PathValidation.isMediaFile("a.avif"));
         assertTrue(PathValidation.isMediaFile("a.mov"));
         assertTrue(PathValidation.isMediaFile("a.M4V"));
         assertTrue(PathValidation.isMediaFile(""));     // blank is permissive
