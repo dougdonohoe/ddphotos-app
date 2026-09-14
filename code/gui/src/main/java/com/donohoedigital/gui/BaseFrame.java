@@ -17,8 +17,9 @@ public class BaseFrame extends JFrame implements DDWindow
 {
     static Logger logger = LogManager.getLogger(JFrame.class);
 
-    // Window/taskbar icon sizes (Windows + Linux); ignored on macOS, where the Dock
-    // icon comes from the app bundle's .icns (or -Xdock:icon for the raw jar).
+    // Window icon sizes.  Windows + Linux use these for title bar, taskbar and Alt-Tab.
+    // On macOS, the Dock icon comes from the app bundle's .icns (or -Xdock:icon), but
+    // these are used for the badge on a minimized window's Dock thumbnail.
     private static final int[] ICON_SIZES = {16, 32, 48, 64, 128, 256};
 
     GraphicsDevice device_;
