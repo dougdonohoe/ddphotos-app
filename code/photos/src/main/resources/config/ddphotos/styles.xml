@@ -16,9 +16,11 @@
 	     display scale.  Enforced by StylesFontTest.
 
 	     This fixes macOS only.  Linux and Windows have no CoreText - every font there uses the
-	     FreeType scaler and drifts (measured on Linux: SansSerif 26-36px, Monospaced 27-59px), so
-	     HiDPI users on those platforms can still see it.  No font choice helps; that would need a
-	     custom TextUI measuring at the device scale.  At 100% scaling there is no drift anywhere.
+	     FreeType scaler and drifts (measured on Linux: SansSerif 26-36px, Monospaced 27-59px).
+	     No font choice helps there; DDTextField/DDTextArea now handle it instead by marking their
+	     documents "i18n" so Swing paints with TextLayout at the positions it measured (see
+	     DDTextField.useTextLayout).  That fix also works for bundled .ttf fonts, so this font rule
+	     is now belt-and-braces rather than the only defense.
 
 	     Trade-off accepted: logical families resolve per-platform (Helvetica on macOS, Arial on
 	     Windows - metrically compatible; Linux depends on fontconfig, usually DejaVu Sans, which is

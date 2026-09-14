@@ -329,6 +329,7 @@ public class DDTextArea extends JTextArea implements DDTextVisibleComponent,
         {
             current.removeDocumentListener(this);
         }
+        DDTextField.useTextLayout(doc); // caret aligns with text
         super.setDocument(doc);
         doc.addDocumentListener(this);
         if (undo_ != null) undo_.attachTo(current, doc);

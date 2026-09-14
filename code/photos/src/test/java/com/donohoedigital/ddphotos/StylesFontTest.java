@@ -47,9 +47,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * path a bundled {@code .ttf} takes on macOS.  Measured on Linux (temurin 25), <em>every</em>
  * logical family drifts: SansSerif 26-36px, Serif 25-29px, Monospaced 27-59px.  No font choice
  * fixes it there, so asserting zero drift off macOS would be a permanent, unactionable CI
- * failure.  Note this means HiDPI Linux/Windows users can still see caret drift; only a custom
- * {@code TextUI} that measures at the device scale would fix that.  (There is no drift at all at
- * 100% scaling, which is the common case on those platforms.)
+ * failure.  Caret drift in editable fields is handled (verified on macOS; Linux/Windows untested) by
+ * {@code DDTextField.useTextLayout}, which makes Swing paint with {@code TextLayout} at the
+ * positions it measured; this test only guards the font choice.
  */
 public class StylesFontTest {
 
