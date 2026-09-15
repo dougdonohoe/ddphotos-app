@@ -18,6 +18,7 @@ public class PhotosConstants {
      * to ship a new release, just add a line at the top (no commenting/uncommenting needed).
      */
     public static final Version VERSION = latest(
+            new Version(1, 0, 11), // 1.0.11 (TBD)
             new Version(1, 0, 10), // 1.0.10 (9/13/2026)
             new Version(1, 0, 9), // 1.0.9 (9/11/2026)
             new Version(1, 0, 8), // 1.0.8 (8/28/2026)
