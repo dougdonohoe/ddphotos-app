@@ -125,7 +125,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         DDLabelBorder panel = section("sitesettings");
 
         albumId_ = editable(new OptionText(null, "siteid", STYLE, dummy_,
-                PhotosConstants.MAX_SLUG_LENGTH, PhotosConstants.REGEXP_SLUG, PREFERRED_ID_TEXT_WIDTH));
+                PhotosConstants.MAX_SLUG_LENGTH, PhotosConstants.REGEXP_SITE_ID, PREFERRED_ID_TEXT_WIDTH));
         panel.add(buildPasswordRow(albumId_, "sitepassword", "sitelock"));
 
         siteName_ = editable(new OptionText(null, "sitename", STYLE, dummy_,

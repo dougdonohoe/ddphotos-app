@@ -28,13 +28,20 @@ public class PhotosConstants {
     public static final String REGEXP_OPTIONAL = ".*";
 
     /**
-     * An album slug or a site id: starts with a letter or digit, then letters, digits,
-     * underscores and hyphens. Both end up in URLs, so spaces and dots are not allowed.
+     * An album slug: starts with a letter or digit, then letters, digits, underscores
+     * and hyphens. A slug is used unescaped in URLs, so spaces and dots are not allowed.
+     * Matches photogen's slugPattern (albums_config.go).
      */
     public static final String REGEXP_SLUG = "[a-zA-Z0-9][a-zA-Z0-9_-]*";
 
-    /** A base name (a key in albums.yaml): a slug in lower case, with no underscores. */
-    public static final String REGEXP_BASE_NAME = "[a-z0-9][a-z0-9-]*";
+    /**
+     * A site id (settings.id): lower case only, and no underscores. Stricter than a slug
+     * because photogen rejects anything else at build time (validSiteID in config.go).
+     */
+    public static final String REGEXP_SITE_ID = "[a-z0-9][a-z0-9-]*";
+
+    /** A base name (a key in albums.yaml): the same rule as a site id. */
+    public static final String REGEXP_BASE_NAME = REGEXP_SITE_ID;
 
     /** An optional web address: empty, or an http(s) URL with no spaces in it. */
     public static final String REGEXP_URL_OPTIONAL = "(https?://\\S+)?";
