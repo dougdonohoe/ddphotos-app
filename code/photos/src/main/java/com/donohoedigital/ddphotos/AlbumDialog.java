@@ -42,7 +42,7 @@ public class AlbumDialog extends PhotosDialog
         slugField_.setTextLengthLimit(PhotosConstants.MAX_SLUG_LENGTH);
         slugField_.setCustomValidator(text -> {
             if (af == null) return true;
-            return af.getAlbums().stream().noneMatch(a -> text.equals(a.getSlug()));
+            return af.getAlbums().stream().noneMatch(a -> text.equalsIgnoreCase(a.getSlug()));
         });
 
         nameField_ = new DDTextField("albumname", STYLE);

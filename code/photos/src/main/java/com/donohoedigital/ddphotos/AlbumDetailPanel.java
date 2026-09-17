@@ -110,7 +110,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             if (currentAlbumsFile() == null || currentEntry_ == null) return true;
             return currentAlbumsFile().getAlbums().stream()
                     .filter(a -> a != currentEntry_)
-                    .noneMatch(a -> text.equals(a.getSlug()));
+                    .noneMatch(a -> text.equalsIgnoreCase(a.getSlug()));
         });
         panel.add(buildPasswordRow(slug_, "albumpassword", "albumlock"));
 
