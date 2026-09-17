@@ -13,6 +13,54 @@ public class PhotosConstants {
     /** Prefs key (under {@link #PREFS_NODE_APP}) holding the version {@link UpdateCheck} last told the user about. */
     public static final String PREFS_KEY_UPDATE_NOTIFIED = "update.notified.version";
 
+    // -------------------------------------------------------------------------
+    // Text field validation patterns
+    //
+    // DDTextField.setRegExp() matches the whole trimmed value, so these need no
+    // anchors. Keep them here so the same kind of field validates the same way
+    // in every dialog and panel.
+    // -------------------------------------------------------------------------
+
+    /** Any non-empty text: the field is required. */
+    public static final String REGEXP_REQUIRED = ".+";
+
+    /** Any text, empty included: the field is optional. */
+    public static final String REGEXP_OPTIONAL = ".*";
+
+    /**
+     * An album slug or a site id: starts with a letter or digit, then letters, digits,
+     * underscores and hyphens. Both end up in URLs, so spaces and dots are not allowed.
+     */
+    public static final String REGEXP_SLUG = "[a-zA-Z0-9][a-zA-Z0-9_-]*";
+
+    /** A base name (a key in albums.yaml): a slug in lower case, with no underscores. */
+    public static final String REGEXP_BASE_NAME = "[a-z0-9][a-z0-9-]*";
+
+    /** An optional web address: empty, or an http(s) URL with no spaces in it. */
+    public static final String REGEXP_URL_OPTIONAL = "(https?://\\S+)?";
+
+    /** A single folder name: no path separators and no whitespace. */
+    public static final String REGEXP_FOLDER_NAME = "[^/\\\\\\s]+";
+
+    // -------------------------------------------------------------------------
+    // Text field length limits
+    //
+    // How much a field accepts, alongside the pattern above that validates it.
+    // A limit used by only one field stays at that call site.
+    // -------------------------------------------------------------------------
+
+    /** An album slug, a site id or a base name. */
+    public static final int MAX_SLUG_LENGTH = 64;
+
+    /** A one-line value: a name, a URL, a password, a hint. */
+    public static final int MAX_TEXT_LENGTH = 200;
+
+    /** A file or folder path. */
+    public static final int MAX_PATH_LENGTH = 500;
+
+    /** A multi-line description. */
+    public static final int MAX_DESCRIPTION_LENGTH = 500;
+
     /**
      * Version history, most recent first. The current version is always the first entry -
      * to ship a new release, just add a line at the top (no commenting/uncommenting needed).

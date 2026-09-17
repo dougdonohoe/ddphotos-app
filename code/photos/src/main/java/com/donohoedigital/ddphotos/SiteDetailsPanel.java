@@ -125,19 +125,19 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         DDLabelBorder panel = section("sitesettings");
 
         albumId_ = editable(new OptionText(null, "siteid", STYLE, dummy_,
-                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", PREFERRED_ID_TEXT_WIDTH));
+                PhotosConstants.MAX_SLUG_LENGTH, PhotosConstants.REGEXP_SLUG, PREFERRED_ID_TEXT_WIDTH));
         panel.add(buildPasswordRow(albumId_, "sitepassword", "sitelock"));
 
         siteName_ = editable(new OptionText(null, "sitename", STYLE, dummy_,
-                200, "^.+$", 350));
+                PhotosConstants.MAX_TEXT_LENGTH, PhotosConstants.REGEXP_REQUIRED, 350));
         panel.add(siteName_);
 
         siteUrl_ = editable(new OptionText(null, "siteurl", STYLE, dummy_,
-                200, "^(https?://\\S+)?$", 350));
+                PhotosConstants.MAX_TEXT_LENGTH, PhotosConstants.REGEXP_URL_OPTIONAL, 350));
         panel.add(siteUrl_);
 
         siteDescription_ = editable(new OptionTextArea(null, "sitedescription", STYLE, null, dummy_,
-                500, null, 2, 350));
+                PhotosConstants.MAX_DESCRIPTION_LENGTH, null, 2, 350));
         panel.add(siteDescription_);
 
         descriptionsFile_ = editable(new OptionFileChooser(null, "descriptionsfile", STYLE, dummy_,
@@ -211,7 +211,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private DDLabelBorder buildCopyrightSection() {
         DDLabelBorder panel = section("copyrightcrawling");
 
-        copyrightOwner_ = editable(new OptionText(null, "copyrightowner", STYLE, dummy_, 200, null, 350));
+        copyrightOwner_ = editable(new OptionText(null, "copyrightowner", STYLE, dummy_,
+                PhotosConstants.MAX_TEXT_LENGTH, null, 350));
         panel.add(copyrightOwner_);
 
         int currentYear = Year.now().getValue();
@@ -305,7 +306,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         });
         heroBaseLabel_ = new DDLabel("siteherobase", STYLE);
 
-        heroImage_ = editable(new OptionFileChooser(null, "siteheroimage", STYLE, dummy_, 500, 350, null));
+        heroImage_ = editable(new OptionFileChooser(null, "siteheroimage", STYLE, dummy_,
+                PhotosConstants.MAX_PATH_LENGTH, 350, null));
         heroImage_.setStartDirSupplier(() -> {
             Path baseAbsPath = resolveHeroBasePath();
             return baseAbsPath != null ? baseAbsPath.toString() : System.getProperty("user.home");

@@ -452,7 +452,7 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
 
         // Folder name — OptionText gives us a matching styled label automatically
         initDirName_ = new OptionText(PREFS_NODE, "wizard.dirname", STYLE, new TypedHashMap(),
-                100, "[^/\\\\\\s]+", 500);
+                100, PhotosConstants.REGEXP_FOLDER_NAME, 500);
         initDirName_.getTextField().setText(suggestedDirName());
         // Red when the resolved path already exists and is not a ddphotos site
         initDirName_.getTextField().setCustomValidator(s -> {
@@ -617,7 +617,7 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         return !parent.isEmpty()
                 && Files.isDirectory(Path.of(parent))
                 && !name.isEmpty()
-                && name.matches("[^/\\\\\\s]+");
+                && name.matches(PhotosConstants.REGEXP_FOLDER_NAME);
     }
 
     private void onInitCompleted() {

@@ -38,16 +38,16 @@ public class AlbumDialog extends PhotosDialog
         AlbumsFile af = site_ != null ? site_.getOrCreateAlbumsFile() : null;
 
         slugField_ = new DDTextField("albumslug", STYLE);
-        slugField_.setRegExp("^[a-zA-Z0-9][a-zA-Z0-9_-]*$");
-        slugField_.setTextLengthLimit(64);
+        slugField_.setRegExp(PhotosConstants.REGEXP_SLUG);
+        slugField_.setTextLengthLimit(PhotosConstants.MAX_SLUG_LENGTH);
         slugField_.setCustomValidator(text -> {
             if (af == null) return true;
             return af.getAlbums().stream().noneMatch(a -> text.equals(a.getSlug()));
         });
 
         nameField_ = new DDTextField("albumname", STYLE);
-        nameField_.setRegExp(".+");
-        nameField_.setTextLengthLimit(200);
+        nameField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);
+        nameField_.setTextLengthLimit(PhotosConstants.MAX_TEXT_LENGTH);
 
         GridBagForm form = GridBagForm.dialog(STYLE)
                 .row("albumslug", slugField_, null)

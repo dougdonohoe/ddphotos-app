@@ -105,7 +105,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         DDLabelBorder panel = section("albumbasic");
 
         slug_ = editable(new OptionText(null, "albumslug", STYLE, dummy_,
-                64, "^[a-zA-Z0-9][a-zA-Z0-9_-]*$", PREFERRED_SLUG_TEXT_WIDTH));
+                PhotosConstants.MAX_SLUG_LENGTH, PhotosConstants.REGEXP_SLUG, PREFERRED_SLUG_TEXT_WIDTH));
         slug_.getTextField().setCustomValidator(text -> {
             if (currentAlbumsFile() == null || currentEntry_ == null) return true;
             return currentAlbumsFile().getAlbums().stream()
@@ -114,12 +114,13 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         });
         panel.add(buildPasswordRow(slug_, "albumpassword", "albumlock"));
 
-        name_ = editable(new OptionText(null, "albumname", STYLE, dummy_, 200, "^.+$", 350));
+        name_ = editable(new OptionText(null, "albumname", STYLE, dummy_,
+                PhotosConstants.MAX_TEXT_LENGTH, PhotosConstants.REGEXP_REQUIRED, 350));
         GuiUtils.setPreferredWidth(name_.getTextField(), PREFERRED_SHORT_TEXT_WIDTH);
         panel.add(name_);
 
         description_ = editable(new OptionTextArea(null, "albumdescription", STYLE, null, dummy_,
-                500, null, 4, 350));
+                PhotosConstants.MAX_DESCRIPTION_LENGTH, null, 4, 350));
         panel.add(description_);
 
         recurse_ = editable(new OptionBoolean(null, "albumrecurse", STYLE, dummy_));
@@ -189,8 +190,9 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             checkButtons();
         });
 
-        source_ = editable(new OptionFileChooser(null, "albumsourcepath", STYLE, dummy_, 500, PREFERRED_TEXT_WIDTH, null));
-        source_.getTextField().setRegExp(".+");
+        source_ = editable(new OptionFileChooser(null, "albumsourcepath", STYLE, dummy_,
+                PhotosConstants.MAX_PATH_LENGTH, PREFERRED_TEXT_WIDTH, null));
+        source_.getTextField().setRegExp(PhotosConstants.REGEXP_REQUIRED);
         source_.setDirectoryMode(true);
         source_.setChooserTitle(PropertyConfig.getMessage("msg.filechooser.title.source"));
         source_.setStartDirSupplier(() -> {
@@ -214,7 +216,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             }
         });
 
-        cover_ = editable(new OptionFileChooser(null, "albumcover", STYLE, dummy_, 200, PREFERRED_TEXT_WIDTH, null));
+        cover_ = editable(new OptionFileChooser(null, "albumcover", STYLE, dummy_,
+                PhotosConstants.MAX_PATH_LENGTH, PREFERRED_TEXT_WIDTH, null));
         cover_.setStartDirSupplier(() -> {
             Path sourceDir = resolveSourcePath();
             return sourceDir != null ? sourceDir.toString() : System.getProperty("user.home");

@@ -41,8 +41,6 @@ public class PasswordDialog extends PhotosDialog
     /** "do not show again" preference key for the key-change warning. */
     private static final String NO_SHOW_KEY_EDIT = "password.key.edit";
 
-    private static final String REGEXP_KEY = "^.+$";
-
     private static final int PREFERRED_WIDTH = 700;
 
     private Site           site_;
@@ -79,24 +77,24 @@ public class PasswordDialog extends PhotosDialog
         savedKey_         = originalKey_;
 
         keyField_ = new DDTextField("passwordkey", STYLE);
-        keyField_.setTextLengthLimit(200);
+        keyField_.setTextLengthLimit(PhotosConstants.MAX_TEXT_LENGTH);
         keyField_.setText(originalKey_);
         keyField_.setEnabled(false);
         // Only enforce a value while the field is editable; otherwise a file with no key yet
         // would show as invalid on a screen the user can't act on.
         keyField_.setCustomValidator(text -> !isEditingKey() || !text.isBlank());
-        keyField_.setRegExp(REGEXP_KEY);
+        keyField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);
 
         passwordField_ = new DDTextField("passwordvalue", STYLE);
-        passwordField_.setTextLengthLimit(200);
+        passwordField_.setTextLengthLimit(PhotosConstants.MAX_TEXT_LENGTH);
         passwordField_.setText(originalPassword_);
         // Blank (clears the password) or at least photogen's minimum.
         passwordField_.setRegExp("^(.{" + PasswordsFile.MIN_PASSWORD_LENGTH + ",})?$");
 
         hintField_ = new DDTextField("passwordhint", STYLE);
-        hintField_.setTextLengthLimit(200);
+        hintField_.setTextLengthLimit(PhotosConstants.MAX_TEXT_LENGTH);
         hintField_.setText(originalHint_);
-        hintField_.setRegExp("^.*$");
+        hintField_.setRegExp(PhotosConstants.REGEXP_OPTIONAL);
 
         editKeyCheck_ = new DDCheckBox("editpasswordkey", STYLE);
         editKeyCheck_.setSelected(false);
@@ -225,7 +223,7 @@ public class PasswordDialog extends PhotosDialog
         } else {
             keyField_.setText(savedKey_);
         }
-        keyField_.setRegExp(REGEXP_KEY);   // re-trigger: rule depends on the checkbox
+        keyField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);   // re-trigger: rule depends on the checkbox
         checkButtons();
     }
 

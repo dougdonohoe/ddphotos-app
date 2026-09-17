@@ -52,8 +52,8 @@ public class BaseDialog extends PhotosDialog
                       ? albumsFile_.getBases().get(editingName_) : null;
 
         nameField_ = new DDTextField("basename", STYLE);
-        nameField_.setRegExp("^[a-z0-9][a-z0-9-]*$");
-        nameField_.setTextLengthLimit(64);
+        nameField_.setRegExp(PhotosConstants.REGEXP_BASE_NAME);
+        nameField_.setTextLengthLimit(PhotosConstants.MAX_SLUG_LENGTH);
         nameField_.setCustomValidator(text -> {
             if (albumsFile_ == null) return true;
             // In edit mode the user may keep the same name unchanged
@@ -62,8 +62,8 @@ public class BaseDialog extends PhotosDialog
         });
 
         pathField_ = new DDTextField("basepath", STYLE);
-        pathField_.setRegExp(".+");
-        pathField_.setTextLengthLimit(500);
+        pathField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);
+        pathField_.setTextLengthLimit(PhotosConstants.MAX_PATH_LENGTH);
         pathField_.setCustomValidator(text -> Files.isDirectory(resolveBasePath(text)));
 
         DDButton browseBtn = new DDButton("browsepath", STYLE);

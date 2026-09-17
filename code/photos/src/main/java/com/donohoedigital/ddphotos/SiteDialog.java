@@ -26,10 +26,6 @@ public class SiteDialog extends PhotosDialog
 
     private static final int PREFERRED_WIDTH = 720;
 
-    // validation patterns: REQUIRED = non-empty, OPTIONAL = any (incl. empty)
-    private static final String REGEXP_REQUIRED = ".+";
-    private static final String REGEXP_OPTIONAL = ".*";
-
     private SitesFile sitesFile_;
     private Site siteBeingEdited_;
     private Site originalSite_;
@@ -51,7 +47,7 @@ public class SiteDialog extends PhotosDialog
         siteBeingEdited_ = (Site)  phase_.getObject(PARAM_SITE);
 
         displayNameField_ = new DDTextField("sitedisplayname", STYLE);
-        displayNameField_.setRegExp(REGEXP_REQUIRED);
+        displayNameField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);
         displayNameField_.setTextLengthLimit(50);
 
         dirPathField_ = new DDTextField("sitedirpath", STYLE);
@@ -64,8 +60,8 @@ public class SiteDialog extends PhotosDialog
             }
             return true;
         });
-        dirPathField_.setRegExp(REGEXP_REQUIRED);
-        dirPathField_.setTextLengthLimit(500);
+        dirPathField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);
+        dirPathField_.setTextLengthLimit(PhotosConstants.MAX_PATH_LENGTH);
 
         configPathField_ = new DDTextField("siteconfigpath", STYLE);
         configPathField_.setCustomValidator(text -> {
@@ -77,8 +73,8 @@ public class SiteDialog extends PhotosDialog
             String siteDir = dirPathField_ != null ? dirPathField_.getText().trim() : "";
             return Site.isCustomConfigPath(siteDir, text);
         });
-        configPathField_.setRegExp(REGEXP_OPTIONAL);
-        configPathField_.setTextLengthLimit(500);
+        configPathField_.setRegExp(PhotosConstants.REGEXP_OPTIONAL);
+        configPathField_.setTextLengthLimit(PhotosConstants.MAX_PATH_LENGTH);
 
         // browse buttons created before checkbox so the action listener can reference them
         DDButton browseDirBtn    = new DDButton("browsedirpath",    STYLE);
@@ -104,8 +100,8 @@ public class SiteDialog extends PhotosDialog
                 savedConfigPath_ = configPathField_.getText().trim();
                 configPathField_.setText("");
             }
-            dirPathField_.setRegExp(REGEXP_REQUIRED);   // re-trigger: rule depends on override state
-            configPathField_.setRegExp(REGEXP_OPTIONAL); // re-trigger: required when override is on
+            dirPathField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);   // re-trigger: rule depends on override state
+            configPathField_.setRegExp(PhotosConstants.REGEXP_OPTIONAL); // re-trigger: required when override is on
             checkButtons();
         });
 
@@ -144,7 +140,7 @@ public class SiteDialog extends PhotosDialog
                 // still unchecked (so it required <site-dir>/config/albums.yaml).
                 // Now that override is on, re-trigger validation against the
                 // correct rule, otherwise the field shows red until edited.
-                dirPathField_.setRegExp(REGEXP_REQUIRED);
+                dirPathField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);
             }
         }
 
