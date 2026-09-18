@@ -428,10 +428,21 @@ public class AlbumsFile extends ConfigFile {
     // ── validation ──────────────────────────────────────────────────────────
 
     void validate() throws AlbumsFileException {
+        // Lowercased slug -> slug as written.  Mirrors photogen's check, which rejects the whole
+        // file: slugs that differ only by case are one directory on macOS and Windows.
+        Map<String, String> seenSlugs = new HashMap<>();
         for (int i = 0; i < albums.size(); i++) {
             AlbumEntry a = albums.get(i);
             if (isBlank(a.getSlug())) {
                 throw new AlbumsFileException("album[" + i + "]: slug is required");
+            }
+            String prior = seenSlugs.putIfAbsent(a.getSlug().toLowerCase(Locale.ROOT), a.getSlug());
+            if (prior != null) {
+                if (prior.equals(a.getSlug())) {
+                    throw new AlbumsFileException("album \"" + a.getSlug() + "\": duplicate slug");
+                }
+                throw new AlbumsFileException("albums \"" + prior + "\" and \"" + a.getSlug()
+                        + "\": slugs differ only by case");
             }
             if (isBlank(a.getName())) {
                 throw new AlbumsFileException("album \"" + a.getSlug() + "\": name is required");

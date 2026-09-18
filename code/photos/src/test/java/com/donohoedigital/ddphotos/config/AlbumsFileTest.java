@@ -161,6 +161,35 @@ public class AlbumsFileTest {
     }
 
     @Test
+    public void validate_duplicateSlug() throws Exception {
+        Path f = writeYaml("albums:\n"
+                + "  - slug: trip\n    name: Trip\n    source: /tmp/a\n"
+                + "  - slug: trip\n    name: Trip Copy\n    source: /tmp/b\n");
+        AlbumsFileException e = assertThrows(AlbumsFileException.class, () -> AlbumsFile.load(f));
+        assertTrue(e.getMessage().contains("duplicate slug"), e.getMessage());
+    }
+
+    @Test
+    public void validate_slugsDifferOnlyByCase() throws Exception {
+        Path f = writeYaml("albums:\n"
+                + "  - slug: Uganda\n    name: Uganda\n    source: /tmp/a\n"
+                + "  - slug: UGANDA\n    name: Uganda Caps\n    source: /tmp/b\n");
+        AlbumsFileException e = assertThrows(AlbumsFileException.class, () -> AlbumsFile.load(f));
+        assertTrue(e.getMessage().contains("differ only by case"), e.getMessage());
+        assertTrue(e.getMessage().contains("\"Uganda\"") && e.getMessage().contains("\"UGANDA\""),
+                   e.getMessage());
+    }
+
+    @Test
+    public void validate_mixedCaseSlugAllowed() throws Exception {
+        // The check is for clashes, not lowercase enforcement: album slugs may be mixed case.
+        Path f = writeYaml("albums:\n"
+                + "  - slug: Uganda\n    name: Uganda\n    source: /tmp/a\n"
+                + "  - slug: uganda-2\n    name: Uganda 2\n    source: /tmp/b\n");
+        assertEquals(2, AlbumsFile.load(f).getAlbums().size());
+    }
+
+    @Test
     public void validate_badTheme() throws Exception {
         Path f = writeYaml("settings:\n  default_theme: purple\nalbums:\n  - slug: a\n    name: A\n    source: /tmp/p\n");
         try {
