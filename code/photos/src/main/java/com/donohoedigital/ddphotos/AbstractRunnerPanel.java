@@ -374,7 +374,7 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
 
                     case FlagDef.FilePickerField fld -> {
                         OptionFileChooser ofc = new OptionFileChooser(prefsName, widgetName,
-                                style, dummy_, 200, 280, fld.requiredFilename());
+                                style, dummy_, PhotosConstants.MAX_PATH_LENGTH, 280, fld.requiredFilename());
                         ofc.getTextField().addValidationListener(this::updateButtonState);
                         fileControls_.put(def.name(), ofc);
                         flagsRow.add(withExtraButton(ofc, fld.extraButton(), style));

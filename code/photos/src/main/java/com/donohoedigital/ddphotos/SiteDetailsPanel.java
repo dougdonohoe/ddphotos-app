@@ -141,7 +141,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         panel.add(siteDescription_);
 
         descriptionsFile_ = editable(new OptionFileChooser(null, "descriptionsfile", STYLE, dummy_,
-                100, 350, null));
+                PhotosConstants.MAX_PATH_LENGTH, 350, null));
         descriptionsFile_.setFileExtensionFilter("txt");
         panel.add(descriptionsFile_);
 
