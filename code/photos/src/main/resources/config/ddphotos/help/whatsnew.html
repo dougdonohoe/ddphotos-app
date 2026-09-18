@@ -8,7 +8,7 @@
 
 <!-- 1.0.11 -->
 <div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
-    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.11 - TBD</span></strong>
+    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.11 - September 18th, 2026</span></strong>
 </div>
 <ul>
     <li>The cursor in text fields now stays lined up with the text.  Before, it could drift
@@ -16,6 +16,13 @@
     <li>On the <b>Config</b> tab, the album <b>Recurse</b> option is renamed
         <b>Include Subfolders (recurse)</b>, and <b>Manual Sort</b> is renamed
         <b>Manual Sort Order</b>.</li>
+    <li>DD Photos now refuses an <tt>albums.yaml</tt> in which two albums share a slug, including
+        slugs that differ only by case (e.g. <tt>Paris</tt> and <tt>paris</tt>).  This matches
+        <tt>photogen</tt>, which already rejects such a file, and avoids two albums sharing one
+        folder on macOS and Windows.</li>
+    <li>Fixed editing an album while its site's bases change.  Saving could lose the edit or
+        wrongly report the album's own slug as a duplicate, and the base you had picked was reset
+        to the saved one.</li>
 </ul>
 
 <!-- 1.0.10 -->
