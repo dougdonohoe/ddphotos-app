@@ -504,9 +504,15 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             }
         }
 
+        // Mid-edit, keep the pending base choice (None included) if it still exists; otherwise
+        // show the saved base.  Same idea as SiteDetailsPanel.rebuildHeroBaseList().
+        String preserved = isEditing() ? nvl(selectedBase(), NONE_BASE) : null;
+
         rebuildBaseList();
 
-        if (currentEntry_ != null) {
+        if (preserved != null && baseKeys_.contains(preserved)) {
+            baseCombo_.setSelectedItem(preserved);
+        } else if (currentEntry_ != null) {
             baseCombo_.setSelectedItem(nvl(currentEntry_.getBase(), NONE_BASE));
         }
 
