@@ -487,8 +487,11 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     public void onBasesChanged() {
         albumsList_.reloadAlbumsFile();
 
-        // Refresh currentEntry_ from the fresh AlbumsFile so stale base refs are corrected
-        if (currentEntry_ != null && !isEditing()) {
+        // Refresh currentEntry_ from the fresh AlbumsFile so stale base refs are corrected.
+        // Do this mid-edit too: the slug validator excludes currentEntry_ by identity, and
+        // applyAndSave() writes into it, so a stale instance breaks both.  Edits live in the
+        // fields until save, so the entry's slug is still the one on disk.
+        if (currentEntry_ != null) {
             AlbumsFile af = albumsList_.getCurrentAlbumsFile();
             if (af != null) {
                 String slug = currentEntry_.getSlug();
