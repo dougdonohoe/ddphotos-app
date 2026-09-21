@@ -189,10 +189,12 @@ public class OptionTextArea extends DDOption implements PropertyChangeListener
     }
 
     /**
-     * Get the text area.  Inline mode only; null in row mode, which has no text area.
+     * Get the text area.  Inline mode only: row mode has no text area, so asking for one there
+     * is a programming error.
      */
     public DDTextArea getTextArea()
     {
+        if (text_ == null) throw new IllegalStateException("getTextArea() is only available in inline mode");
         return text_;
     }
 
