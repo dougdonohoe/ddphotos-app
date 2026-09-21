@@ -14,6 +14,8 @@ import com.donohoedigital.gui.ImageComponent;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
+import javax.swing.JScrollPane;
+import javax.swing.JViewport;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
@@ -35,6 +37,10 @@ public class DialogBackground extends DDPanel
     // Max width applied to wrapping text contents (e.g. DDHtmlArea messages) so long
     // lines wrap instead of stretching the dialog. 0 disables. See setCenterContents().
     private final int maxWidth_;
+
+    // Max height of wrapping text contents that sit in a scroll pane, so a very long message
+    // (e.g. an exception) scrolls instead of growing past the window. 0 disables.
+    private final int maxHeight_;
 
     /**
      * Creates a new instance of DialogBackground
@@ -104,12 +110,19 @@ public class DialogBackground extends DDPanel
             dialogbox_.add(spacer, BorderLayout.NORTH);
         }
         maxWidth_ = appPhase.getInteger("dialog-maxwidth", 750);
+        // max height is 60% of window (3/5)
+        maxHeight_ = (context != null && context.getFrame() != null) ? context.getFrame().getHeight() * 3 / 5 : 0;
         parent.add(dialogbox_, BorderLayout.CENTER);
     }
 
     public void setCenterContents(JComponent c)
     {
-        applyMaxWidth(c);
+        JEditorPane editor = findEditorPane(c);
+        if (editor != null)
+        {
+            applyMaxWidth(editor);
+            applyMaxHeight(editor);
+        }
         dialogbox_.add(c, BorderLayout.CENTER);
     }
 
@@ -119,11 +132,9 @@ public class DialogBackground extends DDPanel
      * component's preferred height is recomputed for the bounded width so the dialog packs tall
      * enough. No-op when dialog-maxwidth is 0 or the content is already narrower.
      */
-    private void applyMaxWidth(JComponent c)
+    private void applyMaxWidth(JEditorPane editor)
     {
         if (maxWidth_ <= 0) return;
-        JEditorPane editor = findEditorPane(c);
-        if (editor == null) return;
         // Wrap at the narrower of maxWidth_ and any width the contents already established
         // (e.g. PhotosDialog.wrapWithInstructions pre-sizes the editor). Honoring that width
         // keeps the recomputed height in sync with the width the editor is actually displayed
@@ -133,6 +144,22 @@ public class DialogBackground extends DDPanel
         editor.setSize(width, Short.MAX_VALUE);
         int height = editor.getPreferredSize().height;
         editor.setPreferredSize(new Dimension(width, height));
+    }
+
+    /**
+     * If the editor is the view of a scroll pane and is taller than maxHeight_, cap the scroll
+     * pane at maxHeight_ so the text scrolls. The scroll pane is widened by the scroll bar so
+     * the text keeps the width it was wrapped at. No-op for an editor not in a scroll pane.
+     */
+    private void applyMaxHeight(JEditorPane editor)
+    {
+        if (maxHeight_ <= 0) return;
+        if (!(editor.getParent() instanceof JViewport viewport)) return;
+        if (!(viewport.getParent() instanceof JScrollPane scroll)) return;
+        Dimension pref = editor.getPreferredSize();
+        if (pref.height <= maxHeight_) return;
+        int barWidth = scroll.getVerticalScrollBar().getPreferredSize().width;
+        scroll.setPreferredSize(new Dimension(pref.width + barWidth, maxHeight_));
     }
 
     private static JEditorPane findEditorPane(Component c)

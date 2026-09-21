@@ -11,6 +11,7 @@ import com.donohoedigital.gui.*;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
+import javax.swing.JScrollPane;
 import java.awt.BorderLayout;
 import java.awt.Component;
 
@@ -58,7 +59,13 @@ public class DisplayMessage extends DialogPhase
         label.setFocusable(true);
         GuiUtils.setDoNothingCaret(label);
         label.setBorder(BorderFactory.createEmptyBorder(STANDARD_BORDER_GAP,STANDARD_BORDER_GAP,15,STANDARD_BORDER_GAP));
-        info.add(label, BorderLayout.CENTER);
+        label.setCaretPosition(0);
+
+        // scrolls only when DialogBackground caps the height of a very long message
+        DDScrollPane scroll = new DDScrollPane(label, STYLE, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                                               JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setOpaque(false); // GuiManager makes the viewport opaque; let the dialog background show through
+        info.add(scroll, BorderLayout.CENTER);
 
         return info;
     }

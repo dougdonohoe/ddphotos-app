@@ -354,7 +354,7 @@ public abstract class AppEngine extends BaseApp {
             // Space don't reach it).  invokeLater lets the faulting event fully unwind first.
             SwingUtilities.invokeLater(() -> {
                 try {
-                    EngineUtils.displayErrorDialog(context, PropertyConfig.getMessage("msg.error.unexpected", e.toString()));
+                    EngineUtils.displayUnexpectedErrorDialog(context, e);
                 } catch (Throwable t) {
                     logger.warn("AppEngine - Exception caught showing error dialog", t);
                 }

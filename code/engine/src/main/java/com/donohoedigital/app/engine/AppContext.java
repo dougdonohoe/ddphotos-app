@@ -331,8 +331,7 @@ public class AppContext
      */
     protected void handleProcessPhaseException(Throwable e)
     {
-        // toString() rather than getMessage(), which is null for an NPE and many others
-        EngineUtils.displayErrorDialog(this, PropertyConfig.getMessage("msg.error.unexpected", e.toString()));
+        EngineUtils.displayUnexpectedErrorDialog(this, e);
     }
 
     /**

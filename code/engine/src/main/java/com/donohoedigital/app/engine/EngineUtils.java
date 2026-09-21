@@ -6,8 +6,10 @@
 
 package com.donohoedigital.app.engine;
 
+import com.donohoedigital.base.ApplicationError;
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.app.config.AppButton;
+import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.gui.DialogType;
 import com.donohoedigital.gui.GuiUtils;
 
@@ -222,6 +224,36 @@ public class EngineUtils
     public static void displayErrorDialog(AppContext context, String sMsg)
     {
         displayMessageDialog(context, "DisplayError", sMsg, null, null, null, true);
+    }
+
+    /**
+     * Show the standard "unexpected error" dialog for e.  The dialog shows a one-line
+     * summary without a stack trace; callers log the full details.
+     */
+    public static void displayUnexpectedErrorDialog(AppContext context, Throwable e)
+    {
+        displayErrorDialog(context, PropertyConfig.getMessage("msg.error.unexpected", escapeHtml(getErrorSummary(e))));
+    }
+
+    /**
+     * One-line description of e.  ApplicationError.toString() appends a stack trace, so
+     * for those use the wrapped exception (or the error without its trace) instead.
+     * Uses toString() rather than getMessage(), which is null for an NPE and many others.
+     */
+    static String getErrorSummary(Throwable e)
+    {
+        if (e instanceof ApplicationError ae)
+        {
+            Throwable wrapped = ae.getException();
+            return wrapped != null ? getErrorSummary(wrapped) : ae.toStringNoStackTrace();
+        }
+        return e.toString();
+    }
+
+    /** Escapes the HTML metacharacters {@code & < >} so text displays literally in an HTML message. */
+    private static String escapeHtml(String s)
+    {
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
     /**
