@@ -329,7 +329,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private void populate(AlbumEntry entry) {
         slug_.getTextField().setText(nvl(entry.getSlug(), ""));
         name_.getTextField().setText(nvl(entry.getName(), ""));
-        description_.getTextArea().setText(nvl(entry.getDescription(), ""));
+        description_.setText(nvl(entry.getDescription(), ""));
         baseCombo_.setSelectedItem(nvl(entry.getBase(), NONE_BASE));
         source_.setText(nvl(entry.getSource(), ""));
         cover_.setText(nvl(entry.getCover(), ""));
@@ -340,7 +340,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private void clearFields() {
         slug_.getTextField().setText("");
         name_.getTextField().setText("");
-        description_.getTextArea().setText("");
+        description_.setText("");
         baseCombo_.setSelectedItem(NONE_BASE);
         source_.setText("");
         cover_.setText("");
@@ -438,7 +438,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         AlbumEntry e = new AlbumEntry();
         e.setSlug(slug_.getTextField().getText().trim());
         e.setName(name_.getTextField().getText().trim());
-        e.setDescription(emptyToNull(description_.getTextArea().getText().trim()));
+        e.setDescription(emptyToNull(description_.getText().trim()));
         e.setBase(selectedBase());
         e.setSource(emptyToNull(source_.getText().trim()));
         e.setCover(emptyToNull(cover_.getText().trim()));

@@ -189,7 +189,7 @@ public class PhotogenEditorPhase extends BasePhase {
 
         // Size thumbnails to fill a row: match the caption box height, landscape (3:2) width.
         int captionHeight = new OptionTextArea(null, "photogencaption", STYLE, null,
-                new TypedHashMap(), 2000, null, 2, 500).getPreferredSize().height;
+                new TypedHashMap(), 2000, null, 2, 500, true).getPreferredSize().height;
         thumbH_ = Math.max(THUMB_MIN_H, captionHeight);
         thumbW_ = Math.round(thumbH_ * 1.5f);
 
@@ -497,7 +497,7 @@ public class PhotogenEditorPhase extends BasePhase {
      */
     private OptionTextArea  makeCaptionArea(Row row) {
         OptionTextArea captionArea = new OptionTextArea(null, "photogencaption", STYLE,
-                null, new TypedHashMap(), 2000, null, 2, 500);
+                null, new TypedHashMap(), 2000, null, 2, 500, true);
         DDTextArea caption = captionArea.getTextArea();
         caption.setText(row.caption);
         caption.setTabChangesFocus(true);

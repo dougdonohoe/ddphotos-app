@@ -56,7 +56,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     private OptionTextArea siteSubtitleHtml_;
     private OptionTextArea siteOverviewHtml_;
     private DDButton cssBtn_;
-    private DDPanel cssLabelWrapper_;
+    private JPanel cssRow_;
 
     // Hero section
     private final List<String> heroBaseKeys_     = new ArrayList<>();
@@ -106,9 +106,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         int labelColWidth = GuiUtils.setDDOptionLabelWidths(form, 16);
         // The theme label isn't a DDOption, so align it to the column by hand.
         setLabelWidth(themeLabel_, labelColWidth);
-        // The Custom CSS button sits beside the overview label inside a wrapper; without this the
-        // wrapper would take the button's width and knock that row's label column out of line.
-        setLabelWidth(cssLabelWrapper_, labelColWidth);
+        // The Custom CSS button has a row of its own, lined up with the fields rather than the labels.
+        cssRow_.setBorder(new EmptyBorder(0, labelColWidth + 8, 0, 0));
 
         // The hero section doesn't need to align with the sections above it, so give
         // Base / Image / Crop their own tight column and reclaim the wasted gap.
@@ -242,39 +241,21 @@ public class SiteDetailsPanel extends EditableDetailPanel {
 
         siteOverviewHtml_ = editable(new OptionTextArea(null, "siteoverviewhtml", STYLE, null, dummy_,
                 2000, null, 5, 350));
-        addCustomCssButton(siteOverviewHtml_);
         panel.add(siteOverviewHtml_);
+        panel.add(buildCustomCssRow());
 
         return panel;
     }
 
-    /**
-     * Tucks the "Custom CSS..." button into the empty space below the given field's label - its
-     * text area is five rows tall, so the label column has room to spare and the section doesn't
-     * have to grow to hold another row.  The button sits centered at the bottom of that space.
-     *
-     * <p>The label itself is reused rather than rebuilt, so its help text and font survive.  It
-     * stays the option's {@code getLabelComponent()}, which is what
-     * {@link GuiUtils#setDDOptionLabelWidths} sizes; the wrapper follows it in
-     * {@link #buildUI} via {@link #setLabelWidth} so a wide button can't push this row's label
-     * column out of line with the rest of the form.
-     */
-    private void addCustomCssButton(OptionTextArea option) {
+    /** The "Custom CSS..." button, on its own row below the overview field. */
+    private JPanel buildCustomCssRow() {
         cssBtn_ = new DDButton("customcss", STYLE);
         cssBtn_.addActionListener(_ -> openCssEditor());
 
-        // Centered at the foot of the label column, so it sits opposite the bottom of the text
-        // area rather than crowding the label.
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        buttons.setOpaque(false);
-        buttons.add(cssBtn_);
-
-        JComponent label = option.getLabelComponent();
-        option.remove(label);
-        cssLabelWrapper_ = new DDPanel();
-        cssLabelWrapper_.add(label, BorderLayout.NORTH);
-        cssLabelWrapper_.add(buttons, BorderLayout.SOUTH);
-        option.add(cssLabelWrapper_, BorderLayout.WEST);
+        cssRow_ = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        cssRow_.setOpaque(false);
+        cssRow_.add(cssBtn_);
+        return cssRow_;
     }
 
     private void openCssEditor() {
@@ -470,7 +451,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         albumId_.getTextField().setText(nvl(s.getId()));
         siteName_.getTextField().setText(nvl(s.getSiteName()));
         siteUrl_.getTextField().setText(nvl(s.getSiteUrl()));
-        siteDescription_.getTextArea().setText(nvl(s.getSiteDescription()));
+        siteDescription_.setText(nvl(s.getSiteDescription()));
         descriptionsFile_.setText(nvl(s.getDescriptions()));
         copyrightOwner_.getTextField().setText(nvl(s.getCopyrightOwner()));
         copyrightYear_.getSpinner().setValue(s.getCopyrightYear() > 0 ? s.getCopyrightYear() : Year.now().getValue());
@@ -478,9 +459,9 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         // photogen defaults an absent default_theme to "dark", so treat blank as dark here.
         if (AlbumsFile.THEME_LIGHT.equals(s.getDefaultTheme())) themeLightRadio_.setSelected(true);
         else                                                    themeDarkRadio_.setSelected(true);
-        siteTitleHtml_.getTextArea().setText(nvl(s.getSiteTitleHtml()));
-        siteSubtitleHtml_.getTextArea().setText(nvl(s.getSiteSubtitleHtml()));
-        siteOverviewHtml_.getTextArea().setText(nvl(s.getSiteOverviewHtml()));
+        siteTitleHtml_.setText(nvl(s.getSiteTitleHtml()));
+        siteSubtitleHtml_.setText(nvl(s.getSiteSubtitleHtml()));
+        siteOverviewHtml_.setText(nvl(s.getSiteOverviewHtml()));
         HeroEntry hero = s.getHero();
         if (hero != null) {
             heroBaseCombo_.setSelectedItem(hero.getBase() != null ? hero.getBase() : NONE_BASE);
@@ -577,15 +558,15 @@ public class SiteDetailsPanel extends EditableDetailPanel {
         s.setId(albumId_.getTextField().getText().trim());
         s.setSiteName(siteName_.getTextField().getText().trim());
         s.setSiteUrl(siteUrl_.getTextField().getText().trim());
-        s.setSiteDescription(siteDescription_.getTextArea().getText().trim());
+        s.setSiteDescription(siteDescription_.getText().trim());
         s.setDescriptions(descriptionsFile_.getText().trim());
         s.setCopyrightOwner(copyrightOwner_.getTextField().getText().trim());
         s.setCopyrightYear(copyrightYear_.getValue());
         s.setAllowCrawling(allowCrawling_.getCheckBox().isSelected());
         s.setDefaultTheme(themeLightRadio_.isSelected() ? AlbumsFile.THEME_LIGHT : AlbumsFile.THEME_DARK);
-        s.setSiteTitleHtml(siteTitleHtml_.getTextArea().getText().trim());
-        s.setSiteSubtitleHtml(siteSubtitleHtml_.getTextArea().getText().trim());
-        s.setSiteOverviewHtml(siteOverviewHtml_.getTextArea().getText().trim());
+        s.setSiteTitleHtml(siteTitleHtml_.getText().trim());
+        s.setSiteSubtitleHtml(siteSubtitleHtml_.getText().trim());
+        s.setSiteOverviewHtml(siteOverviewHtml_.getText().trim());
         String heroImage = heroImage_.getText().trim();
         if (!heroImage.isEmpty()) {
             HeroEntry hero = new HeroEntry();
