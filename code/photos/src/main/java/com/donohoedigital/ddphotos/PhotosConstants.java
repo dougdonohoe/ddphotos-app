@@ -68,6 +68,9 @@ public class PhotosConstants {
     /** A multi-line description. */
     public static final int MAX_DESCRIPTION_LENGTH = 500;
 
+    // Gap between horizontal GUI items
+    public static final int HORIZONTAL_GAP = 25;
+
     /**
      * Version history, most recent first. The current version is always the first entry -
      * to ship a new release, just add a line at the top (no commenting/uncommenting needed).

@@ -96,7 +96,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
         int labelColWidth = GuiUtils.setDDOptionLabelWidths(basicSection, 16);
         recurse_.setBorder(new EmptyBorder(0, labelColWidth + 8, 0, 0));
-        manualSort_.setBorder(new EmptyBorder(0, labelColWidth + 8, 0, 0));
+        manualSort_.setBorder(new EmptyBorder(0, PhotosConstants.HORIZONTAL_GAP, 0, 0));
 
         finishBuildUI(form);
     }
@@ -125,8 +125,11 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
         recurse_ = editable(new OptionBoolean(null, "albumrecurse", STYLE, dummy_));
         manualSort_ = editable(new OptionBoolean(null, "albummanualsort", STYLE, dummy_));
-        panel.add(recurse_);
-        panel.add(manualSort_);
+        JPanel checkboxRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        checkboxRow.setOpaque(false);
+        checkboxRow.add(recurse_);
+        checkboxRow.add(manualSort_);
+        panel.add(checkboxRow);
 
         return panel;
     }

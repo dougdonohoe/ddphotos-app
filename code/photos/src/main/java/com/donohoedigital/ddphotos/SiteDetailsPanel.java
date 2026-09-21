@@ -221,7 +221,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
 
         // Tuck Allow Crawling into the year row's free CENTER slot (the spinner + its
         // left label live in WEST) so the two share a line instead of stacking.
-        copyrightYear_.setBorderLayoutGap(0, 25);
+        copyrightYear_.setBorderLayoutGap(0, PhotosConstants.HORIZONTAL_GAP);
         allowCrawling_ = editable(new OptionBoolean(null, "allowcrawling", STYLE, dummy_));
         copyrightYear_.add(allowCrawling_, BorderLayout.CENTER);
         panel.add(copyrightYear_);
