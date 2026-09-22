@@ -69,14 +69,14 @@ public class PasswordsFileTest {
                 password: penguin
             """;
 
-    /** Matches infra/photos/manly-man/passwords.yaml: no comments, no albums block. */
+    /** no comments, no albums block. */
     private static final String SAMPLE_SITE_ONLY =
             """
-            key: manly-man-super-secret-photos-key
+            key: private-amazing-super-secret-photos-key
 
             site:
-              password: bobandtonics
-              hint: What do Manly Men drink?
+              password: big-bottles-of-water
+              hint: What do elephants drink?
             """;
 
     // ── round-trip tests ────────────────────────────────────────────────────
@@ -457,9 +457,9 @@ public class PasswordsFileTest {
 
     @Test
     public void generateKey_usesSiteIdPrefix() {
-        String key = PasswordsFile.generateKey("manly-man");
-        assertTrue(key.startsWith("manly-man-"));
-        assertNotEquals(key, PasswordsFile.generateKey("manly-man"));
+        String key = PasswordsFile.generateKey("funny-friends");
+        assertTrue(key.startsWith("funny-friends-"));
+        assertNotEquals(key, PasswordsFile.generateKey("funny-friends"));
     }
 
     @Test
@@ -567,7 +567,7 @@ public class PasswordsFileTest {
         files.put("sample-all",    Paths.get("/Users/donohoe/work/ddphotos/sample/config/passwords-all.yaml"));
         files.put("sample-uganda", Paths.get("/Users/donohoe/work/ddphotos/sample/config/passwords-uganda.yaml"));
         files.put("docker-init",   Paths.get("/Users/donohoe/work/ddphotos/docker/init/passwords.yaml"));
-        files.put("manly-man",     Paths.get("/Users/donohoe/work/infra/photos/manly-man/passwords.yaml"));
+        files.put("funny-friends",     Paths.get("/Users/donohoe/work/infra/photos/funny-friends/passwords.yaml"));
 
         boolean anyExists = files.values().stream().anyMatch(Files::exists);
         assumeTrue(anyExists, "Skipping real-file round-trip: none of the source files found (CI?)");

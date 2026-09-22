@@ -182,7 +182,6 @@ public class CssFileTest {
     public void roundTripRealFiles() throws Exception {
         Path[] files = {
                 Paths.get("/Users/donohoe/work/infra/photos/donohoe/custom.css"),
-                Paths.get("/Users/donohoe/work/infra/photos/manly-man/custom.css"),
         };
 
         boolean anyExists = false;

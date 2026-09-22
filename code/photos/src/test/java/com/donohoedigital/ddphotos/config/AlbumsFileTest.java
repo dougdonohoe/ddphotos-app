@@ -537,7 +537,6 @@ public class AlbumsFileTest {
         Map<String, Path> files = new LinkedHashMap<>();
         files.put("sample",      Paths.get("/Users/donohoe/work/ddphotos/sample/config/albums.yaml"));
         files.put("docker-init", Paths.get("/Users/donohoe/work/ddphotos/docker/init/albums.yaml"));
-        files.put("manly-man",   Paths.get("/Users/donohoe/work/infra/photos/manly-man/albums.yaml"));
         files.put("donohoe",     Paths.get("/Users/donohoe/work/infra/photos/donohoe/albums.yaml"));
 
         boolean anyExists = files.values().stream().anyMatch(Files::exists);

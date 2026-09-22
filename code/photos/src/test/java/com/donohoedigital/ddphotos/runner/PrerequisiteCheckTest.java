@@ -122,8 +122,8 @@ public class PrerequisiteCheckTest {
                 "Last Modified": "3 days ago"
               },
               {
-                "Project Name": "manly-man",
-                "Project Domains": "manly-man.pages.dev",
+                "Project Name": "funny-friends",
+                "Project Domains": "funny-friends.pages.dev",
                 "Git Provider": "No",
                 "Last Modified": "1 month ago"
               }
@@ -132,7 +132,7 @@ public class PrerequisiteCheckTest {
 
     @Test
     public void wranglerProject_present_passes() {
-        assertEquals(Result.PASSED, WranglerRunner.checkProject(PROJECT_LIST, 0, "manly-man"));
+        assertEquals(Result.PASSED, WranglerRunner.checkProject(PROJECT_LIST, 0, "funny-friends"));
     }
 
     @Test
@@ -145,10 +145,10 @@ public class PrerequisiteCheckTest {
         assertEquals(Result.FAILED, WranglerRunner.checkProject(MOUNTS + "[]\n", 0, "my-site"));
     }
 
-    /** A name must match a whole cell - 'manly' must not be satisfied by 'manly-man'. */
+    /** A name must match a whole cell - 'funny' must not be satisfied by 'funny-friends'. */
     @Test
     public void wranglerProject_partialNameDoesNotMatch() {
-        assertEquals(Result.FAILED, WranglerRunner.checkProject(PROJECT_LIST, 0, "manly"));
+        assertEquals(Result.FAILED, WranglerRunner.checkProject(PROJECT_LIST, 0, "funny"));
     }
 
     /**
