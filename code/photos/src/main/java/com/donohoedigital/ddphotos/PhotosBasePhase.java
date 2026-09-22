@@ -6,6 +6,7 @@ import com.donohoedigital.config.DebugConfig;
 import com.donohoedigital.config.Prefs;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.config.StylesConfig;
+import com.donohoedigital.ddphotos.sync.ImmichProvider;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
 import com.donohoedigital.ddphotos.runner.BuildRunner;
@@ -316,6 +317,12 @@ public class PhotosBasePhase extends BasePhase {
 
         menu.addSeparator();
 
+        DDMenuItem immichCreds = new DDMenuItem("immichcredentials");
+        immichCreds.addActionListener(mainWindowAction(this::doImmichCredentials));
+        menu.add(immichCreds);
+
+        menu.addSeparator();
+
         DDMenuItem showConfigFolder = new DDMenuItem("showconfigfolder");
         showConfigFolder.addActionListener(mainWindowAction(() -> doShowFolder(Site::getActualConfigPath)));
         menu.add(showConfigFolder);
@@ -482,6 +489,10 @@ public class PhotosBasePhase extends BasePhase {
                 case "newsite" -> item.setEnabled(!busy && site != null);
                 // Not gated on busy: opening a folder neither rebuilds nor drives the UI, so
                 // these stay live whenever there is a site to show.
+                case "immichcredentials" -> {
+                    setSiteLabel(item, site);
+                    item.setEnabled(!busy && site != null);
+                }
                 case "showconfigfolder", "showsitefolder" -> {
                     setSiteLabel(item, site);
                     item.setEnabled(site != null);
@@ -521,7 +532,7 @@ public class PhotosBasePhase extends BasePhase {
     }
 
     /**
-     * Run menu items name the site they act on - "Publish (Manly Man)..." - falling back to a
+     * Run menu items name the site they act on - "Publish (Ski Trip)..." - falling back to a
      * bare label when there is none (the wizard, or every site removed).
      */
     private static void setSiteLabel(DDMenuItem item, Site site) {
@@ -667,6 +678,11 @@ public class PhotosBasePhase extends BasePhase {
      * platform fallbacks report success as soon as the file manager is launched, whether
      * the folder they handed it exists.
      */
+    private void doImmichCredentials() {
+        Site site = siteBar_ != null ? siteBar_.getSelectedSite() : null;
+        if (site != null) SyncUi.editCredentials(context_, site, ImmichProvider.INSTANCE);
+    }
+
     private void doShowFolder(Function<Site, String> whichFolder) {
         Site site = siteBar_ != null ? siteBar_.getSelectedSite() : null;
         if (site == null) return;

@@ -11,6 +11,7 @@ public class AlbumEntry {
     private String cover;
     private boolean manualSortOrder;
     private boolean recurse;
+    private SyncEntry sync;
 
     public AlbumEntry() {}
 
@@ -23,6 +24,7 @@ public class AlbumEntry {
         this.cover         = other.cover;
         this.manualSortOrder = other.manualSortOrder;
         this.recurse       = other.recurse;
+        this.sync          = other.sync == null ? null : new SyncEntry(other.sync);
     }
 
     public String getSlug() { return slug; }
@@ -49,6 +51,13 @@ public class AlbumEntry {
     public boolean isRecurse() { return recurse; }
     public void setRecurse(boolean recurse) { this.recurse = recurse; }
 
+    /** The {@code sync:} block; null for an album read from a local folder. */
+    public SyncEntry getSync() { return sync; }
+    public void setSync(SyncEntry sync) { this.sync = sync; }
+
+    /** True when photogen downloads this album from a provider rather than reading {@code source}. */
+    public boolean isSynced() { return sync != null; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -60,11 +69,12 @@ public class AlbumEntry {
             && Objects.equals(description, e.description)
             && Objects.equals(base,        e.base)
             && Objects.equals(source,      e.source)
-            && Objects.equals(cover,       e.cover);
+            && Objects.equals(cover,       e.cover)
+            && Objects.equals(sync,        e.sync);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(slug, name, description, base, source, cover, manualSortOrder, recurse);
+        return Objects.hash(slug, name, description, base, source, cover, manualSortOrder, recurse, sync);
     }
 }

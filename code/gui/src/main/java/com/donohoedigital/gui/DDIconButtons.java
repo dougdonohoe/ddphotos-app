@@ -15,30 +15,31 @@ import java.util.function.Supplier;
  */
 public class DDIconButtons
 {
-    public static final FlatSVGIcon PLUS          = svgIcon("icons/plus.svg");
-    public static final FlatSVGIcon EDIT          = svgIcon("icons/pencil.svg");
-    public static final FlatSVGIcon TRASH         = svgIcon("icons/trash-2.svg");
-    public static final FlatSVGIcon CHEVRON_UP    = svgIcon("icons/chevron-up.svg");
-    public static final FlatSVGIcon CHEVRON_DOWN  = svgIcon("icons/chevron-down.svg");
-    public static final FlatSVGIcon CAMERA_OFF    = svgIcon("icons/camera-off.svg");
-    public static final FlatSVGIcon VIDEO_OFF     = svgIcon("icons/video-off.svg");
-    public static final FlatSVGIcon PLAY          = svgIcon("icons/play.svg");
-    public static final FlatSVGIcon STOP_SQUARE   = svgIcon("icons/square.svg");
-    public static final FlatSVGIcon KILL          = svgIcon("icons/circle-x.svg");
-    public static final FlatSVGIcon SCROLL_TOP    = svgIcon("icons/arrow-up-to-line.svg");
-    public static final FlatSVGIcon SCROLL_BOTTOM = svgIcon("icons/arrow-down-to-line.svg");
-    public static final FlatSVGIcon ERASER        = svgIcon("icons/eraser.svg");
-    public static final FlatSVGIcon FOLDER_OPEN   = svgIcon("icons/folder-open.svg");
     public static final FlatSVGIcon ARROW_LEFT    = svgIcon("icons/arrow-left.svg");
     public static final FlatSVGIcon ARROW_RIGHT   = svgIcon("icons/arrow-right.svg");
     public static final FlatSVGIcon ARROW_UP      = svgIcon("icons/arrow-up.svg");
-    public static final FlatSVGIcon SEARCH        = svgIcon("icons/search.svg");
-    public static final FlatSVGIcon CLOSE         = svgIcon("icons/x.svg");
-    public static final FlatSVGIcon LOCK          = svgIcon("icons/lock.svg");
-    public static final FlatSVGIcon UNLOCK        = svgIcon("icons/lock-open.svg");
-    public static final FlatSVGIcon EXTERNAL_LINK = svgIcon("icons/external-link.svg");
-    public static final FlatSVGIcon ZAP           = svgIcon("icons/zap.svg");
+    public static final FlatSVGIcon CAMERA_OFF    = svgIcon("icons/camera-off.svg");
+    public static final FlatSVGIcon CHEVRON_DOWN  = svgIcon("icons/chevron-down.svg");
+    public static final FlatSVGIcon CHEVRON_UP    = svgIcon("icons/chevron-up.svg");
     public static final FlatSVGIcon CIRCLE        = svgIcon("icons/circle.svg");
+    public static final FlatSVGIcon CLOSE         = svgIcon("icons/x.svg");
+    public static final FlatSVGIcon EDIT          = svgIcon("icons/pencil.svg");
+    public static final FlatSVGIcon ERASER        = svgIcon("icons/eraser.svg");
+    public static final FlatSVGIcon EXTERNAL_LINK = svgIcon("icons/external-link.svg");
+    public static final FlatSVGIcon FOLDER_OPEN   = svgIcon("icons/folder-open.svg");
+    public static final FlatSVGIcon INFO          = svgIcon("icons/info.svg");
+    public static final FlatSVGIcon KILL          = svgIcon("icons/circle-x.svg");
+    public static final FlatSVGIcon LOCK          = svgIcon("icons/lock.svg");
+    public static final FlatSVGIcon PLAY          = svgIcon("icons/play.svg");
+    public static final FlatSVGIcon PLUS          = svgIcon("icons/plus.svg");
+    public static final FlatSVGIcon SCROLL_BOTTOM = svgIcon("icons/arrow-down-to-line.svg");
+    public static final FlatSVGIcon SCROLL_TOP    = svgIcon("icons/arrow-up-to-line.svg");
+    public static final FlatSVGIcon SEARCH        = svgIcon("icons/search.svg");
+    public static final FlatSVGIcon STOP_SQUARE   = svgIcon("icons/square.svg");
+    public static final FlatSVGIcon TRASH         = svgIcon("icons/trash-2.svg");
+    public static final FlatSVGIcon UNLOCK        = svgIcon("icons/lock-open.svg");
+    public static final FlatSVGIcon VIDEO_OFF     = svgIcon("icons/video-off.svg");
+    public static final FlatSVGIcon ZAP           = svgIcon("icons/zap.svg");
 
     public static DDButton iconButton(String name, String style, Icon icon)
     {

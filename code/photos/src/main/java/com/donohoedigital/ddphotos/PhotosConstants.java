@@ -46,6 +46,16 @@ public class PhotosConstants {
     /** An optional web address: empty, or an http(s) URL with no spaces in it. */
     public static final String REGEXP_URL_OPTIONAL = "(https?://\\S+)?";
 
+    /** A required web address: an http(s) URL with no spaces in it. */
+    public static final String REGEXP_URL = "https?://\\S+";
+
+    /**
+     * An Immich API key.  Immich makes one from 32 random bytes in base64 with the non-word
+     * characters removed, so about 43 letters and digits; the range is loose because keys from
+     * older Immich versions were not checked.
+     */
+    public static final String REGEXP_IMMICH_API_KEY = "[A-Za-z0-9_-]{16,128}";
+
     /** A single folder name: no path separators and no whitespace. */
     public static final String REGEXP_FOLDER_NAME = "[^/\\\\\\s]+";
 

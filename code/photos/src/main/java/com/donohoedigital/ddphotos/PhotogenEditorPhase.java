@@ -133,8 +133,14 @@ public class PhotogenEditorPhase extends BasePhase {
         params.setString(EngineConstants.PARAM_WINDOW_TITLE, PropertyConfig.getMessage(
                 "msg.windowtitle.PhotogenEditor.full",
                 site.getDisplayName() != null ? site.getDisplayName() : site.getIdOrDefault(),
-                album.getName() != null ? album.getName() : album.getSlug()));
+                displayName(site, album)));
         context.processPhase("PhotogenEditor", params);
+    }
+
+    /** The album's name as photogen publishes it, which for a synced album may come from upstream. */
+    private static String displayName(Site site, AlbumEntry album) {
+        AlbumsFile af = site.getAlbumsFile();
+        return af != null ? af.displayName(album) : album.getSlug();
     }
 
     private static String keyFor(Site site, AlbumEntry album) {
@@ -310,7 +316,7 @@ public class PhotogenEditorPhase extends BasePhase {
     }
 
     private String siteLabelHtml() {
-        String albumName = album_.getName() != null ? album_.getName() : album_.getSlug();
+        String albumName = displayName(site_, album_);
         return "<html><b>" + PhotosUtils.escapeHtml(albumName) + "</b> &nbsp;|&nbsp; " +
                 PhotosUtils.siteLabelHtml(site_) + "</html>";
     }
