@@ -47,10 +47,14 @@ abstract class EditableDetailPanel extends DDPanel {
      * <pre>siteName_ = editable(new OptionText(null, "sitename", STYLE, ...));</pre>
      *
      * Anything not registered - labels, previews, warning areas - is left alone by
-     * {@link #setReadOnly}.
+     * {@link #setReadOnly}.  An {@link OptionTextArea}'s edit button is pointed at
+     * {@link TextAreaDialog} here too.
      */
     protected <T extends DDDisplayOnly> T editable(T field) {
         editFields_.add(field);
+        if (field instanceof OptionTextArea ota) {
+            ota.setEditHandler(o -> TextAreaDialog.open(getContext(), o));
+        }
         return field;
     }
 

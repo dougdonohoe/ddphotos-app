@@ -154,6 +154,22 @@
         </paramlist>
     </phase>
 
+    <!-- Editor behind an OptionTextArea's pencil button.  Resizable and sized from the app window,
+         so dialog-maxwidth is off.  No default button: Enter adds a line break. -->
+    <phase name="TextAreaDialog" class="com.donohoedigital.ddphotos.TextAreaDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-maxwidth" intvalue="0"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.TextAreaDialog"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <paramlist name="buttons">
+            <strvalue>cancel</strvalue>
+            <strvalue>save</strvalue>
+        </paramlist>
+    </phase>
+
     <!-- Close rather than Cancel/Save: the Option widgets on this dialog write their preference
          as they are clicked, so there is nothing left to save (or to take back). -->
     <phase name="PublishSettingsDialog" class="com.donohoedigital.ddphotos.PublishSettingsDialog" transient="true">
