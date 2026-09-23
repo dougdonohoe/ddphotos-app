@@ -127,7 +127,8 @@ public class ImmichCredentialsDialog extends PhotosDialog
     @Override
     protected Component getFocusComponent()
     {
-        return urlField_.getText().isBlank() ? urlField_ : keyField_;
+        return urlField_.getText().isBlank() ? urlField_ :
+                keyField_.getText().isBlank() ? keyField_ : testBtn_;
     }
 
     @Override
