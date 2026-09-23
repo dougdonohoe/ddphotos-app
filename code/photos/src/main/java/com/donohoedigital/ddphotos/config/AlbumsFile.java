@@ -422,11 +422,13 @@ public class AlbumsFile extends ConfigFile {
 
     /**
      * Returns the site's {@link ImmichCredentialsFile}, loaded on first access and cached.  The
-     * file need not exist: a missing one loads empty and {@link ImmichCredentialsFile#save()}
-     * creates it.  Returns null only when the config dir is unknown.
+     * cached copy is reloaded when the file has changed on disk, since the user may fix a key in
+     * a text editor.  The file need not exist: a missing one loads empty and
+     * {@link ImmichCredentialsFile#save()} creates it.  Returns null only when the config dir is
+     * unknown.
      */
     public ImmichCredentialsFile getImmichCredentialsFile() {
-        if (immichCredentials_ == null) {
+        if (immichCredentials_ == null || immichCredentials_.isChangedOnDisk()) {
             Path path = resolveImmichCredentialsPath();
             if (path == null) return null;
             immichCredentials_ = new ImmichCredentialsFile(path).load();
