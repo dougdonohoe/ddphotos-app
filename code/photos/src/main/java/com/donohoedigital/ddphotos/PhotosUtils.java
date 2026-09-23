@@ -175,16 +175,32 @@ public class PhotosUtils {
      */
     public static void renameSyncFolder(AppContext context, Path from, Path to) {
         if (from == null || to == null || from.equals(to) || !Files.isDirectory(from)) return;
-        if (Files.exists(to)) {
+        if (Files.exists(to) && !isSameFile(from, to)) {
             logger.warn("sync folder not moved, target exists: {} -> {}", from, to);
             EngineUtils.displayErrorDialog(context,
                     PropertyConfig.getMessage("msg.syncfolder.exists", escapeHtml(from.toString()), escapeHtml(to.toString())),
                     "msg.windowtitle.syncFolder", null);
             return;
         }
+        // Moved through a temporary name on every platform.  On a case-insensitive file system
+        // (the macOS default) Trip and trip are the same folder, and Files.move sees that and
+        // silently does nothing, so a case-only rename would keep the old case.  Two steps work
+        // everywhere, so there is one code path rather than a platform check.
+        Path temp = from.resolveSibling(from.getFileName() + ".renaming");
         try {
             Files.createDirectories(to.getParent());
-            Files.move(from, to);
+            Files.move(from, temp);
+            try {
+                Files.move(temp, to);
+            } catch (IOException e) {
+                // Put it back rather than leave the photos under the temporary name.
+                try {
+                    Files.move(temp, from);
+                } catch (IOException restore) {
+                    e.addSuppressed(restore);
+                }
+                throw e;
+            }
             logger.info("moved sync folder {} -> {}", from, to);
         } catch (IOException e) {
             logger.error("Failed to move sync folder {} -> {}", from, to, e);
@@ -192,6 +208,15 @@ public class PhotosUtils {
                     PropertyConfig.getMessage("msg.syncfolder.movefailed", escapeHtml(from.toString()),
                                               escapeHtml(to.toString()), escapeHtml(FileErrors.reason(e))),
                     "msg.windowtitle.syncFolder", null);
+        }
+    }
+
+    /** Whether two existing paths are the same file, false when that cannot be told. */
+    private static boolean isSameFile(Path a, Path b) {
+        try {
+            return Files.isSameFile(a, b);
+        } catch (IOException e) {
+            return false;
         }
     }
 
