@@ -69,7 +69,10 @@ public class PasswordsFileTest {
                 password: penguin
             """;
 
-    /** no comments, no albums block. */
+    /**
+     * A site-only file: no comments, no albums block.  Stands in for a real one, which would put
+     * a real password in the repo.
+     */
     private static final String SAMPLE_SITE_ONLY =
             """
             key: private-amazing-super-secret-photos-key
@@ -567,7 +570,6 @@ public class PasswordsFileTest {
         files.put("sample-all",    Paths.get("/Users/donohoe/work/ddphotos/sample/config/passwords-all.yaml"));
         files.put("sample-uganda", Paths.get("/Users/donohoe/work/ddphotos/sample/config/passwords-uganda.yaml"));
         files.put("docker-init",   Paths.get("/Users/donohoe/work/ddphotos/docker/init/passwords.yaml"));
-        files.put("funny-friends",     Paths.get("/Users/donohoe/work/infra/photos/funny-friends/passwords.yaml"));
 
         boolean anyExists = files.values().stream().anyMatch(Files::exists);
         assumeTrue(anyExists, "Skipping real-file round-trip: none of the source files found (CI?)");

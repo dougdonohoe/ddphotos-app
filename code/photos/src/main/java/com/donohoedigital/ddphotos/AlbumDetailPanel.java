@@ -8,6 +8,7 @@ import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumEntry;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.AlbumsFileException;
+import com.donohoedigital.ddphotos.config.ConfigFile;
 import com.donohoedigital.ddphotos.config.PasswordsFile;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SyncEntry;
@@ -115,6 +116,16 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private boolean synced_;
     /** The source type before the latest change, to tell Local-to-Sync from a provider change. */
     private boolean wasSync_;
+    /**
+     * Stands in for {@code meta_} in the watch while there is none, as for a local album.  A null
+     * would read to ConfigWatcher as "no file yet", so selecting a synced album next would be
+     * reported as its metadata.yaml arriving.  A synced album with no metadata.yaml yet still has
+     * a model, so a file that really does arrive is still noticed.
+     */
+    private static final ConfigFile NO_META = new ConfigFile() {
+        @Override public Path getPath() { return null; }
+    };
+
     /** Watches the album's metadata.yaml while the panel is showing; see {@link #addNotify}. */
     private ConfigWatcher.Registration metaWatch_;
 
@@ -140,7 +151,9 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     @Override
     public void addNotify() {
         super.addNotify();
-        if (metaWatch_ == null) metaWatch_ = ConfigWatcher.watch(() -> meta_, this::onMetadataChangedOnDisk);
+        if (metaWatch_ == null) {
+            metaWatch_ = ConfigWatcher.watch(() -> meta_ != null ? meta_ : NO_META, this::onMetadataChangedOnDisk);
+        }
     }
 
     @Override
@@ -191,14 +204,15 @@ public class AlbumDetailPanel extends EditableDetailPanel {
                     .filter(a -> a != currentEntry_)
                     .noneMatch(a -> text.equalsIgnoreCase(a.getSlug()));
         });
-        panel.add(buildPasswordRow(slug_, "albumpassword", "albumlock"));
 
-        // Sized to the option label column in buildUI().
+        // Source type first, as in the New Album dialog.  Sized to the option label column in
+        // buildUI().
         sourceTypeLabel_ = new DDLabel("sourcetype", STYLE);
         sourceType_ = new SourceTypeRow(STYLE);
         sourceType_.getCredentialsButton().addActionListener(_ -> editCredentials());
         sourceType_.addChangeListener(this::sourceTypeChanged);
         panel.add(westCenterRow(sourceTypeLabel_, sourceType_));
+        panel.add(buildPasswordRow(slug_, "albumpassword", "albumlock"));
 
         // Name is required for a local album and for an overridden synced one; see nameRequired().
         name_ = editable(new OptionText(null, "albumname", STYLE, dummy_,
@@ -652,6 +666,11 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             nameOverride_.setSelected(!name.isEmpty() && !name.equals(nvl(metaName_, "").trim()));
             descOverride_.setSelected(!desc.isEmpty() && !desc.equals(nvl(metaDesc_, "").trim()));
             applyMeta();   // fills the fields that are not overridden
+            // The cover names a photo in the local folder, and recurse only applies to one.  Both
+            // are hidden in Sync mode, so a leftover value would be saved without the user seeing
+            // it.
+            cover_.setText("");
+            recurse_.getCheckBox().setSelected(false);
         } else {
             // Going to Local, a name is required again: start from what photogen would publish.
             if (name_.getTextField().getText().isBlank() && currentEntry_ != null) {

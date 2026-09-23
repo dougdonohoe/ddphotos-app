@@ -256,6 +256,51 @@ public class AtomicWriteTest {
                 "a new file should get the same permissions a plain write would give it");
     }
 
+    // ── owner-only (secrets) ────────────────────────────────────────────────
+
+    @Test
+    public void createOwnerOnly_isOwnerOnlyFromTheStart() throws IOException {
+        // The temp file a secret is written into: private before any byte of it lands, rather
+        // than at the default permissions until a chmod after the rename.
+        assumeFalse(Utils.ISWINDOWS, "POSIX file permissions are not supported on Windows");
+        Path f = tmp.resolve("immich.env.tmp1");
+        AtomicWrite.createOwnerOnly(f);
+        assertEquals("rw-------", PosixFilePermissions.toString(Files.getPosixFilePermissions(f)));
+        assertEquals(0, Files.size(f));
+    }
+
+    @Test
+    public void createOwnerOnly_replacesAStaleTempFile() throws IOException {
+        assumeFalse(Utils.ISWINDOWS, "POSIX file permissions are not supported on Windows");
+        Path f = tmp.resolve("immich.env.tmp1");
+        Files.writeString(f, "left behind by a crashed save");
+        Files.setPosixFilePermissions(f, PosixFilePermissions.fromString("rw-r--r--"));
+        AtomicWrite.createOwnerOnly(f);
+        assertEquals("rw-------", PosixFilePermissions.toString(Files.getPosixFilePermissions(f)));
+        assertEquals(0, Files.size(f));
+    }
+
+    @Test
+    public void writeStringOwnerOnly_newFileIsOwnerOnly() throws IOException {
+        assumeFalse(Utils.ISWINDOWS, "POSIX file permissions are not supported on Windows");
+        Path target = tmp.resolve("immich.env");
+        AtomicWrite.writeStringOwnerOnly(target, "IMMICH_API_KEY=abc\n");
+        assertEquals("rw-------", PosixFilePermissions.toString(Files.getPosixFilePermissions(target)));
+        assertEquals("IMMICH_API_KEY=abc\n", Files.readString(target, StandardCharsets.UTF_8));
+        assertEquals(Set.of("immich.env"), listNames(tmp), "no temp file is left behind");
+    }
+
+    @Test
+    public void writeStringOwnerOnly_existingFileKeepsItsPermissions() throws IOException {
+        assumeFalse(Utils.ISWINDOWS, "POSIX file permissions are not supported on Windows");
+        Path target = tmp.resolve("immich.env");
+        Files.writeString(target, "IMMICH_API_KEY=old\n");
+        Files.setPosixFilePermissions(target, PosixFilePermissions.fromString("rw-r-----"));
+        AtomicWrite.writeStringOwnerOnly(target, "IMMICH_API_KEY=new\n");
+        assertEquals("rw-r-----", PosixFilePermissions.toString(Files.getPosixFilePermissions(target)));
+        assertEquals("IMMICH_API_KEY=new\n", Files.readString(target, StandardCharsets.UTF_8));
+    }
+
     private static Set<String> listNames(Path dir) throws IOException {
         try (var entries = Files.list(dir)) {
             return entries.map(p -> p.getFileName().toString()).collect(java.util.stream.Collectors.toSet());

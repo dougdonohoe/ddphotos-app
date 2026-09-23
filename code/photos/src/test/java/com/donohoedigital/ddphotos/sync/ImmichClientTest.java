@@ -29,7 +29,7 @@ public class ImmichClientTest {
 
     private HttpServer server_;
     private String url_;
-    /** path -> {status, body}; absent paths answer 404. */
+    /** path -> {status, body} or {status, body, content type}; absent paths answer 404. */
     private final Map<String, Object[]> routes_ = new ConcurrentHashMap<>();
     private final Map<String, String> seenKeys_ = new ConcurrentHashMap<>();
     private final Map<String, String> seenUpgrades_ = new ConcurrentHashMap<>();
@@ -44,7 +44,7 @@ public class ImmichClientTest {
             if (upgrade != null) seenUpgrades_.put(path, upgrade);
             Object[] r = routes_.getOrDefault(path, new Object[]{404, "{\"message\":\"Not Found\"}"});
             byte[] body = ((String) r[1]).getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.getResponseHeaders().add("Content-Type", r.length > 2 ? (String) r[2] : "application/json");
             exchange.sendResponseHeaders((Integer) r[0], body.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(body);
@@ -122,7 +122,7 @@ public class ImmichClientTest {
 
     @Test
     public void test_notImmich() {
-        routes_.put("/api/api-keys/me", new Object[]{200, "<html>hello</html>\n  : : ["});
+        routes_.put("/api/api-keys/me", new Object[]{200, "<html>hello</html>\n  : : [", "text/html"});
         SyncException e = assertThrows(SyncException.class, () -> new ImmichClient(url_, KEY).test());
         assertTrue(e.getMessage().contains("not like Immich"), e.getMessage());
     }
@@ -181,6 +181,33 @@ public class ImmichClientTest {
         assertMessage(() -> new ImmichClient(url_, "\u201c" + KEY + "\u201d").listAlbums(), "API key");
         assertMessage(() -> new ImmichClient(url_, "abc def ghi jkl mno").test(), "API key");
         assertTrue(seenKeys_.isEmpty(), "nothing is sent with a key that cannot be valid");
+    }
+
+    @Test
+    public void listAlbums_largeLibrary() throws Exception {
+        // Over snakeyaml-engine's default 3,145,728 code point limit, which a library of a few
+        // thousand albums reaches.
+        String description = "x".repeat(10_000);
+        StringBuilder json = new StringBuilder("[");
+        int count = 400;
+        for (int i = 0; i < count; i++) {
+            if (i > 0) json.append(',');
+            json.append("{\"id\":\"%08d-43fb-4c63-90c0-307b88b8f97a\",\"albumName\":\"A%d\",\"description\":\"%s\"}"
+                                .formatted(i, i, description));
+        }
+        json.append(']');
+        assertTrue(json.length() > 3_145_728);
+        routes_.put("/api/albums", new Object[]{200, json.toString()});
+
+        assertEquals(count, new ImmichClient(url_, KEY).listAlbums().size());
+    }
+
+    @Test
+    public void listAlbums_unreadableJson_isNotReportedAsNotImmich() {
+        routes_.put("/api/albums", new Object[]{200, "[{\"id\": "});
+        SyncException e = assertThrows(SyncException.class, () -> new ImmichClient(url_, KEY).listAlbums());
+        assertTrue(e.getMessage().contains("could not be read"), e.getMessage());
+        assertFalse(e.getMessage().contains("not like Immich"), e.getMessage());
     }
 
     // ── helpers ─────────────────────────────────────────────────────────────

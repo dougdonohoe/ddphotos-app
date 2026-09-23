@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermissions;
 
 /**
  * Replaces a file's contents without ever leaving it half-written.
@@ -31,6 +32,30 @@ public final class AtomicWrite {
      */
     public static void writeString(Path path, String content) throws IOException {
         replace(path, tmp -> Files.writeString(tmp, content, StandardCharsets.UTF_8));
+    }
+
+    /**
+     * {@link #writeString} for a file that holds a secret.  The temp file is created readable by
+     * its owner only before anything is written into it, so a new file is never readable by other
+     * users, not even for the moment between the rename and a later {@code chmod}.  A file that
+     * already exists keeps its own permissions, as with {@link #writeString}.
+     */
+    public static void writeStringOwnerOnly(Path path, String content) throws IOException {
+        replace(path, tmp -> {
+            createOwnerOnly(tmp);
+            Files.writeString(tmp, content, StandardCharsets.UTF_8);
+        });
+    }
+
+    /** Creates an empty file readable and writable by its owner only, replacing any left there. */
+    static void createOwnerOnly(Path path) throws IOException {
+        Files.deleteIfExists(path);   // a temp file left behind by a save that crashed
+        try {
+            Files.createFile(path, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+        } catch (UnsupportedOperationException e) {
+            // Not a POSIX filesystem (Windows): the user profile's ACLs are what protect it.
+            Files.createFile(path);
+        }
     }
 
     /**

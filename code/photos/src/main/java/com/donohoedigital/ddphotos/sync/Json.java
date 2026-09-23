@@ -16,10 +16,15 @@ final class Json {
 
     private Json() {}
 
-    /** Parses a JSON document; throws {@link IllegalArgumentException} when it is not one. */
+    /**
+     * Parses a JSON document; throws {@link IllegalArgumentException} when it is not one.  The
+     * code point limit is lifted: the default (3 MB) guards against huge YAML input, but a
+     * response is already in memory as one string, and a library of a few thousand albums
+     * exceeds it.
+     */
     static Object parse(String json) {
         try {
-            return new Load(LoadSettings.builder().build()).loadFromString(json);
+            return new Load(LoadSettings.builder().setCodePointLimit(Integer.MAX_VALUE).build()).loadFromString(json);
         } catch (YamlEngineException e) {
             throw new IllegalArgumentException("not JSON: " + e.getMessage(), e);
         }
