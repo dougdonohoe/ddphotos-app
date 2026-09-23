@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,10 +88,8 @@ public class ImmichCredentialsFile extends ConfigFile {
         if (!sawKey) out.add(KEY_API_KEY + "=" + nvl(apiKey_));
         if (!sawUrl) out.add(KEY_URL + "=" + nvl(url_));
 
-        boolean creating = !Files.exists(path_);
         if (path_.getParent() != null) Files.createDirectories(path_.getParent());
-        AtomicWrite.writeString(path_, String.join("\n", out) + "\n");
-        if (creating) ownerOnly(path_);
+        AtomicWrite.writeStringOwnerOnly(path_, String.join("\n", out) + "\n");
         logger.info("save {}", path_);
 
         lines_.clear();
@@ -134,14 +131,6 @@ public class ImmichCredentialsFile extends ConfigFile {
             }
         }
         return new String[]{key, value.isEmpty() ? null : value};
-    }
-
-    private static void ownerOnly(Path path) {
-        try {
-            Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rw-------"));
-        } catch (IOException | UnsupportedOperationException e) {
-            // Not a POSIX filesystem (Windows) - the user profile's ACLs are what protect it.
-        }
     }
 
     private static String trimToNull(String s) {
