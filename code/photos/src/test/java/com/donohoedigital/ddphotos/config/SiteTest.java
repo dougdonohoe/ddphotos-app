@@ -7,6 +7,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -233,7 +234,95 @@ public class SiteTest {
         assertEquals(configDir, af.getConfigDir());
     }
 
+    // ── addAlbum() / removeAlbum() ──────────────────────────────────────────
+    // When the save fails, the in-memory album list must go back to what is on disk, so a later
+    // save cannot write a change the user was told had failed.  An album with no name or source
+    // does not validate, which makes the save fail.
+
+    private static final String TWO_ALBUMS = """
+            settings:
+              id: my-photos
+
+            albums:
+              - slug: uganda
+                name: Uganda
+                source: /tmp/uganda
+              - slug: kenya
+                name: Kenya
+                source: /tmp/kenya
+            """;
+
+    @Test
+    public void addAlbum_savesIt() throws Exception {
+        Path configDir = writeTwoAlbums();
+        Site site = new Site("My Site", "/irrelevant", configDir.toString());
+
+        site.addAlbum(album("peru", "Peru", "/tmp/peru"));
+
+        assertEquals(List.of("uganda", "kenya", "peru"), slugs(site));
+        assertTrue(readAlbums(configDir).contains("slug: peru"));
+    }
+
+    @Test
+    public void addAlbum_saveFails_albumIsTakenBackOut() throws Exception {
+        Path configDir = writeTwoAlbums();
+        Site site = new Site("My Site", "/irrelevant", configDir.toString());
+
+        assertThrows(AlbumsFileException.class, () -> site.addAlbum(album("peru", null, null)));
+
+        assertEquals(List.of("uganda", "kenya"), slugs(site));
+        assertEquals(TWO_ALBUMS, readAlbums(configDir));
+    }
+
+    @Test
+    public void removeAlbum_savesIt() throws Exception {
+        Path configDir = writeTwoAlbums();
+        Site site = new Site("My Site", "/irrelevant", configDir.toString());
+
+        site.removeAlbum(site.getAlbumsFile().getAlbums().getFirst());
+
+        assertEquals(List.of("kenya"), slugs(site));
+        assertFalse(readAlbums(configDir).contains("slug: uganda"));
+    }
+
+    @Test
+    public void removeAlbum_saveFails_albumIsPutBackInPlace() throws Exception {
+        Path configDir = writeTwoAlbums();
+        Site site = new Site("My Site", "/irrelevant", configDir.toString());
+        List<AlbumEntry> albums = site.getAlbumsFile().getAlbums();
+        AlbumEntry uganda = albums.getFirst();
+        albums.add(album("peru", null, null));   // makes every save fail
+
+        assertThrows(AlbumsFileException.class, () -> site.removeAlbum(uganda));
+
+        assertEquals(List.of("uganda", "kenya", "peru"), slugs(site));
+        assertSame(uganda, albums.getFirst(), "the same entry goes back, at its old index");
+        assertEquals(TWO_ALBUMS, readAlbums(configDir));
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
+
+    private Path writeTwoAlbums() throws Exception {
+        Path configDir = Files.createDirectory(tmp.resolve("config"));
+        Files.writeString(configDir.resolve("albums.yaml"), TWO_ALBUMS, StandardCharsets.UTF_8);
+        return configDir;
+    }
+
+    private static String readAlbums(Path configDir) throws Exception {
+        return Files.readString(configDir.resolve("albums.yaml"), StandardCharsets.UTF_8);
+    }
+
+    private static AlbumEntry album(String slug, String name, String source) {
+        AlbumEntry e = new AlbumEntry();
+        e.setSlug(slug);
+        e.setName(name);
+        e.setSource(source);
+        return e;
+    }
+
+    private static List<String> slugs(Site site) {
+        return site.getAlbumsFile().getAlbums().stream().map(AlbumEntry::getSlug).toList();
+    }
 
     private void writeMinimalAlbums(Path dir, String id) throws Exception {
         Files.writeString(dir.resolve("albums.yaml"),

@@ -191,9 +191,16 @@ public class AlbumsListPanel extends DDPanel {
                 && EngineUtils.displayConfirmationDialog(context_, PropertyConfig.getMessage(
                         "msg.confirm.remove.syncfolder", name, PhotosUtils.escapeHtml(syncDir.toString())));
 
-        int idx = list_.getSelectedIndex();
-        af.getAlbums().remove(selected);
+        // On a failed save the album stays, and so do its password and downloads: albums.yaml
+        // still lists it.
+        try {
+            currentSite_.removeAlbum(selected);
+        } catch (AlbumsFileException e) {
+            reportSaveError(e);
+            return;
+        }
 
+        int idx = list_.getSelectedIndex();
         suppressSelectionChange_ = true;
         listModel_.removeElement(selected);
         int newIdx = Math.min(idx, listModel_.size() - 1);
@@ -201,7 +208,6 @@ public class AlbumsListPanel extends DDPanel {
         lastLoadedIndex_ = newIdx;
         suppressSelectionChange_ = false;
 
-        saveAlbumsFile();
         // Before notifying listeners, so the detail panel's lock icon reads the updated file.
         PhotosUtils.removeAlbumPassword(context_, af, selected.getSlug());
         if (deleteSyncDir) PhotosUtils.deleteSyncFolder(context_, syncDir);
@@ -256,9 +262,13 @@ public class AlbumsListPanel extends DDPanel {
         try {
             currentSite_.saveAlbumsFile();
         } catch (AlbumsFileException e) {
-            logger.error("Failed to save albums file: {}", currentSite_.getAlbumsFilePath(), e);
-            PhotosUtils.showSaveError(context_, currentSite_.getAlbumsFilePath(), e);
+            reportSaveError(e);
         }
+    }
+
+    private void reportSaveError(AlbumsFileException e) {
+        logger.error("Failed to save albums file: {}", currentSite_.getAlbumsFilePath(), e);
+        PhotosUtils.showSaveError(context_, currentSite_.getAlbumsFilePath(), e);
     }
 
     // -------------------------------------------------------------------------
