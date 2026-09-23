@@ -376,8 +376,7 @@ public class AlbumsListPanel extends DDPanel {
             JLabel label = (JLabel) super.getListCellRendererComponent(
                     list, value, index, isSelected, cellHasFocus);
             if (value instanceof AlbumEntry entry) {
-                AlbumsFile af = currentSite_ != null ? currentSite_.getAlbumsFile() : null;
-                String text = af != null ? af.displayName(entry) : entry.getSlug();
+                String text = currentSite_ != null ? currentSite_.albumDisplayName(entry) : entry.getSlug();
                 // Eliding here is also what caps the panel's width: a JList sizes itself to the
                 // widest cell the renderer reports, so short names still shrink it to fit.
                 label.setText(text == null ? null : GuiUtils.elideRight(text, label, maxTextWidth(label)));
