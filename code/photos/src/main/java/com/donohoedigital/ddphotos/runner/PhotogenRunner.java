@@ -29,6 +29,8 @@ public class PhotogenRunner extends DdphotosRunner {
                 new FlagDef.BooleanFlag("--resize", false, EDITABLE),
                 new FlagDef.BooleanFlag("--clean", false, EDITABLE),
                 new FlagDef.BooleanFlag("--hero-only", false, EDITABLE),
+                new FlagDef.BooleanFlag("--sync-only", false, EDITABLE),
+                new FlagDef.BooleanFlag("--no-sync", false, EDITABLE),
                 new FlagDef.BooleanFlag("--force", false, EDITABLE)
         );
     }

@@ -11,9 +11,12 @@ import com.donohoedigital.ddphotos.config.PasswordsFile;
 import com.donohoedigital.ddphotos.config.PasswordsFileException;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +38,7 @@ public class PhotosUtils {
     /**
      * Strips ANSI escapes from command output.  Swing renders none of them, so left in place they
      * show up as literal noise ({@code [31m}, {@code [0m}) around the text - which is what the tools
-     * we shell out to emit whether or not they are on a terminal (wrangler colors its error output
+     * we shell out to emit whether they are on a terminal (wrangler colors its error output
      * unconditionally).  Safe to apply a line at a time: escape sequences never span a newline.
      */
     public static String stripAnsi(String text) {
@@ -159,6 +162,51 @@ public class PhotosUtils {
         } catch (PasswordsFileException e) {
             logger.error("Failed to save passwords file: {}", af.resolvePasswordsPath(), e);
             showSaveError(context, af.resolvePasswordsPath(), e);
+        }
+    }
+
+    /**
+     * Moves a synced album's download folder when the path photogen would use changes (a slug or
+     * site id rename), so the next run finds the photos, the {@code metadata.yaml} record and any
+     * local caption edits instead of downloading everything again into a fresh folder.
+     *
+     * <p>Nothing happens when {@code from} does not exist.  When {@code to} already exists the
+     * move is refused and the user is told, rather than merging two albums' downloads.
+     */
+    public static void renameSyncFolder(AppContext context, Path from, Path to) {
+        if (from == null || to == null || from.equals(to) || !Files.isDirectory(from)) return;
+        if (Files.exists(to)) {
+            logger.warn("sync folder not moved, target exists: {} -> {}", from, to);
+            EngineUtils.displayErrorDialog(context,
+                    PropertyConfig.getMessage("msg.syncfolder.exists", escapeHtml(from.toString()), escapeHtml(to.toString())),
+                    "msg.windowtitle.syncFolder", null);
+            return;
+        }
+        try {
+            Files.createDirectories(to.getParent());
+            Files.move(from, to);
+            logger.info("moved sync folder {} -> {}", from, to);
+        } catch (IOException e) {
+            logger.error("Failed to move sync folder {} -> {}", from, to, e);
+            EngineUtils.displayErrorDialog(context,
+                    PropertyConfig.getMessage("msg.syncfolder.movefailed", escapeHtml(from.toString()),
+                                              escapeHtml(to.toString()), escapeHtml(FileErrors.reason(e))),
+                    "msg.windowtitle.syncFolder", null);
+        }
+    }
+
+    /** Deletes a synced album's download folder and everything in it, reporting a failure. */
+    public static void deleteSyncFolder(AppContext context, Path dir) {
+        if (dir == null || !Files.isDirectory(dir)) return;
+        try {
+            FileUtils.deleteDirectory(dir.toFile());
+            logger.info("deleted sync folder {}", dir);
+        } catch (IOException e) {
+            logger.error("Failed to delete sync folder {}", dir, e);
+            EngineUtils.displayErrorDialog(context,
+                    PropertyConfig.getMessage("msg.syncfolder.deletefailed", escapeHtml(dir.toString()),
+                                              escapeHtml(FileErrors.reason(e))),
+                    "msg.windowtitle.syncFolder", null);
         }
     }
 

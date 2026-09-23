@@ -381,6 +381,62 @@ mvn dependency:tree -q -Dscope=runtime -Ddependency.classpath.outputFile=/tmp/t 
 mvn-tree
 ```
 
+### Immich Sync
+
+An album can sync from [Immich↗](https://immich.app) instead of reading a local folder.
+`photogen` does the syncing; the app only edits the `sync:` block in `albums.yaml`, manages
+the Immich credentials and lets the user choose an album.  The behavior photogen defines,
+such as the validation rules and the sync folder layout, is documented in the ddphotos
+repo's `docs/CONFIGURATION.md`.  The app mirrors it.
+
+Where the code lives:
+
+* `config/SyncEntry`, `config/AlbumsFile` - the `sync:` block, its validation, and
+  `resolveSyncPath()`, which gives `<site-dir>/sync/<site-id>/<provider>/<slug>`
+* `config/SyncMetadataFile` - reads the `metadata.yaml` photogen writes into each sync
+  folder, for the upstream name and description.  It also writes a stub holding just those
+  two when a new album is chosen, so the app can show them before the first sync.
+* `config/ImmichCredentialsFile` - the site's `config/immich.env`
+* `sync/` - the `SyncProvider` interface and the Immich client, which makes only two
+  calls: `GET /api/api-keys/me` for **Test**, and `GET /api/albums` for the album chooser
+
+A few things worth knowing:
+
+* The client forces HTTP/1.1.  Java's `HttpClient` otherwise asks to upgrade a plain
+  `http://` connection to HTTP/2, and Immich drops the connection
+  (*"HTTP/1.1 header parser received no bytes"*).
+* The app accepts the `mock` provider, which photogen uses for offline tests, and preserves
+  a `sync.mock:` block on save, but it never offers `mock` in the UI.
+* The API key must never appear in a log line or an error message.  `ImmichClientTest`
+  checks this.
+
+#### Testing
+
+`ImmichClientTest` needs no Immich server.  It serves recorded responses from a local
+`HttpServer`, using fixtures in `code/photos/src/test/resources/testdata/immich/`.
+
+The fixtures are recorded from a real server in the ddphotos repo (assumed to be at
+`~/work/ddphotos`), which keeps one source for every Immich fixture.  To refresh them after
+an Immich upgrade, record them there, then copy them here:
+
+```shell
+# in ~/work/ddphotos: needs a running Immich and a config dir holding immich.env
+go run cmd/immich-record/immich-record.go -config-dir <site>/config <album-uuid>
+
+# in this repo: copy album.json, albums.json and api-key-me.json
+tools/bin/sync-immich-fixtures.sh              # or pass the ddphotos repo path
+```
+
+The recorder rewrites *all* of ddphotos' Immich fixtures, including the ones its Go tests
+use, so record against the album those tests expect.  To record only for this repo, add
+`-out <scratch-dir>` and copy `albums.json` and `api-key-me.json` into
+`pkg/photogen/testdata/immich/` by hand.
+
+For manual testing, run Immich locally (`http://localhost:2283`) and create an API key with
+the `album.read`, `asset.read` and `asset.download` permissions.  Enter the key through
+_File → Immich Credentials_.  Then add a **Sync** album, run `photogen` (the `--sync-only`
+flag skips resizing), and the album's photos and cover chooser appear.
+
 ## Appendix A: Testing on Ubuntu via Docker
 
 It is possible to run DD Photos in Ubuntu in Docker and display it on your Mac, but

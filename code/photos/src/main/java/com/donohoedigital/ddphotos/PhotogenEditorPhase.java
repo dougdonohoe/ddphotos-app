@@ -133,7 +133,7 @@ public class PhotogenEditorPhase extends BasePhase {
         params.setString(EngineConstants.PARAM_WINDOW_TITLE, PropertyConfig.getMessage(
                 "msg.windowtitle.PhotogenEditor.full",
                 site.getDisplayName() != null ? site.getDisplayName() : site.getIdOrDefault(),
-                album.getName() != null ? album.getName() : album.getSlug()));
+                site.albumDisplayName(album)));
         context.processPhase("PhotogenEditor", params);
     }
 
@@ -310,7 +310,7 @@ public class PhotogenEditorPhase extends BasePhase {
     }
 
     private String siteLabelHtml() {
-        String albumName = album_.getName() != null ? album_.getName() : album_.getSlug();
+        String albumName = site_.albumDisplayName(album_);
         return "<html><b>" + PhotosUtils.escapeHtml(albumName) + "</b> &nbsp;|&nbsp; " +
                 PhotosUtils.siteLabelHtml(site_) + "</html>";
     }

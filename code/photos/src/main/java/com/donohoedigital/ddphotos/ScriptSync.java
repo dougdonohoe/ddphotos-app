@@ -26,7 +26,7 @@ import java.util.Set;
  * left behind on whatever version was current when the site was created, still pinned to that
  * release's image tag.  Running it then quietly uses the old image, and the container warns that
  * the local script no longer matches.  So the Upgrade tab runs this at the end of every run of
- * {@code ddphotos upgrade}, whether or not there turned out to be an upgrade to do.
+ * {@code ddphotos upgrade}, whether there turned out to be an upgrade to do.
  *
  * <p>The script carries no version of its own, so - like the image's own check - this compares
  * byte for byte and replaces the whole file when it differs.

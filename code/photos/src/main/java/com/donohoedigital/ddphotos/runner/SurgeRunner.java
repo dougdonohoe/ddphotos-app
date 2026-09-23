@@ -50,7 +50,7 @@ public class SurgeRunner extends DdphotosRunner {
     // ──────────────────────────────────────────────────────────────────────────────
 
     /**
-     * Classifies 'surge whoami'. Surge exits 0 whether or not it is authenticated, so the exit
+     * Classifies 'surge whoami'. Surge exits 0 whether it is authenticated, so the exit
      * code proves nothing on its own and the account line has to be matched positively - the old
      * "no 'not authenticated' in the output" test passed on any wording surge might change to.
      */

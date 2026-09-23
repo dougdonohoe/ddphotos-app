@@ -88,6 +88,15 @@ public class Site implements NamedObject, Comparable<Site> {
     }
 
     /**
+     * The album's name as photogen publishes it (see {@link AlbumsFile#displayName}), or its slug
+     * when there is no albums file to consult.
+     */
+    public String albumDisplayName(AlbumEntry album) {
+        AlbumsFile af = getAlbumsFile();
+        return af != null ? af.displayName(album) : album.getSlug();
+    }
+
+    /**
      * Returns the cached AlbumsFile, creating an empty one if neither a cached instance
      * nor an on-disk file exists. The created instance is cached for subsequent saves.
      */

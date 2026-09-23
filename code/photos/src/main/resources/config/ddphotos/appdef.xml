@@ -109,6 +109,23 @@
         </paramlist>
     </phase>
 
+    <!-- dialog-maxwidth is off (0) because the dialog sizes itself to fit a whole API key,
+         which can be wider than the 750 default. -->
+    <phase name="ImmichCredentialsDialog" class="com.donohoedigital.ddphotos.ImmichCredentialsDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-maxwidth" intvalue="0"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.ImmichCredentialsDialog"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <param name="default-button" strvalue="save"/>
+        <paramlist name="buttons">
+            <strvalue>cancel</strvalue>
+            <strvalue>save</strvalue>
+        </paramlist>
+    </phase>
+
     <phase name="BaseDialog" class="com.donohoedigital.ddphotos.BaseDialog" transient="true">
         <param name="style" strvalue="OptionsDialog"/>
         <param name="dialog-background-image" strvalue="dialog-background"/>
@@ -131,6 +148,20 @@
         <param name="dialog-modal" boolvalue="true"/>
         <param name="dialog-maxwidth" intvalue="0"/>
         <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.PhotoChooser"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <param name="default-button" strvalue="choose"/>
+        <paramlist name="buttons">
+            <strvalue>cancel</strvalue>
+            <strvalue>choose</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="SyncAlbumChooser" class="com.donohoedigital.ddphotos.SyncAlbumChooserDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.SyncAlbumChooser"/>
         <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
         <param name="dialog-window-close-activates-button" strvalue="cancel"/>
         <param name="default-button" strvalue="choose"/>

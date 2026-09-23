@@ -19,6 +19,8 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -176,13 +178,20 @@ public class AlbumsListPanel extends DDPanel {
         AlbumEntry selected = list_.getSelectedValue();
         if (selected == null) return;
 
-        if (!EngineUtils.displayConfirmationDialog(context_, PropertyConfig.getMessage("msg.confirm.remove.album", selected.getName()))) {
-            return;
-        }
-
-        int idx = list_.getSelectedIndex();
         AlbumsFile af = currentSite_.getAlbumsFile();
         if (af == null) return;
+        String name = PhotosUtils.escapeHtml(af.displayName(selected));
+        if (!EngineUtils.displayConfirmationDialog(context_, PropertyConfig.getMessage("msg.confirm.remove.album", name))) {
+            return;
+        }
+        // A synced album's downloads can be fetched again, so offer to remove them too.  Asked
+        // before albums.yaml changes, while the folder can still be resolved from the entry.
+        Path syncDir = af.resolveSyncPath(selected);
+        boolean deleteSyncDir = syncDir != null && Files.isDirectory(syncDir)
+                && EngineUtils.displayConfirmationDialog(context_, PropertyConfig.getMessage(
+                        "msg.confirm.remove.syncfolder", name, PhotosUtils.escapeHtml(syncDir.toString())));
+
+        int idx = list_.getSelectedIndex();
         af.getAlbums().remove(selected);
 
         suppressSelectionChange_ = true;
@@ -195,6 +204,7 @@ public class AlbumsListPanel extends DDPanel {
         saveAlbumsFile();
         // Before notifying listeners, so the detail panel's lock icon reads the updated file.
         PhotosUtils.removeAlbumPassword(context_, af, selected.getSlug());
+        if (deleteSyncDir) PhotosUtils.deleteSyncFolder(context_, syncDir);
         notifySelectionListeners(list_.getSelectedValue());
         updateButtons();
     }
@@ -349,7 +359,7 @@ public class AlbumsListPanel extends DDPanel {
     // Cell renderer
     // -------------------------------------------------------------------------
 
-    private static class AlbumCellRenderer extends DefaultListCellRenderer {
+    private class AlbumCellRenderer extends DefaultListCellRenderer {
         /**
          * A sizing sample, never displayed: 31 characters, the length of the longest album name
          * worth showing in full.  Measuring it in the list's own font keeps the cap consistent
@@ -366,8 +376,7 @@ public class AlbumsListPanel extends DDPanel {
             JLabel label = (JLabel) super.getListCellRendererComponent(
                     list, value, index, isSelected, cellHasFocus);
             if (value instanceof AlbumEntry entry) {
-                String name = entry.getName();
-                String text = name != null && !name.isBlank() ? name : entry.getSlug();
+                String text = currentSite_ != null ? currentSite_.albumDisplayName(entry) : entry.getSlug();
                 // Eliding here is also what caps the panel's width: a JList sizes itself to the
                 // widest cell the renderer reports, so short names still shrink it to fit.
                 label.setText(text == null ? null : GuiUtils.elideRight(text, label, maxTextWidth(label)));

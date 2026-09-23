@@ -24,6 +24,7 @@ import java.awt.FlowLayout;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Year;
+import java.util.Objects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -504,6 +505,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
 
         AlbumsSettings s = af.getSettings();
         AlbumsSettings updated = settingsFromFields();
+        String oldId = s.getId();
         s.setId(updated.getId());
         s.setSiteName(updated.getSiteName());
         s.setSiteUrl(updated.getSiteUrl());
@@ -524,6 +526,11 @@ public class SiteDetailsPanel extends EditableDetailPanel {
             logger.error("Failed to save albums file: {}", currentSite_.getAlbumsFilePath(), e);
             PhotosUtils.showSaveError(context_, currentSite_.getAlbumsFilePath(), e);
             return;
+        }
+
+        // Synced albums download into sync/<site-id>/, so their folders follow the id.
+        if (!Objects.equals(oldId, s.getId())) {
+            PhotosUtils.renameSyncFolder(context_, af.resolveSyncSiteRoot(oldId), af.resolveSyncSiteRoot(s.getId()));
         }
 
         originalSettings_ = null;

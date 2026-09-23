@@ -31,6 +31,9 @@ public class AlbumsFile extends ConfigFile {
     public static final String THEME_LIGHT = "light";
     public static final String THEME_DARK  = "dark";
 
+    /** The sync root under the site dir (photogen's {@code DDPHOTOS_SYNC_DIR} in Docker). */
+    public static final String SYNC_DIR_NAME = "sync";
+
     /**
      * The file this instance was loaded from, or last saved to.  Null for a brand-new
      * {@link AlbumsFile} that has never been written - unlike its siblings, this class is
@@ -45,6 +48,8 @@ public class AlbumsFile extends ConfigFile {
     private List<AlbumEntry> albums;
     private Path siteDir;
     private Path configDir;
+    private ImmichCredentialsFile immichCredentials_;
+    private final Map<Path, SyncMetadataFile> syncMetadata_ = new HashMap<>();
     private PasswordsFile passwordsFile_;
     private boolean passwordsSettingUnsaved_;
     private CssFile cssFile_;
@@ -175,9 +180,11 @@ public class AlbumsFile extends ConfigFile {
      * Resolves an album's source to an absolute directory path.
      * Returns null if source is empty, is a Docker path (/ddphotos prefix),
      * or cannot be resolved (relative source with unresolvable base).
+     * A synced album has no {@code source}; its sync folder is returned instead.
      */
     public Path resolveSourcePath(AlbumEntry album) {
         if (album == null) return null;
+        if (album.isSynced()) return resolveSyncPath(album);
         String source = album.getSource();
         if (source == null || source.isBlank()) return null;
         if (source.startsWith("/ddphotos")) return null;
@@ -186,6 +193,75 @@ public class AlbumsFile extends ConfigFile {
         Path baseAbsPath = resolveBasePath(album.getBase());
         if (baseAbsPath == null) return null;
         return baseAbsPath.resolve(source).normalize();
+    }
+
+    /**
+     * The folder photogen syncs an album into: {@code <site-dir>/sync/<site-id>/<provider>/<slug>}
+     * (photogen's {@code SyncAlbumPath}).  The app always runs photogen through {@code ./ddphotos}
+     * in Docker, where {@code DDPHOTOS_SYNC_DIR} is {@code /ddphotos/sync}, the {@code sync} folder
+     * of the mounted site dir.
+     *
+     * <p>Computed on demand, because it depends on the site dir, the site id and the slug, any of
+     * which may change after load.  Returns null for an album with no {@code sync:} block, or when
+     * the site dir, site id, provider or slug is unknown.
+     */
+    public Path resolveSyncPath(AlbumEntry album) {
+        if (album == null || !album.isSynced()) return null;
+        return resolveSyncPath(settings.getId(), album.getSync().getProvider(), album.getSlug());
+    }
+
+    /** {@link #resolveSyncPath(AlbumEntry)} for an explicit site id, provider and slug. */
+    public Path resolveSyncPath(String siteId, String provider, String slug) {
+        Path root = resolveSyncSiteRoot(siteId);
+        if (root == null || isBlank(provider) || isBlank(slug)) return null;
+        return root.resolve(provider).resolve(slug);
+    }
+
+    /** {@code <site-dir>/sync/<site-id>}, the folder holding every synced album of the site. */
+    public Path resolveSyncSiteRoot(String siteId) {
+        if (siteDir == null || isBlank(siteId)) return null;
+        return siteDir.resolve(SYNC_DIR_NAME).resolve(siteId);
+    }
+
+    /**
+     * The album's {@code metadata.yaml}; null when the album is not synced.  Parsed files are
+     * cached and re-read only when the file changes on disk, because the albums list asks for
+     * every synced album's name on each repaint and the file lists every photo.
+     */
+    public SyncMetadataFile loadSyncMetadata(AlbumEntry album) {
+        Path dir = resolveSyncPath(album);
+        if (dir == null) return null;
+        SyncMetadataFile meta = syncMetadata_.get(dir);
+        if (meta == null) {
+            meta = new SyncMetadataFile(dir).load();
+            syncMetadata_.put(dir, meta);
+        } else if (meta.isChangedOnDisk()) {
+            meta.load();
+        }
+        return meta;
+    }
+
+    /**
+     * The album name photogen will publish: {@code name}, then (for a synced album) the upstream
+     * name in {@code metadata.yaml}, then the slug.
+     */
+    public String displayName(AlbumEntry album) {
+        if (album == null) return null;
+        if (!isBlank(album.getName())) return album.getName();
+        SyncMetadataFile meta = loadSyncMetadata(album);
+        if (meta != null && !isBlank(meta.getName())) return meta.getName();
+        return album.getSlug();
+    }
+
+    /**
+     * The album description photogen will publish: {@code description}, then (for a synced
+     * album) the upstream description in {@code metadata.yaml}.  Null when there is neither.
+     */
+    public String displayDescription(AlbumEntry album) {
+        if (album == null) return null;
+        if (!isBlank(album.getDescription())) return album.getDescription();
+        SyncMetadataFile meta = loadSyncMetadata(album);
+        return meta != null ? meta.getDescription() : null;
     }
 
     /**
@@ -337,6 +413,32 @@ public class AlbumsFile extends ConfigFile {
         return new PasswordsFile(path).load();
     }
 
+    // ── immich credentials ──────────────────────────────────────────────────
+
+    /** {@code <config-dir>/immich.env}; null when the config dir is unknown. */
+    public Path resolveImmichCredentialsPath() {
+        return configDir != null ? configDir.resolve(ImmichCredentialsFile.FILE_NAME) : null;
+    }
+
+    /**
+     * Returns the site's {@link ImmichCredentialsFile}, loaded on first access and cached.  The
+     * file need not exist: a missing one loads empty and {@link ImmichCredentialsFile#save()}
+     * creates it.  Returns null only when the config dir is unknown.
+     */
+    public ImmichCredentialsFile getImmichCredentialsFile() {
+        if (immichCredentials_ == null) {
+            Path path = resolveImmichCredentialsPath();
+            if (path == null) return null;
+            immichCredentials_ = new ImmichCredentialsFile(path).load();
+        }
+        return immichCredentials_;
+    }
+
+    /** Forces a fresh load from disk on next access. */
+    public void reloadImmichCredentialsFile() {
+        immichCredentials_ = null;
+    }
+
     // ── css file ────────────────────────────────────────────────────────────
 
     /**
@@ -431,6 +533,8 @@ public class AlbumsFile extends ConfigFile {
         // Lowercased slug -> slug as written.  Mirrors photogen's check, which rejects the whole
         // file: slugs that differ only by case are one directory on macOS and Windows.
         Map<String, String> seenSlugs = new HashMap<>();
+        // "provider/lowercased album_id" -> slug, for photogen's one-folder-per-upstream-album rule.
+        Map<String, String> seenSyncTargets = new HashMap<>();
         for (int i = 0; i < albums.size(); i++) {
             AlbumEntry a = albums.get(i);
             if (isBlank(a.getSlug())) {
@@ -444,11 +548,14 @@ public class AlbumsFile extends ConfigFile {
                 throw new AlbumsFileException("albums \"" + prior + "\" and \"" + a.getSlug()
                         + "\": slugs differ only by case");
             }
-            if (isBlank(a.getName())) {
+            if (!a.isSynced() && isBlank(a.getName())) {
                 throw new AlbumsFileException("album \"" + a.getSlug() + "\": name is required");
             }
-            if (isBlank(a.getSource())) {
+            if (!a.isSynced() && isBlank(a.getSource())) {
                 throw new AlbumsFileException("album \"" + a.getSlug() + "\": source is required");
+            }
+            if (a.isSynced()) {
+                validateSync(a, seenSyncTargets);
             }
             if (!isBlank(a.getBase()) && !bases.containsKey(a.getBase())) {
                 throw new AlbumsFileException(
@@ -469,6 +576,62 @@ public class AlbumsFile extends ConfigFile {
             if (!isBlank(hero.getBase()) && !bases.containsKey(hero.getBase())) {
                 throw new AlbumsFileException("hero: base \"" + hero.getBase() + "\" not defined in bases");
             }
+        }
+    }
+
+    /**
+     * The sync rules from photogen's {@code AlbumsFile.validate} and {@code SyncEntry.validate}
+     * ({@code pkg/photogen/albums_config.go}), in the same order and with the same wording, so
+     * the app rejects exactly the files photogen would.
+     */
+    private static void validateSync(AlbumEntry a, Map<String, String> seenSyncTargets)
+            throws AlbumsFileException {
+        String slug = "album \"" + a.getSlug() + "\": ";
+        if (!isBlank(a.getSource()) || !isBlank(a.getBase())) {
+            throw new AlbumsFileException(slug + "sync and source/base are mutually exclusive - a synced "
+                    + "album downloads into a folder photogen owns, so remove source and base");
+        }
+        SyncEntry sync = a.getSync();
+        String known = String.join(", ", SyncEntry.KNOWN_PROVIDERS);
+        if (isBlank(sync.getProvider())) {
+            throw new AlbumsFileException(slug + "sync.provider is required (one of: " + known + ")");
+        }
+        if (!SyncEntry.KNOWN_PROVIDERS.contains(sync.getProvider())) {
+            throw new AlbumsFileException(slug + "sync.provider \"" + sync.getProvider()
+                    + "\" is not a known provider (one of: " + known + ")");
+        }
+        if (isBlank(sync.getAlbumId())) {
+            throw new AlbumsFileException(slug + "sync.album_id is required");
+        }
+        SyncEntry.MockSyncEntry mock = sync.getMock();
+        if (mock != null) {
+            if (!SyncEntry.PROVIDER_MOCK.equals(sync.getProvider())) {
+                throw new AlbumsFileException(slug + "sync.mock is only valid with provider \""
+                        + SyncEntry.PROVIDER_MOCK + "\", not \"" + sync.getProvider() + "\"");
+            }
+            if (isBlank(mock.getAssets())) {
+                throw new AlbumsFileException(slug + "sync.mock.assets is required");
+            }
+            if (isBlank(mock.getMediaDir())) {
+                throw new AlbumsFileException(slug + "sync.mock.media_dir is required");
+            }
+            String fail = mock.getFail();
+            if (!isBlank(fail) && !fail.equals("list") && !fail.equals("fetch")) {
+                throw new AlbumsFileException(slug + "sync.mock.fail must be \"list\" or \"fetch\", got \""
+                        + fail + "\"");
+            }
+        }
+        if (SyncEntry.PROVIDER_IMMICH.equals(sync.getProvider())
+                && !SyncEntry.isImmichAlbumId(sync.getAlbumId())) {
+            throw new AlbumsFileException(slug + "sync.album_id \"" + sync.getAlbumId()
+                    + "\" is not an Immich album UUID - it is the last path segment of the album's URL in Immich");
+        }
+        String target = sync.getProvider() + "/" + sync.getAlbumId().toLowerCase(Locale.ROOT);
+        String prior = seenSyncTargets.putIfAbsent(target, a.getSlug());
+        if (prior != null) {
+            throw new AlbumsFileException("albums \"" + prior + "\" and \"" + a.getSlug()
+                    + "\": both sync album_id \"" + sync.getAlbumId() + "\" from provider \""
+                    + sync.getProvider() + "\"; each synced album needs its own upstream album");
         }
     }
 
@@ -531,7 +694,26 @@ public class AlbumsFile extends ConfigFile {
         a.setCover(getString(n, "cover"));
         a.setManualSortOrder(getBoolean(n, "manual_sort_order"));
         a.setRecurse(getBoolean(n, "recurse"));
+        MappingNode syncNode = getMappingNode(n, "sync");
+        if (syncNode != null) a.setSync(readSyncEntry(syncNode));
         return a;
+    }
+
+    private static SyncEntry readSyncEntry(MappingNode n) {
+        SyncEntry s = new SyncEntry();
+        s.setProvider(getString(n, "provider"));
+        s.setAlbumId(getString(n, "album_id"));
+        String captions = getString(n, "captions");
+        if (captions != null) s.setCaptions("true".equalsIgnoreCase(captions));
+        MappingNode mockNode = getMappingNode(n, "mock");
+        if (mockNode != null) {
+            SyncEntry.MockSyncEntry m = new SyncEntry.MockSyncEntry();
+            m.setAssets(getString(mockNode, "assets"));
+            m.setMediaDir(getString(mockNode, "media_dir"));
+            m.setFail(getString(mockNode, "fail"));
+            s.setMock(m);
+        }
+        return s;
     }
 
     // ── syncing domain objects back to node tree ────────────────────────────
@@ -639,11 +821,36 @@ public class AlbumsFile extends ConfigFile {
         setOptionalString(n, "slug", a.getSlug());
         setOptionalString(n, "name", a.getName());
         setOptionalString(n, "description", a.getDescription());
+        syncSyncEntry(n, a.getSync());
         setOptionalString(n, "base", a.getBase());
         setOptionalString(n, "source", a.getSource());
         setOptionalString(n, "cover", a.getCover());
         setBoolean(n, "manual_sort_order", a.isManualSortOrder());
         setBoolean(n, "recurse", a.isRecurse());
+    }
+
+    /**
+     * Writes an album's {@code sync:} block, editing an existing node in place so a {@code mock:}
+     * sub-block and comments survive.  A new block goes straight after the album's name and
+     * description rather than at the end, where SnakeYAML would append it.
+     */
+    private static void syncSyncEntry(MappingNode album, SyncEntry sync) {
+        if (sync == null) {
+            removeKey(album, "sync");
+            return;
+        }
+        MappingNode n = getMappingNode(album, "sync");
+        if (n == null) {
+            n = new MappingNode(Tag.MAP, new ArrayList<>(), FlowStyle.BLOCK);
+            int after = -1;
+            for (String key : List.of("slug", "name", "description")) {
+                after = Math.max(after, findTupleIndex(album, key));
+            }
+            album.getValue().add(after + 1, new NodeTuple(scalar("sync"), n));
+        }
+        setOptionalString(n, "provider", sync.getProvider());
+        setOptionalString(n, "album_id", sync.getAlbumId());
+        setBoolean(n, "captions", sync.isCaptionsEnabled());
     }
 
     // ── node building (for new AlbumsFile or new list items) ────────────────
