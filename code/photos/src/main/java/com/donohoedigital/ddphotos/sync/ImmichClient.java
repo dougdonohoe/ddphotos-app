@@ -153,13 +153,16 @@ public class ImmichClient implements SyncClient {
 
     // ── HTTP ────────────────────────────────────────────────────────────────
 
-    private record Response(ImmichClient client, String path, int status, String body) {
+    private record Response(ImmichClient client, String path, int status, String contentType, String body) {
         /** The parsed body of a 2xx response; anything else becomes the matching error. */
         Object ok() throws SyncException {
             if (status < 200 || status >= 300) throw client.statusError(path, status, body);
             try {
                 return Json.parse(body);
             } catch (IllegalArgumentException e) {
+                // JSON that does not parse came from an API, so blaming the URL would mislead;
+                // anything else is some other web server.
+                if (contentType.startsWith("application/json")) throw client.unreadable(path, e);
                 throw client.notImmich(e);
             }
         }
@@ -182,7 +185,8 @@ public class ImmichClient implements SyncClient {
                 .build()) {
             HttpResponse<String> r = client.send(request, HttpResponse.BodyHandlers.ofString());
             logger.info("immich GET {} -> {}", path, r.statusCode());
-            return new Response(this, path, r.statusCode(), r.body());
+            String contentType = r.headers().firstValue("Content-Type").orElse("").toLowerCase(Locale.ROOT);
+            return new Response(this, path, r.statusCode(), contentType, r.body());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new SyncException("Interrupted while contacting Immich.", e);
@@ -206,6 +210,11 @@ public class ImmichClient implements SyncClient {
     private SyncException notImmich(Exception cause) {
         return new SyncException("The server at " + baseUrl_ + " answered, but not like Immich. "
                 + "Check the URL.", cause);
+    }
+
+    private SyncException unreadable(String path, Exception cause) {
+        logger.info("immich GET {}: unreadable response: {}", path, cause.toString());
+        return new SyncException("Immich answered GET " + path + ", but its response could not be read.", cause);
     }
 
     /** photogen's {@code statusError}, reworded for a dialog. */
