@@ -8,6 +8,7 @@ import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumEntry;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.AlbumsFileException;
+import com.donohoedigital.ddphotos.config.ConfigFile;
 import com.donohoedigital.ddphotos.config.PasswordsFile;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SyncEntry;
@@ -115,6 +116,16 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private boolean synced_;
     /** The source type before the latest change, to tell Local-to-Sync from a provider change. */
     private boolean wasSync_;
+    /**
+     * Stands in for {@code meta_} in the watch while there is none, as for a local album.  A null
+     * would read to ConfigWatcher as "no file yet", so selecting a synced album next would be
+     * reported as its metadata.yaml arriving.  A synced album with no metadata.yaml yet still has
+     * a model, so a file that really does arrive is still noticed.
+     */
+    private static final ConfigFile NO_META = new ConfigFile() {
+        @Override public Path getPath() { return null; }
+    };
+
     /** Watches the album's metadata.yaml while the panel is showing; see {@link #addNotify}. */
     private ConfigWatcher.Registration metaWatch_;
 
@@ -140,7 +151,9 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     @Override
     public void addNotify() {
         super.addNotify();
-        if (metaWatch_ == null) metaWatch_ = ConfigWatcher.watch(() -> meta_, this::onMetadataChangedOnDisk);
+        if (metaWatch_ == null) {
+            metaWatch_ = ConfigWatcher.watch(() -> meta_ != null ? meta_ : NO_META, this::onMetadataChangedOnDisk);
+        }
     }
 
     @Override
