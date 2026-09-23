@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 public class Site implements NamedObject, Comparable<Site> {
@@ -143,6 +144,48 @@ public class Site implements NamedObject, Comparable<Site> {
         Path path = getAlbumsFilePath();
         if (path == null) return;
         albumsFile_.save(path);
+    }
+
+    /**
+     * Adds an album at the end of the list and saves.  If the save fails the album is taken back
+     * out, so the in-memory list still matches the file and a later save does not write it.
+     */
+    public void addAlbum(AlbumEntry album) throws AlbumsFileException {
+        List<AlbumEntry> albums = getOrCreateAlbumsFile().getAlbums();
+        albums.add(album);
+        try {
+            saveAlbumsFile();
+        } catch (AlbumsFileException e) {
+            albums.removeLast();
+            throw e;
+        }
+    }
+
+    /**
+     * Removes an album and saves.  If the save fails the album is put back at its old position,
+     * so the in-memory list still matches the file.  No-op if the album is not in the list.
+     */
+    public void removeAlbum(AlbumEntry album) throws AlbumsFileException {
+        AlbumsFile af = getAlbumsFile();
+        if (af == null) return;
+        List<AlbumEntry> albums = af.getAlbums();
+        int idx = indexOf(albums, album);
+        if (idx < 0) return;
+        albums.remove(idx);
+        try {
+            saveAlbumsFile();
+        } catch (AlbumsFileException e) {
+            albums.add(idx, album);
+            throw e;
+        }
+    }
+
+    /** Index of this exact entry: AlbumEntry.equals compares values, not identity. */
+    private static int indexOf(List<AlbumEntry> albums, AlbumEntry album) {
+        for (int i = 0; i < albums.size(); i++) {
+            if (albums.get(i) == album) return i;
+        }
+        return -1;
     }
 
     private AlbumsFile loadFromDisk() {

@@ -265,10 +265,9 @@ public class AlbumDialog extends PhotosDialog
             entry.setName(nameField_.getText().trim());
             entry.setSource(PropertyConfig.getMessage("msg.addalbum.source.placeholder"));
         }
-        af.getAlbums().add(entry);
 
         try {
-            site_.saveAlbumsFile();
+            site_.addAlbum(entry);
         } catch (AlbumsFileException e) {
             logger.error("Failed to save albums file: {}", site_.getAlbumsFilePath(), e);
             PhotosUtils.showSaveError(context_, site_.getAlbumsFilePath(), e);

@@ -1,6 +1,7 @@
 package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.engine.AppContext;
+import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
@@ -772,6 +773,16 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         if (!okayToOverwrite(af)) return;
 
         AlbumEntry updated = entryFromFields();
+        // Pointing a synced album at another upstream album makes the next photogen run replace
+        // its photos, so their caption edits are lost for good.  Once confirmed, the album
+        // starts over as if it were new.
+        if (SyncUi.switchesSyncedAlbum(currentEntry_, updated)) {
+            if (!EngineUtils.displayConfirmationDialog(albumsList_.getContext(), PropertyConfig.getMessage(
+                    "msg.confirm.switch.syncalbum", PhotosUtils.escapeHtml(af.displayName(currentEntry_))))) {
+                return;
+            }
+            SyncUi.startFresh(updated);
+        }
         String oldSlug = currentEntry_.getSlug();
         Path oldSyncDir = af.resolveSyncPath(currentEntry_);
         currentEntry_.setSlug(updated.getSlug());
