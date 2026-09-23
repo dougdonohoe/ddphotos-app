@@ -653,6 +653,11 @@ public class AlbumDetailPanel extends EditableDetailPanel {
             nameOverride_.setSelected(!name.isEmpty() && !name.equals(nvl(metaName_, "").trim()));
             descOverride_.setSelected(!desc.isEmpty() && !desc.equals(nvl(metaDesc_, "").trim()));
             applyMeta();   // fills the fields that are not overridden
+            // The cover names a photo in the local folder, and recurse only applies to one.  Both
+            // are hidden in Sync mode, so a leftover value would be saved without the user seeing
+            // it.
+            cover_.setText("");
+            recurse_.getCheckBox().setSelected(false);
         } else {
             // Going to Local, a name is required again: start from what photogen would publish.
             if (name_.getTextField().getText().isBlank() && currentEntry_ != null) {
