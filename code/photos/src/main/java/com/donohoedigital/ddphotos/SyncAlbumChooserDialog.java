@@ -7,12 +7,15 @@ import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.sync.SyncAlbumInfo;
+import com.donohoedigital.ddphotos.sync.SyncClient;
 import com.donohoedigital.ddphotos.sync.SyncException;
 import com.donohoedigital.ddphotos.sync.SyncProvider;
 import com.donohoedigital.gui.DDButton;
 import com.donohoedigital.gui.DDHtmlArea;
 import com.donohoedigital.gui.DDList;
 import com.donohoedigital.gui.GuiUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
@@ -46,6 +49,8 @@ import java.util.Set;
  */
 public class SyncAlbumChooserDialog extends PhotosDialog
 {
+    private static final Logger logger = LogManager.getLogger(SyncAlbumChooserDialog.class);
+
     public static final String PHASE_NAME = "SyncAlbumChooser";
 
     private static final String PARAM_SITE     = "sync-chooser-site";
@@ -190,14 +195,26 @@ public class SyncAlbumChooserDialog extends PhotosDialog
         setStatus(PropertyConfig.getMessage("msg.syncchooser.loading", provider_.displayName()));
         checkButtons();
 
-        AlbumsFile af = site_.getOrCreateAlbumsFile();
+        // Built here on the event thread: it reads the site's credentials file, which the
+        // credentials dialog also reloads on this thread.
+        SyncClient client;
+        try {
+            client = provider_.client(site_.getOrCreateAlbumsFile());
+        } catch (SyncException e) {
+            loaded(null, e.getMessage());
+            return;
+        }
         Thread.ofVirtual().name("sync-album-list").start(() -> {
             List<SyncAlbumInfo> albums = null;
             String error = null;
             try {
-                albums = provider_.client(af).listAlbums();
+                albums = client.listAlbums();
             } catch (SyncException e) {
                 error = e.getMessage();
+            } catch (RuntimeException e) {
+                // Anything unexpected must still reach loaded(), or the dialog stays on "Loading...".
+                logger.error("Listing {} albums failed", provider_.displayName(), e);
+                error = e.toString();
             }
             List<SyncAlbumInfo> finalAlbums = albums;
             String finalError = error;
