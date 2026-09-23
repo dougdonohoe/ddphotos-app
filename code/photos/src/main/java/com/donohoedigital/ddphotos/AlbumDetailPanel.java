@@ -115,8 +115,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private boolean synced_;
     /** The source type before the latest change, to tell Local-to-Sync from a provider change. */
     private boolean wasSync_;
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})  // held open for the panel's lifetime
-    private final ConfigWatcher.Registration metaWatch_;
+    /** Watches the album's metadata.yaml while the panel is showing; see {@link #addNotify}. */
+    private ConfigWatcher.Registration metaWatch_;
 
     private Runnable onSavedCallback_;
 
@@ -131,7 +131,25 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         buildUI();
         albumsList_.addSelectionListener(this::loadAlbum);
         loadAlbum(albumsList_.getSelectedAlbum());
-        metaWatch_ = ConfigWatcher.watch(() -> meta_, this::onMetadataChangedOnDisk);
+    }
+
+    /**
+     * Opens the metadata watch here and closes it in {@link #removeNotify}, so a panel dropped by
+     * New Site or Rerun Setup Wizard stops being polled and can be garbage collected.
+     */
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        if (metaWatch_ == null) metaWatch_ = ConfigWatcher.watch(() -> meta_, this::onMetadataChangedOnDisk);
+    }
+
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        if (metaWatch_ != null) {
+            metaWatch_.close();
+            metaWatch_ = null;
+        }
     }
 
     // -------------------------------------------------------------------------
