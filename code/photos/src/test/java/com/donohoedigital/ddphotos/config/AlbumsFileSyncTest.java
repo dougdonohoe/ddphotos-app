@@ -135,6 +135,20 @@ public class AlbumsFileSyncTest {
     }
 
     @Test
+    public void save_providerChangedFromMock_dropsMockBlock() throws Exception {
+        // What the album panel saves: a new SyncEntry, without the mock block, for the new provider.
+        Path f = writeYaml(album(sync("mock", "antarctica")
+                + "      mock:\n        assets: a.json\n        media_dir: m\n"));
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getAlbums().getFirst().setSync(new SyncEntry("immich", ID_A, true));
+        af.save(f);
+
+        String out = Files.readString(f);
+        assertFalse(out.contains("mock"), out);
+        assertEquals(af.getAlbums().getFirst(), AlbumsFile.load(f).getAlbums().getFirst());
+    }
+
+    @Test
     public void save_newSyncedAlbum_writesSyncAfterNameAndNoSource() throws Exception {
         Path f = writeYaml(settings("demo") + "albums:\n  - slug: local\n    name: Local\n    source: /tmp/p\n");
         AlbumsFile af = AlbumsFile.load(f);

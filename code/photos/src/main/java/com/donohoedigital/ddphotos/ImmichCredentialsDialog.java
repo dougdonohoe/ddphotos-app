@@ -186,6 +186,10 @@ public class ImmichCredentialsDialog extends PhotosDialog
                                                     PhotosUtils.escapeHtml(String.join(", ", result.missingPermissions())));
             } catch (SyncException e) {
                 html = PropertyConfig.getMessage("msg.immichcreds.test.failed", PhotosUtils.escapeHtml(e.getMessage()));
+            } catch (RuntimeException e) {
+                // Anything unexpected must still be reported, or the dialog stays on "Testing...".
+                logger.error("Immich connection test failed", e);
+                html = PropertyConfig.getMessage("msg.immichcreds.test.failed", PhotosUtils.escapeHtml(e.toString()));
             }
             String finalHtml = html;
             SwingUtilities.invokeLater(() -> {

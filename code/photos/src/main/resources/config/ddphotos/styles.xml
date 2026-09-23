@@ -317,6 +317,11 @@
 	<color name="OptionsDialog.button.fg" default="true"/>
 	<color name="OptionsDialog.button.bg" default="true"/>
 	 <font name="OptionsDialog.button" fontname="SansSerif" pointsize="16"/>
+	<color name="OptionsDialog.list.fg" default="true"/>
+	<color name="OptionsDialog.list.bg" default="true"/>
+	<color name="OptionsDialog.list.selection.bg" default="true"/>
+	<color name="OptionsDialog.list.selection.fg" default="true"/>
+	 <font name="OptionsDialog.list" fontname="SansSerif" pointsize="16"/>
 	<!-- OptionsDialog -->
 
 	<!-- PhotoChooser: the widgets inside the photo chooser dialog.  Its buttons are OptionsDialog

@@ -50,12 +50,18 @@ public class ImmichClient implements SyncClient {
     /**
      * @param url    the instance URL as the user wrote it; normalized here
      * @param apiKey the API key
-     * @throws SyncException when the URL is not usable
+     * @throws SyncException when the URL or the API key is not usable
      */
     public ImmichClient(String url, String apiKey) throws SyncException {
         String configuredUrl = url == null ? "" : url.strip();
         baseUrl_ = normalizeUrl(configuredUrl);
         apiKey_ = apiKey == null ? "" : apiKey.strip();
+        // Checked here because the HTTP library rejects some characters (smart quotes pasted into
+        // immich.env, say) with an unchecked exception.  Same rule as the credentials' dialog.
+        if (!apiKey_.matches(PhotosConstants.REGEXP_IMMICH_API_KEY)) {
+            throw new SyncException("The Immich API key is not valid: it should be only letters, digits, "
+                                    + "'-' and '_'.  Check for quotes or spaces copied along with it.");
+        }
     }
 
     /** The normalized instance URL, without {@code /api}. */

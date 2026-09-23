@@ -174,6 +174,15 @@ public class ImmichClientTest {
         assertEquals(new SyncAlbumInfo("ef8acfb8-43fb-4c63-90c0-307b88b8f97a", "A", "d", 3, "Olive"), a);
     }
 
+    @Test
+    public void badlyFormedKey_isASyncException() {
+        // A key pasted into immich.env with smart quotes: the HTTP library throws
+        // IllegalArgumentException for it, which the dialogs' background threads never caught.
+        assertMessage(() -> new ImmichClient(url_, "\u201c" + KEY + "\u201d").listAlbums(), "API key");
+        assertMessage(() -> new ImmichClient(url_, "abc def ghi jkl mno").test(), "API key");
+        assertTrue(seenKeys_.isEmpty(), "nothing is sent with a key that cannot be valid");
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private static String fixture(String name) throws IOException {

@@ -422,11 +422,13 @@ public class AlbumsFile extends ConfigFile {
 
     /**
      * Returns the site's {@link ImmichCredentialsFile}, loaded on first access and cached.  The
-     * file need not exist: a missing one loads empty and {@link ImmichCredentialsFile#save()}
-     * creates it.  Returns null only when the config dir is unknown.
+     * cached copy is reloaded when the file has changed on disk, since the user may fix a key in
+     * a text editor.  The file need not exist: a missing one loads empty and
+     * {@link ImmichCredentialsFile#save()} creates it.  Returns null only when the config dir is
+     * unknown.
      */
     public ImmichCredentialsFile getImmichCredentialsFile() {
-        if (immichCredentials_ == null) {
+        if (immichCredentials_ == null || immichCredentials_.isChangedOnDisk()) {
             Path path = resolveImmichCredentialsPath();
             if (path == null) return null;
             immichCredentials_ = new ImmichCredentialsFile(path).load();
@@ -851,6 +853,9 @@ public class AlbumsFile extends ConfigFile {
         setOptionalString(n, "provider", sync.getProvider());
         setOptionalString(n, "album_id", sync.getAlbumId());
         setBoolean(n, "captions", sync.isCaptionsEnabled());
+        // The mock block is carried over in the node, not written from the model, so it has to
+        // be dropped here when the model no longer has one (the provider changed away from mock).
+        if (sync.getMock() == null) removeKey(n, "mock");
     }
 
     // ── node building (for new AlbumsFile or new list items) ────────────────

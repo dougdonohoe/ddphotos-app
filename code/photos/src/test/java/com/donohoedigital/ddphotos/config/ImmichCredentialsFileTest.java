@@ -31,6 +31,29 @@ public class ImmichCredentialsFileTest {
     }
 
     @Test
+    public void albumsFile_picksUpAHandEdit() throws Exception {
+        // The chooser's own error message sends the user off to fix the key in a text editor.
+        write("IMMICH_INSTANCE_URL=http://localhost:2283\nIMMICH_API_KEY=old-key-0123456789\n");
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(tmp);
+        assertEquals("old-key-0123456789", af.getImmichCredentialsFile().getApiKey());
+
+        // A different length guarantees a different stamp even on a coarse-mtime filesystem.
+        write("IMMICH_INSTANCE_URL=http://localhost:2283\nIMMICH_API_KEY=fixed-key-0123456789abcdef\n");
+        assertEquals("fixed-key-0123456789abcdef", af.getImmichCredentialsFile().getApiKey());
+    }
+
+    @Test
+    public void albumsFile_picksUpAFileCreatedLater() throws Exception {
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(tmp);
+        assertFalse(af.getImmichCredentialsFile().isComplete());
+
+        write("IMMICH_INSTANCE_URL=http://localhost:2283\nIMMICH_API_KEY=new-key-0123456789\n");
+        assertTrue(af.getImmichCredentialsFile().isComplete());
+    }
+
+    @Test
     public void load_missingFile() {
         ImmichCredentialsFile c = new ImmichCredentialsFile(tmp.resolve("immich.env")).load();
         assertFalse(c.existsOnDisk());
