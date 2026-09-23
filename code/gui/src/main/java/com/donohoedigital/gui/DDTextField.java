@@ -15,7 +15,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
 import java.awt.Color;
 import java.awt.event.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -359,11 +358,22 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
         {
             pattern_ = Pattern.compile(sPattern);
         }
-        regexpValidate();
+        rulesChanged();
     }
 
     /**
-     * validate text
+     * Re-validate after the regexp or custom validator changes.  Removing the last rule makes the
+     * field valid, since nothing is left that could reject it.
+     */
+    private void rulesChanged()
+    {
+        if (pattern_ == null && customValidator_ == null) setValid(true);
+        else regexpValidate();
+    }
+
+    /**
+     * Validate text against the regexp and the custom validator, whichever are set.  With neither
+     * set, validity is left alone so a caller managing it through setValid() keeps its state.
      */
     private void regexpValidate()
     {
@@ -372,17 +382,14 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
             throw new RuntimeException("BOOM!");
         }
 
-        if (pattern_ != null)
-        {
-            String sNew = getText().trim();
-            Matcher m = pattern_.matcher(sNew);
+        if (pattern_ == null && customValidator_ == null) return;
 
-            setValid(m.matches() && customValidate());
-        }
+        boolean matches = pattern_ == null || pattern_.matcher(getText().trim()).matches();
+        setValid(matches && customValidate());
     }
 
     /**
-     * Called after regexp passes; delegates to customValidator_ if set.
+     * Called after the regexp passes (or when none is set); delegates to customValidator_ if set.
      * Use setCustomValidator() rather than subclassing.
      */
     private boolean customValidate()
@@ -395,7 +402,7 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
     public void setCustomValidator(java.util.function.Predicate<String> validator)
     {
         customValidator_ = validator;
-        regexpValidate();
+        rulesChanged();
     }
 
     /**
