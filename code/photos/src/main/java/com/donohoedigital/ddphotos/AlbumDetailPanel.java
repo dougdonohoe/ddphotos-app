@@ -58,7 +58,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     public static final int PREFERRED_TEXT_WIDTH = 350;
     public static final int PREFERRED_SHORT_TEXT_WIDTH = 350;
     /** Slugs are short, and the row has to leave room for the password controls. */
-    private static final int PREFERRED_SLUG_TEXT_WIDTH = 160;
+    private static final int PREFERRED_SLUG_TEXT_WIDTH = 231;
     /** Album ids are UUIDs, and the row has to leave room for Choose... */
     private static final int PREFERRED_ALBUM_ID_WIDTH = 270;
     /** What the album id field is sized to show in full. */

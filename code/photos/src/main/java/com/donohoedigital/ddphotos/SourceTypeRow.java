@@ -72,7 +72,7 @@ final class SourceTypeRow extends JPanel {
         add(local_, c);
         add(sync_, c);
         add(provider_, c);
-        c.insets = new Insets(0, 0, 0, 0);
+        c.insets = new Insets(0, 8, 0, 0);
         add(credentials_, c);
         // Soaks up any extra width so the controls stay packed to the left.
         c.weightx = 1.0;
