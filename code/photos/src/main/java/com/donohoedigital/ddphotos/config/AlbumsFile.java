@@ -853,6 +853,9 @@ public class AlbumsFile extends ConfigFile {
         setOptionalString(n, "provider", sync.getProvider());
         setOptionalString(n, "album_id", sync.getAlbumId());
         setBoolean(n, "captions", sync.isCaptionsEnabled());
+        // The mock block is carried over in the node, not written from the model, so it has to
+        // be dropped here when the model no longer has one (the provider changed away from mock).
+        if (sync.getMock() == null) removeKey(n, "mock");
     }
 
     // ── node building (for new AlbumsFile or new list items) ────────────────
