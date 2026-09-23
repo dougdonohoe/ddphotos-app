@@ -42,7 +42,7 @@ public class AlbumDialog extends PhotosDialog
 
     public static final String PARAM_SITE = "site";
 
-    private static final int PREFERRED_WIDTH = 540;
+    private static final int PREFERRED_WIDTH = 650;
 
     private Site site_;
     private AlbumsFile af_;
@@ -115,11 +115,13 @@ public class AlbumDialog extends PhotosDialog
         syncDescLabel_ = new DDLabel("syncalbumdescription", STYLE);
         syncDescField_ = displayOnlyField("syncalbumdescription");
 
+        // Source type first: it decides the other rows, and in Sync mode choosing the album
+        // suggests a slug.  showModeRows() hides the rows the other mode uses.
         GridBagForm form = GridBagForm.dialog(STYLE)
-                .row("albumslug", slugField_, null)
                 .row("sourcetype", sourceType_, null)
-                .row(nameLabel_, nameField_, null)
                 .row(albumIdLabel_, albumIdField_, chooseBtn_)
+                .row("albumslug", slugField_, null)
+                .row(nameLabel_, nameField_, null)
                 .row(syncNameLabel_, syncNameField_, null)
                 .row(syncDescLabel_, syncDescField_, null);
 

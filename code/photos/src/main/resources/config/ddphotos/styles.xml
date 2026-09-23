@@ -322,6 +322,12 @@
 	<color name="OptionsDialog.list.selection.bg" default="true"/>
 	<color name="OptionsDialog.list.selection.fg" default="true"/>
 	 <font name="OptionsDialog.list" fontname="SansSerif" pointsize="16"/>
+	<color name="OptionsDialog.combobox.fg" copy="black"/>
+	<color name="OptionsDialog.combobox.bg" copy="white"/>
+	<color name="OptionsDialog.combobox.mouseover.fg" default="true"/>
+	<color name="OptionsDialog.combobox.selection.bg" copy="black"/>
+	<color name="OptionsDialog.combobox.selection.fg" copy="white"/>
+	 <font name="OptionsDialog.combobox" fontname="SansSerif" pointsize="14"/>
 	<!-- OptionsDialog -->
 
 	<!-- PhotoChooser: the widgets inside the photo chooser dialog.  Its buttons are OptionsDialog
