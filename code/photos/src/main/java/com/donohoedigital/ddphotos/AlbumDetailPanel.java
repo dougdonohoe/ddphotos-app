@@ -324,9 +324,9 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
         baseCombo_ = editable(createBaseCombo(baseElement_));
         baseCombo_.addActionListener(_ -> {
-            // re-trigger validation now that the base (and thus resolution) changed
-            source_.setCustomValidator(sourceValidator);
-            cover_.setCustomValidator(coverValidator);
+            // Check again now that the base (and thus resolution) changed.
+            source_.revalidateData();
+            cover_.revalidateData();
             checkButtons();
         });
 
@@ -358,10 +358,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
         albumId_ = editable(new OptionText(null, "albumsyncid", STYLE, dummy_,
                 PhotosConstants.MAX_PATH_LENGTH, PhotosConstants.REGEXP_OPTIONAL, PREFERRED_ALBUM_ID_WIDTH));
+        sizeAlbumIdField();
         DDTextField idField = albumId_.getTextField();
-        Insets in = idField.getInsets();
-        GuiUtils.setPreferredWidth(idField, idField.getFontMetrics(idField.getFont()).stringWidth(SAMPLE_ALBUM_ID)
-                                            + in.left + in.right + 8);
         idField.setCustomValidator(this::isAlbumIdValid);
         albumId_.getTextField().addValidationListener(this::albumIdChanged);
         chooseBtn_ = new DDButton("syncchoose", STYLE);
@@ -395,7 +393,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
         source_.setCustomValidator(sourceValidator);
         cover_.setCustomValidator(coverValidator);
-        source_.getTextField().addValidationListener(() -> cover_.setCustomValidator(coverValidator));
+        source_.getTextField().addValidationListener(cover_::revalidateData);
 
         notSyncedArea_ = new DDHtmlArea("albumnotsynced", STYLE);
         notSyncedArea_.setEditable(false);
@@ -640,7 +638,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         logger.info("sync metadata changed on disk: {}", meta_.getPath());
         meta_.load();
         applyMeta();
-        cover_.setCustomValidator(_ -> evalCover().isValid());
+        cover_.revalidateData();
         checkButtons();
         albumsList_.repaint();  // the list shows the upstream name for an album without one
     }
@@ -693,20 +691,25 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private void albumIdChanged() {
         if (populating_ || !isSyncMode()) return;
         applyMeta();
-        cover_.setCustomValidator(_ -> evalCover().isValid());
+        cover_.revalidateData();
     }
 
     /** Re-runs every validator whose answer depends on the source type or override state. */
     private void revalidateAll() {
-        name_.getTextField().setCustomValidator(text -> !nameRequired() || !text.isBlank());
+        name_.getTextField().revalidateData();
+        sizeAlbumIdField();
+        albumId_.getTextField().revalidateData();
+        source_.revalidateData();
+        cover_.revalidateData();
+        checkButtons();
+    }
+
+    /** Wide enough for an Immich album id, whatever the field's border adds. */
+    private void sizeAlbumIdField() {
         DDTextField idField = albumId_.getTextField();
         Insets in = idField.getInsets();
         GuiUtils.setPreferredWidth(idField, idField.getFontMetrics(idField.getFont()).stringWidth(SAMPLE_ALBUM_ID)
                                             + in.left + in.right + 8);
-        idField.setCustomValidator(this::isAlbumIdValid);
-        source_.setCustomValidator(_ -> isSourceValid());
-        cover_.setCustomValidator(_ -> evalCover().isValid());
-        checkButtons();
     }
 
     private boolean nameRequired() {

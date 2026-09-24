@@ -176,6 +176,11 @@ public class OptionFileChooser extends DDOption implements PropertyChangeListene
         text_.setCustomValidator(validator);
     }
 
+    /** Delegates to the underlying DDTextField. */
+    public void revalidateData() {
+        text_.revalidateData();
+    }
+
     // -------------------------------------------------------------------------
     // Text access
     // -------------------------------------------------------------------------

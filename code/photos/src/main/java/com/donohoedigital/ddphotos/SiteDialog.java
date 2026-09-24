@@ -100,8 +100,8 @@ public class SiteDialog extends PhotosDialog
                 savedConfigPath_ = configPathField_.getText().trim();
                 configPathField_.setText("");
             }
-            dirPathField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);   // re-trigger: rule depends on override state
-            configPathField_.setRegExp(PhotosConstants.REGEXP_OPTIONAL); // re-trigger: required when override is on
+            dirPathField_.revalidateData();     // its rule depends on the override state
+            configPathField_.revalidateData();  // required when the override is on
             checkButtons();
         });
 
@@ -138,9 +138,9 @@ public class SiteDialog extends PhotosDialog
                 configPathField_.setText(existingConfig);
                 // dirPath was validated above while the override checkbox was
                 // still unchecked (so it required <site-dir>/config/albums.yaml).
-                // Now that override is on, re-trigger validation against the
+                // Now that override is on, check it again against the
                 // correct rule, otherwise the field shows red until edited.
-                dirPathField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);
+                dirPathField_.revalidateData();
             }
         }
 

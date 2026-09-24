@@ -209,7 +209,7 @@ public class PasswordDialog extends PhotosDialog
 
     /**
      * Mirrors SiteDialog's config-override checkbox: toggle the field, stash/restore its value,
-     * and re-trigger validation since the field's rule depends on the checkbox state.
+     * and check the field again since its rule depends on the checkbox state.
      */
     private void onEditKeyToggled()
     {
@@ -223,7 +223,7 @@ public class PasswordDialog extends PhotosDialog
         } else {
             keyField_.setText(savedKey_);
         }
-        keyField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);   // re-trigger: rule depends on the checkbox
+        keyField_.revalidateData();   // its rule depends on the checkbox
         checkButtons();
     }
 
