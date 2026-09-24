@@ -81,9 +81,6 @@ final class SourceTypeRow extends JPanel {
         updateEnabled();
     }
 
-    DDRadioButton getLocalRadio() { return local_; }
-    DDRadioButton getSyncRadio() { return sync_; }
-    DDComboBox<String> getProviderCombo() { return provider_; }
     DDButton getCredentialsButton() { return credentials_; }
 
     /** Called whenever the source type or provider changes, by the user or by a setter. */

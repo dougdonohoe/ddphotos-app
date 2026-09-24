@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -64,6 +65,16 @@ public class PhotosUtils {
     }
 
     /** Escapes the HTML metacharacters {@code & < >} for safe inclusion in an HTML label. */
+    /**
+     * Lowercase letters and digits, with each run of anything else as one hyphen and none at
+     * either end.  Empty for null.  Lowercased with {@code Locale.ROOT}, so the default locale
+     * cannot change the result (in Turkish, "I" lowercases to a dotless i).
+     */
+    public static String slugify(String s) {
+        if (s == null) return "";
+        return s.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
+    }
+
     public static String escapeHtml(String s) {
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }

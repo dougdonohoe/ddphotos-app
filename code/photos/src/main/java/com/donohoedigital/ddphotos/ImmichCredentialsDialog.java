@@ -54,6 +54,9 @@ public class ImmichCredentialsDialog extends PhotosDialog
 
     /** Bumped on every Test and every edit, so a slow answer to an old Test is dropped. */
     private int testGeneration_;
+    /** The URL and key the shown test result is about; null when no result is shown. */
+    private String testedUrl_;
+    private String testedKey_;
 
     // -------------------------------------------------------------------------
     // DialogPhase API
@@ -151,9 +154,14 @@ public class ImmichCredentialsDialog extends PhotosDialog
         boolean valid = validatables_.stream().allMatch(DDValidatable::isValidData);
         if (okayButton_ != null) okayButton_.setEnabled(valid && file_ != null && isChanged());
         testBtn_.setEnabled(valid);
-        // An edit makes any shown result stale.
-        testGeneration_++;
-        testResult_.setText("");
+        // An edit makes any shown result stale.  This also runs on focus changes and keys that
+        // edit nothing, so compare with what was tested rather than clearing every time.
+        if (testedUrl_ != null && (!urlField_.getText().strip().equals(testedUrl_)
+                                   || !keyField_.getText().strip().equals(testedKey_))) {
+            testGeneration_++;
+            testResult_.setText("");
+            testedUrl_ = testedKey_ = null;
+        }
     }
 
     private boolean isChanged()
@@ -172,6 +180,8 @@ public class ImmichCredentialsDialog extends PhotosDialog
         int generation = ++testGeneration_;
         String url = urlField_.getText().strip();
         String key = keyField_.getText().strip();
+        testedUrl_ = url;
+        testedKey_ = key;
         testResult_.setText(PropertyConfig.getMessage("msg.immichcreds.testing"));
         testBtn_.setEnabled(false);
 
@@ -180,10 +190,16 @@ public class ImmichCredentialsDialog extends PhotosDialog
             try {
                 ImmichClient client = new ImmichClient(url, key);
                 ConnectionTest result = client.test();
-                html = result.isComplete()
-                        ? PropertyConfig.getMessage("msg.immichcreds.test.ok", PhotosUtils.escapeHtml(client.getBaseUrl()))
-                        : PropertyConfig.getMessage("msg.immichcreds.test.missing",
-                                                    PhotosUtils.escapeHtml(String.join(", ", result.missingPermissions())));
+                if (!result.missingPermissions().isEmpty()) {
+                    html = PropertyConfig.getMessage("msg.immichcreds.test.missing",
+                                                     PhotosUtils.escapeHtml(String.join(", ", result.missingPermissions())));
+                } else if (!result.uncheckedPermissions().isEmpty()) {
+                    html = PropertyConfig.getMessage("msg.immichcreds.test.unchecked",
+                                                     PhotosUtils.escapeHtml(client.getBaseUrl()),
+                                                     PhotosUtils.escapeHtml(String.join(", ", result.uncheckedPermissions())));
+                } else {
+                    html = PropertyConfig.getMessage("msg.immichcreds.test.ok", PhotosUtils.escapeHtml(client.getBaseUrl()));
+                }
             } catch (SyncException e) {
                 html = PropertyConfig.getMessage("msg.immichcreds.test.failed", PhotosUtils.escapeHtml(e.getMessage()));
             } catch (RuntimeException e) {

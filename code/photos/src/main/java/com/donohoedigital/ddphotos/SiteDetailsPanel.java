@@ -282,8 +282,8 @@ public class SiteDetailsPanel extends EditableDetailPanel {
 
         heroBaseCombo_ = editable(createBaseCombo(heroBaseElement_));
         heroBaseCombo_.addActionListener(_ -> {
-            // re-trigger validation now that the base (and thus resolution) changed
-            heroImage_.setCustomValidator(heroValidator);
+            // Check again now that the base (and thus resolution) changed.
+            heroImage_.revalidateData();
             checkButtons();
         });
         heroBaseLabel_ = new DDLabel("siteherobase", STYLE);

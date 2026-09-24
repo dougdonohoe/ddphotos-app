@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Covers {@link PhotosUtils#renameSyncFolder} on the paths that succeed, so no error dialog (and
- * no app context) is needed.
+ * no app context) is needed, and {@link PhotosUtils#slugify}.
  */
 public class PhotosUtilsTest {
 
@@ -48,5 +49,25 @@ public class PhotosUtilsTest {
 
         assertEquals(List.of("trip"), names());
         assertTrue(Files.exists(tmp.resolve("trip").resolve("metadata.yaml")));
+    }
+
+    @Test
+    public void slugify() {
+        assertEquals("march-s-pictures-2002", PhotosUtils.slugify("March's Pictures 2002"));
+        assertEquals("hi", PhotosUtils.slugify("  --Hi!! "));
+        assertEquals("", PhotosUtils.slugify("!!!"));
+        assertEquals("", PhotosUtils.slugify(null));
+    }
+
+    @Test
+    public void slugify_ignoresTheDefaultLocale() {
+        // Lowercased with the Turkish locale, "I" becomes a dotless i, which is not a-z.
+        Locale saved = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr"));
+            assertEquals("title", PhotosUtils.slugify("TITLE"));
+        } finally {
+            Locale.setDefault(saved);
+        }
     }
 }

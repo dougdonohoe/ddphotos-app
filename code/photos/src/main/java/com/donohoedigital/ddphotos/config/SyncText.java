@@ -23,7 +23,9 @@ public final class SyncText {
      */
     public static String escape(String s) {
         if (s == null) return "";
-        String out = WHITESPACE.matcher(s.strip()).replaceAll(" ");
+        // Collapse before trimming: strip() does not treat NBSP as whitespace, but the pattern
+        // does (as Go's strings.Fields does), so an edge run becomes one plain space first.
+        String out = WHITESPACE.matcher(s).replaceAll(" ").strip();
         return out.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 }

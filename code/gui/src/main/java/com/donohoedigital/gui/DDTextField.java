@@ -399,6 +399,16 @@ public class DDTextField extends JFormattedTextField implements DDTextVisibleCom
 
     private java.util.function.Predicate<String> customValidator_;
 
+    /**
+     * Checks the text against the regexp and custom validator again.  For a rule that depends on
+     * something besides the text, such as a checkbox, which has just changed.  Not named
+     * revalidate(), which Swing already uses for layout.
+     */
+    public void revalidateData()
+    {
+        regexpValidate();
+    }
+
     public void setCustomValidator(java.util.function.Predicate<String> validator)
     {
         customValidator_ = validator;

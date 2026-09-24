@@ -7,8 +7,6 @@ import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.AlbumsFileException;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SyncEntry;
-import com.donohoedigital.ddphotos.config.SyncMetadataFile;
-import com.donohoedigital.ddphotos.config.SyncText;
 import com.donohoedigital.ddphotos.sync.SyncAlbumInfo;
 import com.donohoedigital.ddphotos.sync.SyncProvider;
 import com.donohoedigital.gui.DDButton;
@@ -21,8 +19,6 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 
@@ -229,11 +225,10 @@ public class AlbumDialog extends PhotosDialog
         checkButtons();
     }
 
-    /** A slug from an album name: lowercased, runs of other characters become one hyphen. */
+    /** A slug from an album name ({@link PhotosUtils#slugify}), cut to the maximum slug length. */
     static String suggestSlug(String name)
     {
-        if (name == null) return "";
-        String slug = name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
+        String slug = PhotosUtils.slugify(name);
         return slug.length() > PhotosConstants.MAX_SLUG_LENGTH ? slug.substring(0, PhotosConstants.MAX_SLUG_LENGTH) : slug;
     }
 
@@ -276,27 +271,7 @@ public class AlbumDialog extends PhotosDialog
             return;
         }
 
-        if (entry.isSynced() && chosen_ != null) writeStub(af, entry, chosen_);
-    }
-
-    /**
-     * Writes the stub {@code metadata.yaml} for a newly chosen album, unless the sync folder
-     * already holds a record for this same upstream album (left behind by an earlier album with
-     * this slug, say), which is better than a stub.
-     */
-    static void writeStub(AlbumsFile af, AlbumEntry entry, SyncAlbumInfo info)
-    {
-        Path dir = af.resolveSyncPath(entry);
-        if (dir == null) return;
-        SyncMetadataFile existing = new SyncMetadataFile(dir).load();
-        if (existing.existsOnDisk() && entry.getSync().getAlbumId().equalsIgnoreCase(existing.getAlbumId())) return;
-        try {
-            SyncMetadataFile.writeStub(dir, entry.getSync().getProvider(), entry.getSync().getAlbumId(),
-                                       info.name(), SyncText.escape(info.description()));
-        } catch (IOException e) {
-            // Only a display convenience: photogen writes the real file on its first sync.
-            logger.warn("Could not write {}: {}", dir.resolve(SyncMetadataFile.FILE_NAME), e.toString());
-        }
+        if (entry.isSynced() && chosen_ != null) SyncUi.writeStub(af, entry, chosen_);
     }
 
     // -------------------------------------------------------------------------

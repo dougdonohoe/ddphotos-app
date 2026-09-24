@@ -24,6 +24,14 @@ public class SyncTextTest {
     }
 
     @org.junit.jupiter.api.Test
+    public void escape_trimsUnicodeSpaceLikeGo() {
+        // Go's strings.Fields splits on NBSP (U+00A0) and narrow NBSP (U+202F); String.strip()
+        // does not treat them as whitespace, so they must not survive at either end.
+        assertEquals("hi there", SyncText.escape("\u00A0hi\u202Fthere\u00A0"));
+        assertEquals("hi", SyncText.escape(" \u00A0 hi \u2007"));
+    }
+
+    @org.junit.jupiter.api.Test
     public void escape_nullIsEmpty() {
         assertEquals("", SyncText.escape(null));
     }

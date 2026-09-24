@@ -92,4 +92,32 @@ public class DDTextFieldTest
             assertFalse(field.isValidData());
         });
     }
+
+    @Test
+    public void revalidateData_rechecksARuleThatDependsOnOtherState() throws Exception
+    {
+        onEdt(() -> {
+            // The name field's rule, say: required only while an override box is checked.
+            boolean[] required = {false};
+            DDTextField field = new DDTextField();
+            field.setCustomValidator(s -> !required[0] || !s.isBlank());
+            assertTrue(field.isValidData());
+
+            required[0] = true;
+            assertTrue(field.isValidData(), "nothing has asked the field to check again yet");
+            field.revalidateData();
+            assertFalse(field.isValidData());
+        });
+    }
+
+    @Test
+    public void revalidateData_leavesSetValidAloneWithNoRules() throws Exception
+    {
+        onEdt(() -> {
+            DDTextField field = new DDTextField();
+            field.setValid(false);
+            field.revalidateData();
+            assertFalse(field.isValidData());
+        });
+    }
 }
