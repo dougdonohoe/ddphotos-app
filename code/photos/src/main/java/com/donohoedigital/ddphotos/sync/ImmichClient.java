@@ -72,9 +72,10 @@ public class ImmichClient implements SyncClient {
         Response r = get("/api/api-keys/me");
         if (r.status == 404) {
             // A server older than the api-keys/me route.  Listing albums still proves the key and
-            // album.read; the other two permissions cannot be checked.
+            // album.read; the other permissions cannot be checked.
             listAlbums();
-            return new ConnectionTest(null, List.of());
+            List<String> unchecked = REQUIRED_PERMISSIONS.stream().filter(p -> !p.equals("album.read")).toList();
+            return new ConnectionTest(null, List.of(), unchecked);
         }
         Map<?, ?> me = asObject(r.ok());
         List<String> granted = new ArrayList<>();
@@ -85,7 +86,7 @@ public class ImmichClient implements SyncClient {
                 if (!granted.contains(p)) missing.add(p);
             }
         }
-        return new ConnectionTest(Json.string(me, "name"), missing);
+        return new ConnectionTest(Json.string(me, "name"), missing, List.of());
     }
 
     @Override

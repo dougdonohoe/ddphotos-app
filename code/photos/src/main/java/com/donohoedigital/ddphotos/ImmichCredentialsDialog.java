@@ -180,10 +180,16 @@ public class ImmichCredentialsDialog extends PhotosDialog
             try {
                 ImmichClient client = new ImmichClient(url, key);
                 ConnectionTest result = client.test();
-                html = result.isComplete()
-                        ? PropertyConfig.getMessage("msg.immichcreds.test.ok", PhotosUtils.escapeHtml(client.getBaseUrl()))
-                        : PropertyConfig.getMessage("msg.immichcreds.test.missing",
-                                                    PhotosUtils.escapeHtml(String.join(", ", result.missingPermissions())));
+                if (!result.missingPermissions().isEmpty()) {
+                    html = PropertyConfig.getMessage("msg.immichcreds.test.missing",
+                                                     PhotosUtils.escapeHtml(String.join(", ", result.missingPermissions())));
+                } else if (!result.uncheckedPermissions().isEmpty()) {
+                    html = PropertyConfig.getMessage("msg.immichcreds.test.unchecked",
+                                                     PhotosUtils.escapeHtml(client.getBaseUrl()),
+                                                     PhotosUtils.escapeHtml(String.join(", ", result.uncheckedPermissions())));
+                } else {
+                    html = PropertyConfig.getMessage("msg.immichcreds.test.ok", PhotosUtils.escapeHtml(client.getBaseUrl()));
+                }
             } catch (SyncException e) {
                 html = PropertyConfig.getMessage("msg.immichcreds.test.failed", PhotosUtils.escapeHtml(e.getMessage()));
             } catch (RuntimeException e) {

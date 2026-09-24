@@ -87,6 +87,7 @@ public class ImmichClientTest {
         routes_.put("/api/api-keys/me", new Object[]{200, fixture("api-key-me.json")});
         ConnectionTest t = new ImmichClient(url_ + "/api", KEY).test();
         assertTrue(t.isComplete(), t.missingPermissions().toString());
+        assertEquals(List.of(), t.uncheckedPermissions());
         assertEquals(KEY, seenKeys_.get("/api/api-keys/me"), "the key goes in the x-api-key header");
         // Immich drops a connection that asks to upgrade to HTTP/2 (h2c).
         assertEquals(Map.of(), seenUpgrades_);
@@ -107,8 +108,11 @@ public class ImmichClientTest {
 
     @Test
     public void test_olderServerFallsBackToAlbums() throws Exception {
+        // Listing albums proves the key and album.read, and nothing about the other two.
         routes_.put("/api/albums", new Object[]{200, fixture("albums.json")});
-        assertTrue(new ImmichClient(url_, KEY).test().isComplete());
+        ConnectionTest t = new ImmichClient(url_, KEY).test();
+        assertEquals(List.of(), t.missingPermissions());
+        assertEquals(List.of("asset.read", "asset.download"), t.uncheckedPermissions());
     }
 
     @Test
