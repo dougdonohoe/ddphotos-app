@@ -17,7 +17,7 @@ if [ ! -d "$SRC" ]; then
 fi
 
 mkdir -p "$DEST"
-for f in album.json albums.json api-key-me.json; do
+for f in albums.json api-key-me.json; do
     cp "$SRC/$f" "$DEST/$f"
     echo "copied $f"
 done

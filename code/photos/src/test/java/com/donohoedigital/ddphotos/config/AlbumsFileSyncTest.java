@@ -225,16 +225,12 @@ public class AlbumsFileSyncTest {
         AlbumEntry a = af.getAlbums().getFirst();
 
         assertEquals("a", af.displayName(a), "no metadata yet: the slug");
-        assertNull(af.displayDescription(a));
 
         SyncMetadataFile.writeStub(af.resolveSyncPath(a), "immich", ID_A, "The Way", "Walking &amp; talking");
         assertEquals("The Way", af.displayName(a));
-        assertEquals("Walking &amp; talking", af.displayDescription(a));
 
         a.setName("Camino");
-        a.setDescription("Mine");
         assertEquals("Camino", af.displayName(a), "albums.yaml wins");
-        assertEquals("Mine", af.displayDescription(a));
     }
 
     @Test

@@ -254,17 +254,6 @@ public class AlbumsFile extends ConfigFile {
     }
 
     /**
-     * The album description photogen will publish: {@code description}, then (for a synced
-     * album) the upstream description in {@code metadata.yaml}.  Null when there is neither.
-     */
-    public String displayDescription(AlbumEntry album) {
-        if (album == null) return null;
-        if (!isBlank(album.getDescription())) return album.getDescription();
-        SyncMetadataFile meta = loadSyncMetadata(album);
-        return meta != null ? meta.getDescription() : null;
-    }
-
-    /**
      * Resolves an album's cover photo to its absolute path.
      * Returns null if cover is not set or the source cannot be resolved.
      */

@@ -75,7 +75,7 @@ public class ImmichClient implements SyncClient {
             // album.read; the other permissions cannot be checked.
             listAlbums();
             List<String> unchecked = REQUIRED_PERMISSIONS.stream().filter(p -> !p.equals("album.read")).toList();
-            return new ConnectionTest(null, List.of(), unchecked);
+            return new ConnectionTest(List.of(), unchecked);
         }
         Map<?, ?> me = asObject(r.ok());
         List<String> granted = new ArrayList<>();
@@ -86,7 +86,7 @@ public class ImmichClient implements SyncClient {
                 if (!granted.contains(p)) missing.add(p);
             }
         }
-        return new ConnectionTest(Json.string(me, "name"), missing, List.of());
+        return new ConnectionTest(missing, List.of());
     }
 
     @Override
