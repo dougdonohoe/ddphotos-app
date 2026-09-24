@@ -487,7 +487,7 @@ public class PhotosBasePhase extends BasePhase {
                 // A command tab running does not gray this one out: it hands the window to the
                 // wizard, and okayToLeaveEditor asks about that when the item is picked.
                 case "newsite" -> item.setEnabled(!busy && site != null);
-                case "immichcredentials" -> {
+                case "immichcredentials", "publishsettings" -> {
                     setSiteLabel(item, site);
                     item.setEnabled(!busy && site != null);
                 }
@@ -503,10 +503,6 @@ public class PhotosBasePhase extends BasePhase {
                     // reports that as an invalid flag rather than as the "already running" it is.
                     item.setEnabled(!busy && site != null
                             && photogenTab_ != null && !photogenTab_.isRunning());
-                }
-                case "publishsettings" -> {
-                    setSiteLabel(item, site);
-                    item.setEnabled(!busy && site != null);
                 }
                 case "publishrun" -> {
                     setSiteLabel(item, site);
@@ -668,7 +664,7 @@ public class PhotosBasePhase extends BasePhase {
     /** Lower-case, filename-safe form of a tab title (e.g. "Photo Gen" -> "photo-gen"). */
     private static String slug(String title) {
         if (title == null || title.isBlank()) return "screenshot";
-        return title.trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
+        return PhotosUtils.slugify(title);
     }
 
     /** Opens the Immich credentials dialog for the selected site. */

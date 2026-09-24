@@ -5,8 +5,15 @@ import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.ddphotos.config.AlbumEntry;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.Site;
+import com.donohoedigital.ddphotos.config.SyncMetadataFile;
+import com.donohoedigital.ddphotos.config.SyncText;
+import com.donohoedigital.ddphotos.sync.SyncAlbumInfo;
 import com.donohoedigital.ddphotos.sync.SyncProvider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
@@ -14,6 +21,8 @@ import java.util.Set;
 
 /** UI glue shared by the places that configure a synced album. */
 final class SyncUi {
+
+    private static final Logger logger = LogManager.getLogger(SyncUi.class);
 
     private SyncUi() {}
 
@@ -67,5 +76,24 @@ final class SyncUi {
         album.setName(null);
         album.setDescription(null);
         album.setCover(null);
+    }
+
+    /**
+     * Writes the stub {@code metadata.yaml} for a newly chosen album, unless the sync folder
+     * already holds a record for this same upstream album (left behind by an earlier album with
+     * this slug, say), which is better than a stub.
+     */
+    static void writeStub(AlbumsFile af, AlbumEntry entry, SyncAlbumInfo info) {
+        Path dir = af.resolveSyncPath(entry);
+        if (dir == null) return;
+        SyncMetadataFile existing = new SyncMetadataFile(dir).load();
+        if (existing.existsOnDisk() && entry.getSync().getAlbumId().equalsIgnoreCase(existing.getAlbumId())) return;
+        try {
+            SyncMetadataFile.writeStub(dir, entry.getSync().getProvider(), entry.getSync().getAlbumId(),
+                                       info.name(), SyncText.escape(info.description()));
+        } catch (IOException e) {
+            // Only a display convenience: photogen writes the real file on its first sync.
+            logger.warn("Could not write {}: {}", dir.resolve(SyncMetadataFile.FILE_NAME), e.toString());
+        }
     }
 }

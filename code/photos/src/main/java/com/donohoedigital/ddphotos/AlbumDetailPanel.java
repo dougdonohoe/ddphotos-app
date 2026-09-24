@@ -597,6 +597,8 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     /** Re-reads {@code metadata.yaml} for the folder on screen, then recomputes the upstream values. */
     private void loadMeta() {
         Path dir = isSyncMode() ? syncDir() : null;
+        // A copy of its own, not AlbumsFile.loadSyncMetadata's cached one: the albums list reloads
+        // that one when it repaints, which would re-baseline it and hide the change from metaWatch_.
         meta_ = dir != null ? new SyncMetadataFile(dir).load() : null;
         applyMeta();
     }
@@ -858,7 +860,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         }
         if (currentEntry_.isSynced() && pending_ != null
                 && pending_.id().equalsIgnoreCase(currentEntry_.getSync().getAlbumId())) {
-            AlbumDialog.writeStub(af, currentEntry_, pending_);
+            SyncUi.writeStub(af, currentEntry_, pending_);
         }
 
         // Reload rather than just leave edit mode: the override boxes and upstream values are
