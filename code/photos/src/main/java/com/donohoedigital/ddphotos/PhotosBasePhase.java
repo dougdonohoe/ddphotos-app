@@ -487,12 +487,12 @@ public class PhotosBasePhase extends BasePhase {
                 // A command tab running does not gray this one out: it hands the window to the
                 // wizard, and okayToLeaveEditor asks about that when the item is picked.
                 case "newsite" -> item.setEnabled(!busy && site != null);
-                // Not gated on busy: opening a folder neither rebuilds nor drives the UI, so
-                // these stay live whenever there is a site to show.
                 case "immichcredentials" -> {
                     setSiteLabel(item, site);
                     item.setEnabled(!busy && site != null);
                 }
+                // Not gated on busy: opening a folder neither rebuilds nor drives the UI, so
+                // these stay live whenever there is a site to show.
                 case "showconfigfolder", "showsitefolder" -> {
                     setSiteLabel(item, site);
                     item.setEnabled(site != null);
@@ -671,6 +671,12 @@ public class PhotosBasePhase extends BasePhase {
         return title.trim().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
     }
 
+    /** Opens the Immich credentials dialog for the selected site. */
+    private void doImmichCredentials() {
+        Site site = siteBar_ != null ? siteBar_.getSelectedSite() : null;
+        if (site != null) SyncUi.editCredentials(context_, site, ImmichProvider.INSTANCE);
+    }
+
     /**
      * Opens one of the selected site's folders in the OS file manager.  A {@code File} rather than
      * a {@code Path} throughout: sites.yaml is hand-editable, and Path.of would throw on an entry
@@ -678,11 +684,6 @@ public class PhotosBasePhase extends BasePhase {
      * platform fallbacks report success as soon as the file manager is launched, whether
      * the folder they handed it exists.
      */
-    private void doImmichCredentials() {
-        Site site = siteBar_ != null ? siteBar_.getSelectedSite() : null;
-        if (site != null) SyncUi.editCredentials(context_, site, ImmichProvider.INSTANCE);
-    }
-
     private void doShowFolder(Function<Site, String> whichFolder) {
         Site site = siteBar_ != null ? siteBar_.getSelectedSite() : null;
         if (site == null) return;
