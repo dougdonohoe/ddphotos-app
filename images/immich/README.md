@@ -29,8 +29,8 @@ and friends can't discover or browse your other albums.
 
 ## End up with a site like this
 
-DD Photos puts all your albums on one home page (with a custom "hero" image), each 
-with a cover photo and a description:
+DD Photos puts all your albums on one home page, with custom title, subtitle, overview and "hero" image. Each 
+album has a cover photo and a description:
 
 ![DD Photos home page with three albums](ddphotos-immich-albums.png)
 
@@ -75,7 +75,7 @@ the next time you sync.
 
 ![Album details](ddphotos-app-album-details.png)
 
-**4. Build and publish.** Run `photogen` from the app. It downloads your photos and videos from
+**4. Preview, Build and Publish.** Run `photogen` from the app. It downloads your photos and videos from
 Immich and resizes them for the web. Later runs only download what is new or changed. Preview the
 site on your computer, then publish it.
 
