@@ -2,18 +2,21 @@
 
 Hi Immich folks! 👋
 
-I love Immich for keeping my photos. Sharing them has been harder. A shared link shows one album at a
-time. Photo descriptions are there, but friends only see them if they open the info panel or start a
-slideshow. And the photos stay in date order. Also, the
-link only works while my Immich server is up and reachable from the internet.
+I'm Doug, and I make [DD Photos](https://github.com/dougdonohoe/ddphotos-app), a free, open-source
+desktop app for Mac, Windows and Linux. It builds a fast, static photo website from your albums. I
+keep my own photos in Lightroom Classic, but I know many of you use Immich. So I set up an Immich
+server and added support for it. DD Photos can now pull albums straight from Immich, so you don't
+need to export anything first.
 
-So I added Immich support to [DD Photos](https://github.com/dougdonohoe/ddphotos-app). DD Photos is a
-free, open-source desktop app (Mac, Windows and Linux) that builds a static photo website from your
-albums. It now pulls albums straight from Immich, so you don't need to export anything first.
+While building it, I spent a lot of time with Immich's shared albums. They work well, but a few
+things stood out. A shared link shows one album at a time. Photo descriptions are there, but friends
+only see them if they open the info panel or start a slideshow. The photos stay in date order. And
+the link only works while your Immich server is up and reachable from the internet. DD Photos takes
+a different approach.
 
 ## Start in Immich
 
-Here are three albums in my Immich library:
+Here are three albums on my test Immich server:
 
 ![Immich albums page](immich-home.png)
 
@@ -21,11 +24,13 @@ And here is what a friend sees when I share the Uganda album from Immich:
 
 ![Immich shared album](immich-shared-album-uganda.png)
 
-It works, but it is one album per link, and friends can't browse my other trips.
+It works, but it is one album per link, there is a tad too much excess whitespace,
+and friends can't browse your other albums.
 
 ## End up with a site like this
 
-DD Photos puts all your albums on one home page, each with a cover photo and a description:
+DD Photos puts all your albums on one home page (with a custom "hero" image), each 
+with a cover photo and a description:
 
 ![DD Photos home page with three albums](ddphotos-immich-albums.png)
 
@@ -90,3 +95,5 @@ Download the latest release from the
 reports are very welcome, either here or on [GitHub](https://github.com/dougdonohoe/ddphotos-app/issues).
 
 Thanks for building Immich. It made this a lot of fun to put together! 📸
+
+-Doug Donohoe
