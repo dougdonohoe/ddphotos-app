@@ -17,7 +17,7 @@ set -euo pipefail
 # ── Configuration ───────────────────────────────────────────────────────────
 
 # Resize factor applied to every original, as a percentage.
-SCALE=25%
+SCALE=35%
 
 # Border and shadow tuning, in pixels of the scaled image. These match the
 # constants in GuiUtils.java.

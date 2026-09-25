@@ -25,7 +25,7 @@ And here is what a friend sees when I share the Uganda album from Immich:
 ![Immich shared album](immich-shared-album-uganda.png)
 
 It works, but it is one album per link, there is a tad too much excess whitespace,
-and friends can't browse your other albums.
+and friends can't discover or browse your other albums.
 
 ## End up with a site like this
 
