@@ -5,7 +5,9 @@ import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.runner.CommandRunner;
+import com.donohoedigital.ddphotos.runner.Prerequisite;
 
+import javax.swing.SwingUtilities;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -66,9 +68,78 @@ public class WizardRunnerPanel extends AbstractRunnerPanel {
         activeRunner_ = runnerSupplier_.get();
         Site site = getCurrentSite();
         Map<String, String> userValues = collectUserValues();
-        List<String> cmd = activeRunner_.buildCommand(site, userValues);
 
         RunnerConsole.clearForRun(console_);
+        clearUserStop();
+
+        Prerequisite prereq = activeRunner_.getPrerequisite(site, userValues);
+        if (prereq != null) {
+            runPrerequisite(prereq, site, userValues);
+        } else {
+            launchMainCommand(site, userValues);
+        }
+    }
+
+    /**
+     * Runs the prerequisite check, then the main command if it passed. Simpler than
+     * {@code CommandRunnerPanel}: there is no remediation and no chained {@link Prerequisite#next},
+     * so a check that does not pass ends the run like a failed command.
+     */
+    private void runPrerequisite(Prerequisite prereq, Site site, Map<String, String> userValues) {
+        console_.appendSystem(prereq.checkingMessage());
+        List<String> checkCmd = activeRunner_.finalCommand(prereq.checkCommand());
+        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.running", String.join(" ", checkCmd)));
+        Process p;
+        try {
+            p = activeRunner_.launchCommand(checkCmd);
+        } catch (IOException e) {
+            process_ = null;
+            console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "prerequisite check", e.getMessage()));
+            updateButtonState();
+            showFailureDialog();
+            return;
+        }
+        process_ = p;
+        updateButtonState();
+
+        StringBuffer captured = new StringBuffer();
+        Thread out = new Thread(() -> console_.pumpStreamCapturing(p.getInputStream(), captured, false));
+        Thread err = new Thread(() -> console_.pumpStreamCapturing(p.getErrorStream(), captured, true));
+        Thread mon = new Thread(() -> {
+            try {
+                int code = p.waitFor();
+                // wait for both readers to drain so captured holds the full output
+                out.join();
+                err.join();
+                String output = captured.toString();
+                SwingUtilities.invokeLater(() -> {
+                    process_ = null;
+                    if (wasUserStop(code)) {
+                        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
+                        updateButtonState();
+                    } else if (prereq.check(output, code) == Prerequisite.Result.PASSED) {
+                        console_.appendSystem("");
+                        launchMainCommand(site, userValues);
+                    } else {
+                        console_.appendSystemError(prereq.errorMessage(code));
+                        updateButtonState();
+                        showFailureDialog();
+                    }
+                });
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        out.setDaemon(true);
+        err.setDaemon(true);
+        mon.setDaemon(true);
+        out.start();
+        err.start();
+        mon.start();
+    }
+
+    private void launchMainCommand(Site site, Map<String, String> userValues) {
+        List<String> cmd = activeRunner_.buildCommand(site, userValues);
         console_.appendSystem(PropertyConfig.getMessage("msg.cmd.running", String.join(" ", activeRunner_.finalCommand(cmd))));
         try {
             process_ = activeRunner_.launch(site, userValues);
