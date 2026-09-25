@@ -6,6 +6,14 @@
 
 ![logo_256x256.png](logo/icons/ddphotos-logo/logo_256x256.png)
 
+## News
+
+**Immich support is here!** Starting with version 1.0.12, DD Photos can sync albums straight from
+[Immich↗](https://immich.app), with no export needed. See [DD Photos and Immich](docs/IMMICH.md)
+for a walkthrough with screenshots.
+
+## About
+
 DD Photos is a desktop app for quickly and easily publishing your own beautiful photo/video albums, like our
 [sample site↗](https://ddphotos.donohoe.info).  A DD Photos site is wicked-fast,
 mobile friendly, and distraction free.  
