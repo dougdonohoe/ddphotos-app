@@ -1,11 +1,19 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
+# Dependabot version updates: routine bumps, opened as PRs.
 version: 2
+
 updates:
-  - package-ecosystem: "maven" # See documentation for possible values
-    directory: "code" # Location of package manifests
+  # All Maven modules build from the parent pom in code/.
+  - package-ecosystem: maven
+    directory: /code
     schedule:
-      interval: "weekly"
+      interval: weekly
+
+  # The actions in .github/workflows. They release new majors a few times a year,
+  # so monthly checks are enough, and one grouped PR covers them all.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']
