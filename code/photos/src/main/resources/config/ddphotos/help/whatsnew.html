@@ -6,9 +6,27 @@
 
 <h2>What's New?</h2>
 
+<!-- 1.0.13 -->
+<div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
+    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.13 - September 26th, 2026</span></strong>
+</div>
+<ul>
+    <li>When the setup wizard installs the <tt>ddphotos</tt> script, it now downloads the
+        DD Photos image as a separate first step.  The download progress no longer shows in
+        red, which looked like an error.</li>
+    <li>Pressing <b>Stop</b> on the setup wizard's script install could leave an unused Docker
+        container behind, which then made a later <b>Upgrade</b> fail.  <b>Stop</b> now removes
+        the container.</li>
+    <li>Pressing <b>Stop</b> while a login or other setup command runs before a publish step
+        (such as <tt>wrangler login</tt>) now reports "Stopped." rather than a failed
+        command.</li>
+    <li>The exit message at the end of a command no longer appears before the command's last
+        lines of output.</li>
+</ul>
+
 <!-- 1.0.12 -->
 <div style="background-color: #2D1D9F; text-align: center; padding: 4px;">
-    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.12 - TBD</span></strong>
+    <strong><span style="color: #FFFF00; font-size: 1.1em;">Version 1.0.12 - September 24th, 2026</span></strong>
 </div>
 <ul>
     <li>Added ability to sync albums from <a href="https://immich.app/">Immich</a>

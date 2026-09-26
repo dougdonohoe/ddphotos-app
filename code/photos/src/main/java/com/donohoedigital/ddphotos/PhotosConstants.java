@@ -84,29 +84,31 @@ public class PhotosConstants {
     /**
      * Version history, most recent first. The current version is always the first entry -
      * to ship a new release, just add a line at the top (no commenting/uncommenting needed).
+     * Release dates are recorded in help/whatsnew.html.
      */
     public static final Version VERSION = latest(
-            new Version(1, 0, 12), // 1.0.12 (TBD)
-            new Version(1, 0, 11), // 1.0.11 (9/18/2026)
-            new Version(1, 0, 10), // 1.0.10 (9/13/2026)
-            new Version(1, 0, 9), // 1.0.9 (9/11/2026)
-            new Version(1, 0, 8), // 1.0.8 (8/28/2026)
-            new Version(1, 0, 7), // 1.0.7 (8/26/2026)
-            new Version(1, 0, 6), // 1.0.6 (8/25/2026)
-            new Version(1, 0, 5), // 1.0.5 (8/19/2026)
-            new Version(1, 0, 4), // 1.0.4 (8/17/2026)
-            new Version(1, 0, 3), // 1.0.3 (8/12/2026)
-            new Version(1, 0, 2), // 1.0.2 (8/7/2026)
-            new Version(1, 0, 1), // 1.0.1 (8/4/2026)
-            new Version(1, 0, 0), // 1.0.0 (8/3/2026)
-            new Version(Version.TYPE_BETA, 1, 0, 8, 0), // 1.0.0b8 (Beta 8 7/31/2026)
-            new Version(Version.TYPE_BETA, 1, 0, 7, 0), // 1.0.0b7 (Beta 7 7/29/2026)
-            new Version(Version.TYPE_BETA, 1, 0, 6, 0), // 1.0.0b6 (Beta 6 6/21/2026)
-            new Version(Version.TYPE_BETA, 1, 0, 5, 0), // 1.0.0b5 (Beta 5 6/20/2026)
-            new Version(Version.TYPE_BETA, 1, 0, 4, 0), // 1.0.0b4 (Beta 4 6/19/2026)
-            new Version(Version.TYPE_BETA, 1, 0, 3, 0), // 1.0.0b3 (Beta 3 6/14/2026)
-            new Version(Version.TYPE_BETA, 1, 0, 2, 0), // 1.0.0b2 (Beta 2 6/14/2026)
-            new Version(Version.TYPE_BETA, 1, 0, 1, 0)  // 1.0.0b1 (Beta 1 6/14/2026)
+            new Version(1, 0, 13),
+            new Version(1, 0, 12),
+            new Version(1, 0, 11),
+            new Version(1, 0, 10),
+            new Version(1, 0, 9),
+            new Version(1, 0, 8),
+            new Version(1, 0, 7),
+            new Version(1, 0, 6),
+            new Version(1, 0, 5),
+            new Version(1, 0, 4),
+            new Version(1, 0, 3),
+            new Version(1, 0, 2),
+            new Version(1, 0, 1),
+            new Version(1, 0, 0),
+            new Version(Version.TYPE_BETA, 1, 0, 8, 0),
+            new Version(Version.TYPE_BETA, 1, 0, 7, 0),
+            new Version(Version.TYPE_BETA, 1, 0, 6, 0),
+            new Version(Version.TYPE_BETA, 1, 0, 5, 0),
+            new Version(Version.TYPE_BETA, 1, 0, 4, 0),
+            new Version(Version.TYPE_BETA, 1, 0, 3, 0),
+            new Version(Version.TYPE_BETA, 1, 0, 2, 0),
+            new Version(Version.TYPE_BETA, 1, 0, 1, 0)
     );
 
     /** Returns the current (most recent) version, i.e. the first in the history. */
