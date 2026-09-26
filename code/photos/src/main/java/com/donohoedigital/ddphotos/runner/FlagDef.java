@@ -105,9 +105,18 @@ public sealed interface FlagDef permits FlagDef.Constant,
         }
     }
 
-    /** TextField flag with a regexp applied to the input widget; empty is always valid (flag omitted). */
+    /**
+     * TextField flag with a regexp applied to the input widget.  An empty value omits the flag;
+     * a pattern that rejects empty makes the field required.
+     * initialValue: if non-null, replaces the saved preference each time the flag row is built.
+     */
     record ValidatedTextField(String name, String pattern,
-                              FlagVisibility visibility, int width) implements FlagDef {
+                              FlagVisibility visibility, int width, String initialValue) implements FlagDef {
+
+        /** Convenience: no initial value. */
+        ValidatedTextField(String name, String pattern, FlagVisibility visibility, int width) {
+            this(name, pattern, visibility, width, null);
+        }
 
         /** Convenience: default column width of 240. */
         ValidatedTextField(String name, String pattern, FlagVisibility visibility) {

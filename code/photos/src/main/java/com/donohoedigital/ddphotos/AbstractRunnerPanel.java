@@ -388,6 +388,7 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                         OptionText ot = new OptionText(prefsName, widgetName,
                                     style, dummy_, 200,
                                     vf.pattern(), vf.width());
+                        if (vf.initialValue() != null) ot.setText(vf.initialValue());
                         ot.getTextField().addValidationListener(this::updateButtonState);
                         textControls_.put(def.name(), ot);
                         flagsRow.add(ot);
