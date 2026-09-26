@@ -20,6 +20,13 @@ public class InstallScriptRunner extends CommandRunner {
 
     private static boolean useLocalImage() { return DebugConfig.TESTING("settings.debug.local.image"); }
 
+    /**
+     * Named so a Stop can remove the container (see {@link CommandRunner#stop}). Unique per run,
+     * because the wizard builds a fresh runner for each: a container left behind by an earlier
+     * run can then never block this one with "name already in use".
+     */
+    private final String containerName_ = "ddphotos-init-" + System.currentTimeMillis();
+
     @Override
     public String getBinary() { return "docker"; }
 
@@ -29,10 +36,13 @@ public class InstallScriptRunner extends CommandRunner {
     @Override
     public List<String> buildCommand(Site ignored, Map<String, String> ignored2) {
         String docker = DockerStatus.dockerPath();
-        List<String> cmd = new java.util.ArrayList<>(List.of(docker, getSubCommand()));
+        List<String> cmd = new java.util.ArrayList<>(List.of(docker, getSubCommand(), "--name", containerName_));
         cmd.addAll(toArgs(getSubCommandFlagDefs(null), null));
         return cmd;
     }
+
+    @Override
+    protected String containerName(Site site, Map<String, String> userValues) { return containerName_; }
 
     /**
      * Pull the image with 'docker pull' before running it. 'docker run --pull always' would do the
@@ -61,6 +71,14 @@ public class InstallScriptRunner extends CommandRunner {
             public String checkingMessage() {
                 return PropertyConfig.getMessage("msg.wizard.script.pulling");
             }
+
+            @Override
+            public String errorDialogMessage(int exitCode) {
+                return PropertyConfig.getMessage("msg.wizard.script.failure");
+            }
+
+            @Override
+            public String errorTitleKey() { return "msg.windowtitle.cmdFailure"; }
         };
     }
 

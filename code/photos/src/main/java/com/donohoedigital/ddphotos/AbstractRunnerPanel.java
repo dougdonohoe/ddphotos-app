@@ -12,6 +12,7 @@ import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.runner.CommandRunner;
 import com.donohoedigital.ddphotos.runner.FlagDef;
+import com.donohoedigital.ddphotos.runner.Prerequisite;
 import com.donohoedigital.gui.*;
 
 import javax.swing.*;
@@ -21,15 +22,18 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /**
  * Shared base for the two runner panels: {@link CommandRunnerPanel} (tabbed command runner) and
  * {@link WizardRunnerPanel} (wizard-step runner). Owns the control row, the flag / sub-flag rows,
- * the {@link RunnerConsole}, the process-monitor threads and the stop/kill/close machinery.
+ * the {@link RunnerConsole}, the process-monitor threads, the prerequisite flow (check,
+ * remediation, chained checks) and the stop/kill/close machinery.
  *
  * <p>Subclasses supply the variation points: which {@link Site} drives the flag rows
  * ({@link #getCurrentSite()}), which {@link CommandRunner} is rendered/launched
@@ -560,32 +564,182 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
         userStopped_ = false;
         autoOpened_.set(false);
         long startNanos = System.nanoTime();
-        Thread out = new Thread(() -> console_.pumpStream(p.getInputStream(), false, this::maybeAutoOpen));
-        Thread err = new Thread(() -> console_.pumpStream(p.getErrorStream(), true, this::maybeAutoOpen));
-        Thread mon = new Thread(() -> {
-            try {
-                int code = p.waitFor();
-                String elapsed = formatElapsed(System.nanoTime() - startNanos);
-                SwingUtilities.invokeLater(() -> {
-                    process_ = null;
-                    // After a user stop/kill the exit code is an artifact of how we terminated the
-                    // process (e.g. 1 on Windows), not a real result - don't present it as one.
-                    console_.appendSystem(wasUserStop(code)
-                            ? PropertyConfig.getMessage("msg.cmd.stoppedTimed", elapsed)
-                            : PropertyConfig.getMessage("msg.cmd.exited", code, elapsed));
-                    updateButtonState();
-                    onComplete.accept(code);
+        ProcessPump.start(p, "cmd",
+                console_.lineHandler(false, this::maybeAutoOpen),
+                console_.lineHandler(true, this::maybeAutoOpen),
+                code -> {
+                    String elapsed = formatElapsed(System.nanoTime() - startNanos);
+                    SwingUtilities.invokeLater(() -> {
+                        process_ = null;
+                        // After a user stop/kill the exit code is an artifact of how we terminated the
+                        // process (e.g. 1 on Windows), not a real result - don't present it as one.
+                        console_.appendSystem(wasUserStop(code)
+                                ? PropertyConfig.getMessage("msg.cmd.stoppedTimed", elapsed)
+                                : PropertyConfig.getMessage("msg.cmd.exited", code, elapsed));
+                        updateButtonState();
+                        onComplete.accept(code);
+                    });
                 });
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────────
+    // Prerequisites
+    // ──────────────────────────────────────────────────────────────────────────────
+
+    /** Launches the runner's main command; called once every prerequisite has passed. */
+    protected abstract void launchMainCommand(Map<String, String> userValues);
+
+    /**
+     * Called when a run ends before the main command starts: a prerequisite failed, could not be
+     * evaluated, or was stopped, or a remediation was declined or failed.  The reason is already
+     * in the console (and in a dialog where the prerequisite asks for one).  Default no-op.
+     */
+    protected void onRunAborted() {}
+
+    /**
+     * Runs {@code prereq}'s check, then (depending on the result) its remediation, the next
+     * prerequisite in the chain, or {@link #launchMainCommand}.
+     */
+    protected void runWithPrerequisite(Prerequisite prereq, Map<String, String> userValues) {
+        console_.appendSystem(prereq.checkingMessage());
+        List<String> checkCmd = activeRunner_.finalCommand(prereq.checkCommand());
+        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.running", String.join(" ", checkCmd)));
+        Process p;
+        try {
+            p = activeRunner_.launchCommand(checkCmd);
+        } catch (IOException e) {
+            process_ = null;
+            console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "prerequisite check", e.getMessage()));
+            updateButtonState();
+            onRunAborted();
+            return;
+        }
+        process_ = p;
+        updateButtonState();
+
+        // A StringBuffer because stdout and stderr are read on separate threads.
+        StringBuffer captured = new StringBuffer();
+        Consumer<String> capture = line -> captured.append(line).append("\n");
+        ProcessPump.start(p, "check",
+                console_.lineHandler(false, capture),
+                console_.lineHandler(true, capture),
+                code -> {
+                    String output = captured.toString();
+                    SwingUtilities.invokeLater(() -> {
+                        process_ = null;
+                        // A stopped check produced no verdict - its exit code and partial output are
+                        // artifacts of how we killed it, not an answer about the user's login.
+                        if (wasUserStop(code)) {
+                            console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
+                            updateButtonState();
+                            onRunAborted();
+                            return;
+                        }
+                        switch (prereq.check(output, code)) {
+                            case PASSED -> {
+                                // add a little space after check
+                                console_.appendSystem("");
+                                console_.appendSystem("---");
+
+                                Prerequisite next = prereq.next();
+                                if (next != null) {
+                                    runWithPrerequisite(next, userValues);
+                                } else {
+                                    launchMainCommand(userValues);
+                                }
+                            }
+                            case FAILED -> handlePrerequisiteFailure(prereq, userValues);
+                            case ERROR -> handlePrerequisiteError(prereq, code);
+                        }
+                    });
+                });
+    }
+
+    /**
+     * The check could not be evaluated - report what actually happened and stop. Deliberately does
+     * not run {@link Prerequisite#remediation}: offering to log in or to create a project when we
+     * never got an answer is a guess, and in the create case a guess that changes remote state.
+     */
+    private void handlePrerequisiteError(Prerequisite prereq, int exitCode) {
+        console_.appendSystemError(prereq.errorMessage(exitCode));
+        updateButtonState();
+        String html = prereq.errorDialogMessage(exitCode);
+        if (html != null) {
+            EngineUtils.displayErrorDialog(context_, html, prereq.errorTitleKey(), null);
+        }
+        onRunAborted();
+    }
+
+    private void handlePrerequisiteFailure(Prerequisite prereq, Map<String, String> userValues) {
+        Prerequisite next = prereq.next();
+        switch (prereq.remediation()) {
+            case Prerequisite.RunCommand(List<String> cmd) -> {
+                console_.appendSystem(prereq.failedMessage());
+                runRemediation(userValues, next, cmd);
             }
-        });
-        out.setDaemon(true);
-        err.setDaemon(true);
-        mon.setDaemon(true);
-        out.start();
-        err.start();
-        mon.start();
+            case Prerequisite.ShowDialog(String html, String titleKey) -> {
+                updateButtonState();
+                EngineUtils.displayWarningDialog(context_, html, titleKey, null);
+                onRunAborted();
+            }
+            case Prerequisite.ShowMessage(String message) -> {
+                console_.appendSystem(message);
+                updateButtonState();
+                onRunAborted();
+            }
+            case Prerequisite.ConfirmThenRun(String msgKey, String titleKey, List<String> cmd, Object[] msgArgs) -> {
+                console_.appendSystem(prereq.failedMessage());
+                updateButtonState();
+                String html = PropertyConfig.getMessage(msgKey, msgArgs);
+                boolean confirmed = EngineUtils.displayConfirmationDialog(context_, html, titleKey, null);
+                if (!confirmed) {
+                    console_.appendSystem(PropertyConfig.getMessage("msg.cmd.aborted"));
+                    onRunAborted();
+                    return;
+                }
+                runRemediation(userValues, next, cmd);
+            }
+        }
+    }
+
+    /** Runs a remediation command; on exit 0, continues with {@code next} or the main command. */
+    private void runRemediation(Map<String, String> userValues, Prerequisite next, List<String> cmd) {
+        cmd = activeRunner_.finalCommand(cmd);
+        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.running", String.join(" ", cmd)));
+        Process p;
+        try {
+            p = activeRunner_.launchCommand(cmd);
+        } catch (IOException e) {
+            process_ = null;
+            console_.appendSystemError(PropertyConfig.getMessage("msg.cmd.startFailed", "remediation", e.getMessage()));
+            updateButtonState();
+            onRunAborted();
+            return;
+        }
+        process_ = p;
+        updateButtonState();
+
+        ProcessPump.start(p, "remediation",
+                console_.lineHandler(false, null),
+                console_.lineHandler(true, null),
+                code -> SwingUtilities.invokeLater(() -> {
+                    process_ = null;
+                    if (wasUserStop(code)) {
+                        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
+                        updateButtonState();
+                        onRunAborted();
+                    } else if (code == 0) {
+                        if (next != null) {
+                            runWithPrerequisite(next, userValues);
+                        } else {
+                            launchMainCommand(userValues);
+                        }
+                    } else {
+                        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.failedExit", code));
+                        updateButtonState();
+                        onRunAborted();
+                    }
+                }));
     }
 
     /**
