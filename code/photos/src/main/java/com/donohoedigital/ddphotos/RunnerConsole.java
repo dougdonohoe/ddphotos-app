@@ -24,10 +24,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Rectangle2D;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -228,50 +224,23 @@ public class RunnerConsole extends JPanel {
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // Stream pumping (run on a caller-owned background thread; appends marshal to the EDT)
+    // Process output (see ProcessPump; handlers run on its reader threads)
     // ──────────────────────────────────────────────────────────────────────────────
 
-    public void pumpStream(InputStream is, boolean stderr) {
-        pumpStream(is, stderr, null);
-    }
-
     /**
-     * As {@link #pumpStream(InputStream, boolean)}, but also hands each ANSI-stripped line (without
-     * its newline) to {@code lineObserver} - used to spot the preview-server URL a command
-     * announces. The observer is called on this pump thread, after the console append has been
-     * queued, so anything it queues of its own lands in the console in the order it happened.
+     * A {@link ProcessPump} line handler: strips ANSI codes from each line and queues it for the
+     * console, colored as an error if {@code stderr}.  Then hands the stripped line to
+     * {@code observer} (may be null) - used to capture a prerequisite check's output and to spot
+     * the preview-server URL a command announces.  The observer runs on the reader thread, after
+     * the console append has been queued, so anything it queues of its own lands in the console
+     * in the order it happened.
      */
-    public void pumpStream(InputStream is, boolean stderr, Consumer<String> lineObserver) {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String stripped = PhotosUtils.stripAnsi(line);
-                SwingUtilities.invokeLater(() -> appendOutput(stripped + "\n", stderr));
-                if (lineObserver != null) lineObserver.accept(stripped);
-            }
-        } catch (IOException e) {
-            // normal on process exit
-        }
-    }
-
-    /**
-     * Like pumpStream(), but also accumulates the output into the given StringBuffer
-     * (used for prerequisite checks that need to inspect the captured output). stderr
-     * lines are colored as errors but still captured so check() sees the full output.
-     * A StringBuffer (not StringBuilder) is used because stdout and stderr are pumped
-     * on separate threads; its append() is internally synchronized.
-     */
-    public void pumpStreamCapturing(InputStream is, StringBuffer captured, boolean stderr) {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String text = PhotosUtils.stripAnsi(line) + "\n";
-                captured.append(text);
-                SwingUtilities.invokeLater(() -> appendOutput(text, stderr));
-            }
-        } catch (IOException e) {
-            // normal on process exit
-        }
+    public Consumer<String> lineHandler(boolean stderr, Consumer<String> observer) {
+        return line -> {
+            String stripped = PhotosUtils.stripAnsi(line);
+            SwingUtilities.invokeLater(() -> appendOutput(stripped + "\n", stderr));
+            if (observer != null) observer.accept(stripped);
+        };
     }
 
     // ──────────────────────────────────────────────────────────────────────────────

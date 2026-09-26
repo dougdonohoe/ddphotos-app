@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public abstract class CommandRunner {
@@ -114,9 +115,10 @@ public abstract class CommandRunner {
 
     /**
      * The docker container that {@link #launch} starts and that stop()/kill() must tear down, or
-     * null if this runner starts no long-lived container we manage. When non-null, the name is
-     * passed to the {@code ddphotos} script via {@link #ENV_CONTAINER_NAME} so the script applies it
-     * as {@code --name}. Only the long-running, published-port commands (serve/run) override this.
+     * null if this runner starts no container we manage. When non-null, the name is passed to the
+     * {@code ddphotos} script via {@link #ENV_CONTAINER_NAME} so the script applies it as
+     * {@code --name}; a runner that calls docker directly adds {@code --name} itself. Overridden
+     * by the long-running, published-port commands (serve/run) and {@link InstallScriptRunner}.
      */
     protected String containerName(Site site, Map<String, String> userValues) { return null; }
 
@@ -184,7 +186,8 @@ public abstract class CommandRunner {
      * lets the container shut down cleanly, {@code --rm} remove it, and the attached client exit on
      * its own. Force-killing the local client (as kill() does) would instead orphan the container,
      * since the docker daemon - not the client process - owns its lifecycle. The local process tree
-     * is then signaled as a backstop. Container teardown runs off the calling (EDT) thread because
+     * is then signaled as a backstop, and the container removed if anything is left of it (see
+     * {@link #removeContainer}). Container teardown runs off the calling (EDT) thread because
      * {@code docker stop} blocks for the container's stop grace period (up to ~10s).
      */
     public void stop(Process process, OutputSink sink) {
@@ -202,10 +205,12 @@ public abstract class CommandRunner {
         logger.info("{}: root pid={} container={}", verb, process.pid(),
                 container != null ? container : "(none)");
         if (container != null) {
-            // Stop/kill the container, then the now-detachable local process tree, off-thread.
+            // Stop/kill the container, then the now-detachable local process tree, then remove
+            // whatever is left of the container - all off-thread.
             Thread t = new Thread(() -> {
                 stopContainer(container, force, sink);
                 killProcessTree(process, force);
+                removeContainer(container, process, sink);
             }, "container-teardown");
             t.setDaemon(true);
             t.start();
@@ -231,21 +236,55 @@ public abstract class CommandRunner {
 
     /** Tell docker to stop ({@code docker stop}) or force-kill ({@code docker kill}) the container. */
     private void stopContainer(String name, boolean force, OutputSink sink) {
-        String docker = DockerStatus.dockerPath();
-        String verb = force ? "kill" : "stop";
+        runDocker(sink, force ? "kill" : "stop", name);
+    }
+
+    /** How long {@link #removeContainer} waits for the stopped docker client to exit. */
+    private static final long CLIENT_EXIT_WAIT_SECONDS = 10;
+
+    /**
+     * Removes the container once the docker client has exited, whatever state the container is
+     * in.  {@code --rm} only removes a container after it has run and exited, so a Stop that lands
+     * between {@code docker run} creating the container and starting it leaves one behind in the
+     * "Created" state - and it pins its image, so a later {@code ddphotos upgrade} cannot remove
+     * the old one.  Waiting for the client first means it can no longer start the container
+     * after it has been removed.  Silent when {@code --rm} got there first: {@code docker rm -f}
+     * prints nothing for a container that no longer exists.
+     */
+    private void removeContainer(String name, Process process, OutputSink sink) {
         try {
-            if (sink != null) sink.system(PropertyConfig.getMessage("msg.cmd.running", docker + " " + verb + " " + name));
-            Process p = DockerStatus.dockerProcessBuilder(verb, name)
+            if (!process.waitFor(CLIENT_EXIT_WAIT_SECONDS, TimeUnit.SECONDS)) {
+                logger.info("remove: docker client still running after {}s; removing {} anyway",
+                        CLIENT_EXIT_WAIT_SECONDS, name);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+        runDocker(sink, "rm", "-f", name);
+    }
+
+    /**
+     * Runs {@code docker <verb> <args...>} to completion, echoing the command and any output to
+     * {@code sink} (may be null).  Errors are logged and reported, never thrown.
+     */
+    private void runDocker(OutputSink sink, String verb, String... args) {
+        List<String> cmd = new ArrayList<>(List.of(verb));
+        cmd.addAll(List.of(args));
+        String display = DockerStatus.dockerPath() + " " + String.join(" ", cmd);
+        try {
+            if (sink != null) sink.system(PropertyConfig.getMessage("msg.cmd.running", display));
+            Process p = DockerStatus.dockerProcessBuilder(cmd.toArray(new String[0]))
                     .redirectErrorStream(true)
                     .start();
             String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             p.waitFor();
-            logger.info("{}: docker {} {} exit={}", verb, verb, name, p.exitValue());
-            // docker echoes the container name on success, or "No such container" if already gone.
+            logger.info("{}: exit={}", display, p.exitValue());
+            // docker echoes the container name on success, or an error such as "No such container".
             if (sink != null && !out.isBlank()) sink.output(out);
         } catch (Exception e) {
-            logger.info("{}: docker error for {}: {}", verb, name, e.getMessage());
-            if (sink != null) sink.error(PropertyConfig.getMessage("msg.cmd.containerStopError", name, e.getMessage()));
+            logger.info("{}: docker error: {}", display, e.getMessage());
+            if (sink != null) sink.error(PropertyConfig.getMessage("msg.cmd.dockerError", display, e.getMessage()));
         }
     }
 
