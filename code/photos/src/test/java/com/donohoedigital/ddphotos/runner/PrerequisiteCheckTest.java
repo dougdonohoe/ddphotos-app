@@ -12,8 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>The fixtures below are real captured output from
  * {@code ddphotos --dir ... --non-interactive --show-mounts <tool> whoami}, stdout and stderr
- * merged the way {@code CommandRunnerPanel.startCheckReaders} merges them - including the wrapper's
- * mount banner, the npm notices and wrangler's ANSI colouring.  Only the two states that could not
+ * merged the way {@code AbstractRunnerPanel.runWithPrerequisite} merges them - including the wrapper's
+ * mount banner, the npm notices and wrangler's ANSI coloring.  Only the two states that could not
  * be produced on the capture machine (a valid Cloudflare login, and a Pages project list) are
  * reconstructed, from the strings in wrangler's own bundle.
  */
@@ -37,7 +37,7 @@ public class PrerequisiteCheckTest {
 
     // ── wrangler whoami ──────────────────────────────────────────────────────
 
-    /** Real: token expired, non-interactive.  Note this exits 1 and colours its output. */
+    /** Real: token expired, non-interactive.  Note this exits 1 and colors its output. */
     private static final String WRANGLER_EXPIRED = MOUNTS + """
 
              ⛅️ wrangler 4.114.0
@@ -263,7 +263,7 @@ public class PrerequisiteCheckTest {
 
     /**
      * The console pumps output through stripAnsi because Swing renders none of it - without that,
-     * wrangler's coloured error line shows the parameters as literal text ("[31m", "[0m").
+     * wrangler's colored error line shows the parameters as literal text ("[31m", "[0m").
      */
     @Test
     public void stripAnsi_leavesNoBracketCodesInRealWranglerError() {
