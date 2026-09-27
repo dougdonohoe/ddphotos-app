@@ -9,8 +9,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -22,8 +23,12 @@ import java.util.Set;
  * <p>{@code photogen.txt} is a line-based (not YAML) file read by the Go generator
  * (see {@code ddphotos/pkg/photogen/album.go} {@code loadPhotoDescriptions} and
  * {@code util.go} {@code scanLines}).  Each significant line is
- * {@code key [description]}, where {@code key} is a photo basename (with or without an
- * image extension) or a subfolder name.  A key containing a space is double-quoted
+ * {@code key [description]}, where {@code key} is a media file name, a bare stem (the file
+ * name without its extension) or a subfolder name.  A full file name names that one file;
+ * a bare stem names every file sharing it ({@code IMG_1} covers {@code IMG_1.jpg} and
+ * {@code IMG_1.png}), and a full name beats a stem.  The Go side is {@code photoMatcher}.
+ * The editor writes full names, and {@link #canonicalizeEntries} converts older stem lines.
+ * A key containing a space is double-quoted
  * ({@code "Chicago 2009.jpg" A cool trip}); one that doesn't is written bare, as before.
  * There is no escape for a literal quote inside a key, so such a name isn't representable.
  * Blank lines and lines beginning with {@code #} are ignored by the generator but preserved here.
@@ -132,7 +137,7 @@ public class PhotogenFile extends ConfigFile {
     /** True if the {@code photogen.txt} file was present on disk when {@link #load()} ran. */
     public boolean existsOnDisk() { return existed_; }
 
-    /** Entry keys (photo basenames / subfolder names) in file order. */
+    /** Entry keys (file names, stems or subfolder names), as written, in file order. */
     public List<String> getEntryKeys() {
         List<String> keys = new ArrayList<>();
         for (Line l : lines_) {
@@ -141,7 +146,7 @@ public class PhotogenFile extends ConfigFile {
         return keys;
     }
 
-    /** @param name a photo basename (with or without image extension) or a subfolder name. */
+    /** @param name a media file name, a bare stem, or a subfolder name.  See {@link #findEntry}. */
     public boolean hasEntry(String name) {
         return findEntry(name) != null;
     }
@@ -172,10 +177,17 @@ public class PhotogenFile extends ConfigFile {
         lines_.add(Line.entry(name.trim(), desc));
     }
 
-    /** Removes the entry for the given photo/subfolder, if present.  Blanks/comments are untouched. */
+    /**
+     * Removes the entries for the given photo/subfolder, if present, matched as {@link #findEntry}
+     * matches: lines naming it exactly, or failing those, a stem line.  Blanks/comments are untouched.
+     */
     public void removeEntry(String name) {
-        String target = normalizeKey(name);
-        lines_.removeIf(l -> l.kind == Kind.ENTRY && normalizeKey(l.key).equals(target));
+        String exact = exactKey(name);
+        if (lines_.stream().anyMatch(l -> l.kind == Kind.ENTRY && exactKey(l.key).equals(exact))) {
+            lines_.removeIf(l -> l.kind == Kind.ENTRY && exactKey(l.key).equals(exact));
+        } else {
+            lines_.removeIf(l -> l.kind == Kind.ENTRY && stemMatches(l.key, name));
+        }
     }
 
     /**
@@ -184,19 +196,16 @@ public class PhotogenFile extends ConfigFile {
      * comment lines keep their absolute positions.
      */
     public void setEntryOrder(List<String> keys) {
-        Map<String, Line> byKey = new LinkedHashMap<>();
-        for (Line l : lines_) {
-            if (l.kind == Kind.ENTRY) byKey.put(normalizeKey(l.key), l);
-        }
+        // Line has identity equality, so this tracks lines, not keys: every entry line is placed
+        // exactly once, which the slot-filling loop below depends on.
         List<Line> ordered = new ArrayList<>();
-        Set<String> used = new HashSet<>();
+        Set<Line> used = new HashSet<>();
         for (String k : keys) {
-            String nk = normalizeKey(k);
-            Line l = byKey.get(nk);
-            if (l != null && used.add(nk)) ordered.add(l);
+            Line l = findEntry(k);
+            if (l != null && used.add(l)) ordered.add(l);
         }
         for (Line l : lines_) {
-            if (l.kind == Kind.ENTRY && used.add(normalizeKey(l.key))) ordered.add(l);
+            if (l.kind == Kind.ENTRY && used.add(l)) ordered.add(l);
         }
         int idx = 0;
         for (int i = 0; i < lines_.size(); i++) {
@@ -206,22 +215,117 @@ public class PhotogenFile extends ConfigFile {
         }
     }
 
+    /**
+     * Rewrites every entry that names media files by stem, rather than in full, as one line per
+     * file it names, in its place and with its caption.  After this, each file in
+     * {@code mediaFileNames} is found by its exact name, which is what the editor writes.
+     *
+     * <p>That covers a bare stem ({@code IMG_1}) and a stale extension ({@code IMG_1.jpeg} after
+     * the file became {@code IMG_1.jpg}), both of which the Go generator resolves by stem.  A file
+     * that also has a line of its own keeps that line's caption, and is placed at whichever of
+     * the two lines comes first, as the generator does.  Subfolder lines, comments and lines
+     * naming nothing are untouched.
+     *
+     * <p>Changes the model only; it reaches disk when the folder is next saved.
+     *
+     * @return true if any line changed
+     */
+    public boolean canonicalizeEntries(Collection<String> mediaFileNames) {
+        Map<String, String> byName = new HashMap<>();
+        Map<String, List<String>> byStem = new HashMap<>();
+        for (String f : mediaFileNames.stream().sorted().toList()) {
+            byName.put(exactKey(f), f);
+            byStem.computeIfAbsent(normalizeKey(f), _ -> new ArrayList<>()).add(f);
+        }
+        // A file's own line wins over a stem line.  The last one wins, as in the generator.
+        Map<String, String> ownCaption = new HashMap<>();
+        for (Line l : lines_) {
+            if (l.kind == Kind.ENTRY && byName.containsKey(exactKey(l.key))) {
+                ownCaption.put(exactKey(l.key), l.description);
+            }
+        }
+
+        List<Line> out = new ArrayList<>();
+        Set<String> placed = new HashSet<>();        // files with a line in out
+        Set<String> placedByStem = new HashSet<>();  // ... because a stem line was expanded
+        boolean changed = false;
+        for (Line l : lines_) {
+            if (l.kind != Kind.ENTRY) {
+                out.add(l);
+                continue;
+            }
+            String ek = exactKey(l.key);
+            if (byName.containsKey(ek)) {
+                // Placed already by an earlier stem line, which carried this line's caption.
+                if (placedByStem.contains(ek)) {
+                    changed = true;
+                    continue;
+                }
+                placed.add(ek);
+                out.add(l);
+                continue;
+            }
+            List<String> files = byStem.get(normalizeKey(l.key));
+            if (files == null) {
+                out.add(l);
+                continue;
+            }
+            changed = true;
+            for (String f : files) {
+                String fk = exactKey(f);
+                if (placed.add(fk)) {
+                    placedByStem.add(fk);
+                    out.add(Line.entry(f, ownCaption.getOrDefault(fk, l.description)));
+                }
+            }
+        }
+        if (changed) {
+            lines_.clear();
+            lines_.addAll(out);
+        }
+        return changed;
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
+    /**
+     * Finds the line for a name in two tiers, mirroring the generator's {@code photoMatcher}.
+     * A line whose key equals the name (case-insensitively) wins.  Failing that, a line with the
+     * same stem, provided one side is a bare stem: {@code IMG_1} matches {@code IMG_1.png}, but
+     * {@code IMG_1.jpg} does not, since a full name names that one file.
+     */
     private Line findEntry(String name) {
-        String target = normalizeKey(name);
+        String exact = exactKey(name);
         for (Line l : lines_) {
-            if (l.kind == Kind.ENTRY && normalizeKey(l.key).equals(target)) return l;
+            if (l.kind == Kind.ENTRY && exactKey(l.key).equals(exact)) return l;
+        }
+        for (Line l : lines_) {
+            if (l.kind == Kind.ENTRY && stemMatches(l.key, name)) return l;
         }
         return null;
     }
 
+    /** The first-tier key: trimmed and lowercased, extension kept. */
+    public static String exactKey(String name) {
+        return name == null ? "" : name.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /** Same stem, and at least one of the two is a bare stem rather than a media file name. */
+    private static boolean stemMatches(String a, String b) {
+        return normalizeKey(a).equals(normalizeKey(b)) && (isBareStem(a) || isBareStem(b));
+    }
+
+    private static boolean isBareStem(String name) {
+        String s = exactKey(name);
+        return !s.isEmpty() && !PathValidation.isMediaFile(s);
+    }
+
     /**
-     * Normalizes a key for matching: lowercased, with a trailing media extension stripped so
-     * {@code "img_001.jpg"} and {@code "img_001"} match, as do {@code "clip.mov"} and
-     * {@code "clip"}.  Mirrors the Go generator, which treats an entry's leading token
-     * case-insensitively and strips a known extension.  Reuses
-     * {@link PathValidation#isMediaFile(String)} for the recognized-extension set.
+     * Reduces a key to its stem: lowercased, with a trailing media extension stripped, so
+     * {@code "img_001.jpg"} and {@code "img_001"} give the same result, as do {@code "clip.mov"}
+     * and {@code "clip"}.  This is the second matching tier (see {@link #findEntry}); it mirrors
+     * the Go generator's {@code photogenID}.  Reuses {@link PathValidation#isMediaFile(String)}
+     * for the recognized-extension set.
      */
     public static String normalizeKey(String name) {
         if (name == null) return "";
