@@ -191,6 +191,81 @@ public class PhotogenFileTest {
         assertEquals("img_3 Three\nimg_1 One\nimg_2 Two\n", read(dir));
     }
 
+    @Test
+    public void setEntryOrder_keepsEveryLineWhenOneIsRepeated() throws Exception {
+        Path dir = write("img_1 One\nimg_2 Two\nimg_1 Again\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        pf.setEntryOrder(List.of("img_2", "img_1"));
+        pf.save();
+        assertEquals("img_2 Two\nimg_1 One\nimg_1 Again\n", read(dir));
+    }
+
+    // ── same-stem tests ─────────────────────────────────────────────────────
+
+    @Test
+    public void getCaption_fullNameNamesOnlyThatFile() throws Exception {
+        Path dir = write("IMG_1.jpg The jpg\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertEquals("The jpg", pf.getCaption("img_1.JPG"));
+        assertNull(pf.getCaption("IMG_1.png"), "a full name must not caption its sibling");
+    }
+
+    @Test
+    public void getCaption_fullNameBeatsStemWhereverItSits() throws Exception {
+        Path dir = write("IMG_1.png The png\nIMG_1 Both\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertEquals("The png", pf.getCaption("IMG_1.png"));
+        assertEquals("Both", pf.getCaption("IMG_1.jpg"));
+    }
+
+    @Test
+    public void canonicalize_expandsStemInPlace() throws Exception {
+        Path dir = write("# top\nIMG_1 Both\nother.jpg Other\nsubfolder\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertTrue(pf.canonicalizeEntries(List.of("IMG_1.png", "other.jpg", "IMG_1.jpg")));
+        pf.save();
+        assertEquals("# top\nIMG_1.jpg Both\nIMG_1.png Both\nother.jpg Other\nsubfolder\n", read(dir));
+    }
+
+    @Test
+    public void canonicalize_ownLineKeepsCaptionAndFirstPosition() throws Exception {
+        // As in the generator: the stem places both files at its position, and the png keeps
+        // its own caption, so its later line is dropped as a repeat.
+        Path dir = write("IMG_1 Both\nother.jpg Other\nIMG_1.png The png\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertTrue(pf.canonicalizeEntries(List.of("IMG_1.jpg", "IMG_1.png", "other.jpg")));
+        pf.save();
+        assertEquals("IMG_1.jpg Both\nIMG_1.png The png\nother.jpg Other\n", read(dir));
+    }
+
+    @Test
+    public void canonicalize_ownLineFirstIsKeptAndStemFillsTheRest() throws Exception {
+        Path dir = write("IMG_1.png The png\nIMG_1 Both\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertTrue(pf.canonicalizeEntries(List.of("IMG_1.jpg", "IMG_1.png")));
+        pf.save();
+        assertEquals("IMG_1.png The png\nIMG_1.jpg Both\n", read(dir));
+    }
+
+    @Test
+    public void canonicalize_fixesStaleExtension() throws Exception {
+        Path dir = write("IMG_1.jpeg Re-exported\n");
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertTrue(pf.canonicalizeEntries(List.of("IMG_1.jpg")));
+        pf.save();
+        assertEquals("IMG_1.jpg Re-exported\n", read(dir));
+    }
+
+    @Test
+    public void canonicalize_leavesFullNamesByteExact() throws Exception {
+        String content = "# c\n\"Chicago 1.jpg\" A\nclip.mov B\nsubfolder\nghost Nothing\n";
+        Path dir = write(content);
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertFalse(pf.canonicalizeEntries(List.of("Chicago 1.jpg", "clip.mov")));
+        pf.save();
+        assertEquals(content, read(dir));
+    }
+
     // ── save-guard test ─────────────────────────────────────────────────────
 
     @Test

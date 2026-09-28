@@ -382,23 +382,37 @@ public class PhotogenEditorPhase extends BasePhase {
         PhotogenFile pf = filesByDir_.get(dir);
         FolderEditor f = new FolderEditor(dir, pf);
 
-        List<Row> images = new ArrayList<>();
-        List<Row> subfolders = new ArrayList<>();
+        List<Path> mediaPaths = new ArrayList<>();
+        List<Path> subfolderPaths = new ArrayList<>();
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
             for (Path p : ds) {
                 String fileName = p.getFileName().toString();
                 if (Files.isDirectory(p)) {
-                    if (album_.isRecurse()) {
-                        subfolders.add(Row.subfolder(fileName, p, pf.getCaption(fileName)));
-                    }
+                    if (album_.isRecurse()) subfolderPaths.add(p);
                 } else if (PathValidation.isMediaFile(fileName)) {
                     // Videos get a row too - photogen publishes them, so they need captioning and
                     // ordering here, even though we can only show a placeholder for one.
-                    images.add(Row.image(fileName, p, pf.getCaption(fileName)));
+                    mediaPaths.add(p);
                 }
             }
         } catch (Exception e) {
             logger.warn("Failed to list {}: {}", dir, e.getMessage());
+        }
+
+        // Every row is one file, found and written by its full name, so stem lines (IMG_1 for
+        // IMG_1.jpg and IMG_1.png) are rewritten as a line per file first.  In memory only:
+        // it reaches disk if and when this folder is saved.
+        pf.canonicalizeEntries(mediaPaths.stream().map(p -> p.getFileName().toString()).toList());
+
+        List<Row> images = new ArrayList<>();
+        for (Path p : mediaPaths) {
+            String fileName = p.getFileName().toString();
+            images.add(Row.image(fileName, p, pf.getCaption(fileName)));
+        }
+        List<Row> subfolders = new ArrayList<>();
+        for (Path p : subfolderPaths) {
+            String name = p.getFileName().toString();
+            subfolders.add(Row.subfolder(name, p, pf.getCaption(name)));
         }
         images.sort(Comparator.comparing(r -> r.displayName, String.CASE_INSENSITIVE_ORDER));
         subfolders.sort(Comparator.comparing(r -> r.displayName, String.CASE_INSENSITIVE_ORDER));
@@ -407,10 +421,9 @@ public class PhotogenEditorPhase extends BasePhase {
         Map<String, Row> byMatchKey = new LinkedHashMap<>();
         for (Row r : images) byMatchKey.putIfAbsent(r.matchKey, r);
         for (Row r : subfolders) byMatchKey.putIfAbsent(r.matchKey, r);
-
         List<Row> ordered = new ArrayList<>();
         for (String entryKey : pf.getEntryKeys()) {
-            Row r = byMatchKey.remove(PhotogenFile.normalizeKey(entryKey));
+            Row r = byMatchKey.remove(PhotogenFile.exactKey(entryKey));
             if (r != null) ordered.add(r);
         }
         for (Row r : images) if (byMatchKey.containsKey(r.matchKey)) { ordered.add(r); byMatchKey.remove(r.matchKey); }
@@ -805,8 +818,8 @@ public class PhotogenEditorPhase extends BasePhase {
     private static final class Row {
         final RowType type;
         final String displayName;  // full filename or subfolder name
-        final String matchKey;     // normalized, for matching photogen entries
-        final String writeKey;     // key written to photogen.txt (basename w/o ext, or subfolder name)
+        final String matchKey;     // lowercased file or subfolder name, for matching photogen entries
+        final String writeKey;     // key written to photogen.txt (full file name, or subfolder name)
         final Path path;
         String caption;
         String originalCaption;
@@ -823,20 +836,13 @@ public class PhotogenEditorPhase extends BasePhase {
         }
 
         static Row image(String fileName, Path path, String caption) {
-            return new Row(RowType.IMAGE, fileName, PhotogenFile.normalizeKey(fileName), stripExtension(fileName), path, caption);
+            return new Row(RowType.IMAGE, fileName, PhotogenFile.exactKey(fileName), fileName, path, caption);
         }
 
         static Row subfolder(String name, Path path, String caption) {
-            return new Row(RowType.SUBFOLDER, name, PhotogenFile.normalizeKey(name), name, path, caption);
+            return new Row(RowType.SUBFOLDER, name, PhotogenFile.exactKey(name), name, path, caption);
         }
 
-        private static String stripExtension(String fileName) {
-            // Must recognize the same extensions as PhotogenFile.normalizeKey, or a row would be
-            // written under one key and looked up under another.
-            if (!PathValidation.isMediaFile(fileName)) return fileName;
-            int dot = fileName.lastIndexOf('.');
-            return dot > 0 ? fileName.substring(0, dot) : fileName;
-        }
     }
 
     private static final class FolderEditor {
