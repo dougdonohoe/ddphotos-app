@@ -87,9 +87,7 @@ site on your computer, then publish it.
 
 ## A few things to know
 
-- DD Photos downloads the original files. If you edited a photo in Immich, the site shows the
-  unedited version, and DD Photos warns you about it. We plan to add support for edited photos
-  in the future.
+- DD Photos downloads edited photos, if they exist (e.g., a crop).  Otherwise, the original is downloaded.
 - RAW files are skipped for now.
 - DD Photos runs its build tools in Docker, so you need Docker installed. The app's Setup Wizard
   walks you through it.
