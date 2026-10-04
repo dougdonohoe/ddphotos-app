@@ -611,7 +611,9 @@ public class PhotosBasePhase extends BasePhase {
 
         menu.addSeparator();
 
+        // EngineWindow also binds Ctrl-/ off the Mac, for windows without this menu.
         DDMenuItem help = new DDMenuItem("help");
+        help.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, GuiUtils.MENU_SHORTCUT_MASK));
         help.addActionListener(_ -> PhotosMain.getBaseApp().showHelp());
         menu.add(help);
 
@@ -626,11 +628,14 @@ public class PhotosBasePhase extends BasePhase {
             boom.addActionListener(_ ->  { throw new RuntimeException("BOOM!"); });
             menu.add(boom);
 
-            // Cmd/Ctrl-R: the Run menu has Cmd-P and Cmd-G, and this one is debug-only.
-            JMenuItem ss = new JMenuItem("Take screenshot...");
-            ss.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, GuiUtils.MENU_SHORTCUT_MASK));
-            ss.addActionListener(mainWindowAction(() -> context_.screenshot(screenshotName())));
-            menu.add(ss);
+            // Cmd/Ctrl-R: the Run menu has Cmd-P and Cmd-G, and this one is debug-only.  Shown
+            // only when screenshots are on, since AppContext.screenshot does nothing otherwise.
+            if (DebugConfig.TESTING("settings.debug.screenshots")) {
+                JMenuItem ss = new JMenuItem("Take screenshot...");
+                ss.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, GuiUtils.MENU_SHORTCUT_MASK));
+                ss.addActionListener(mainWindowAction(() -> context_.screenshot(screenshotName())));
+                menu.add(ss);
+            }
 
             JMenuItem splash = new JMenuItem("Show Splashscreen");
             splash.addActionListener(_ -> engine_.showSplashScreenAgain());

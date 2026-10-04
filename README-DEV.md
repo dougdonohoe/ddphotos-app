@@ -262,22 +262,74 @@ another language.
 
 ### Debug Settings
 
-There are lots of `settings.debug.*` entries in the code which are used to make
-development easier.  Typically, you put these in your `[username].properties` file,
-so they only are used by you.
+There are a few `settings.debug.*` entries in the code which are used to make
+development easier.  Typically, you put these in your
+`code/photos/src/main/resources/config/ddphotos/override/[username].properties` file, so
+they only are used by you (see [PropertyConfig](#propertyconfig)).
 
-Here are a few interesting ones
+No properties file sets a default, so every flag is off unless you turn it on.  Flags are
+read through `DebugConfig.TESTING(...)`.  The engine's constants are in `EngineConstants`;
+the rest are named inline at the point of use.
+
+#### Master Switch
 
 ```properties
-# Enable debug flags
+# Master switch.  No other settings.debug.* flag has any effect unless this is
+# on, because DebugConfig.TESTING() returns false whenever it is off.
+#
+# On its own, it also enables the debug features described under
+# "Debug Features" below
 settings.debug.enabled=true
+```
 
-# use local 'ddphotos' image
+#### Engine Settings
+
+```properties
+# Force the main window to start at 1500x992 (EngineConstants.TESTING_CHANGE_SIZE_*),
+# the size used for screenshots, and stop saving its size to preferences.  Ignored
+# if the screen is not larger than that
+settings.debug.changesize=true
+
+# Open secondary windows (Help, Support, the photogen editor) as internal dialogs
+# inside the main window instead of as separate top-level windows
+settings.debug.no.external=true
+
+# Add Help -> Take screenshot... (Cmd-R); see "Screenshots" in Appendix C
+settings.debug.screenshots=true
+settings.debug.screenshots.path=/path/to/ddphotos-app/images/screenshots
+settings.debug.screenshots.shadow=true
+```
+
+#### Photos Settings
+
+```properties
+# Run the startup wizard's install step with the local 'ddphotos' Docker image,
+# built from the ddphotos repo, instead of dougdonohoe/ddphotos:latest.  The
+# image is not pulled first
 settings.debug.local.image=true
 ```
 
-There are many other examples, just take a look in the code for `settings.debug` to
-find the constants and then find usages of those constants.
+#### Debug Features
+
+The master switch adds these to the _Help_ menu:
+
+* **BOOM!** throws a `RuntimeException`, to test the uncaught error handling.
+* **Take screenshot...** (`Cmd-R`) captures the current window.  It appears only when
+  `settings.debug.screenshots` is also on.  See [Screenshots](#screenshots).
+* **Show Splashscreen** displays the startup splash screen again.
+* **Display Info...** shows a dialog listing each screen's size, position and scale
+  factor, and marks the screen the main window is on.
+
+It also turns on these:
+
+* `Cmd-D` (`Ctrl-D` on Windows/Linux) logs a stack trace of every thread to the
+  console and the log file.
+* `Ctrl-Shift-Alt-X` (`Ctrl-Shift-Option-X` on a Mac) starts the [FlatLaf Inspector↗](https://www.formdev.com/flatlaf/inspector/),
+  which shows the component, its properties and its style under the mouse.
+* Typing `BOOM!` in any text field throws a `RuntimeException`.  Use it to test error
+  handling inside a modal dialog, where the menu cannot be reached.
+* The `-x` and `-y` command line options set the main window's starting position, in place
+  of the one saved in preferences.
 
 ### Installers
 
