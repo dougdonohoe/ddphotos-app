@@ -82,6 +82,7 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
     private DDLabel    stepLabel_;
     private DDButton   backBtn_;
     private DDButton   nextBtn_;
+    private DDButton   skipBtn_;
 
     // ── Docker step widgets ───────────────────────────────────────────────────
 
@@ -98,6 +99,11 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
     private DDHtmlArea         scriptStatusArea_;
     private WizardRunnerPanel  scriptRunner_;
 
+    // ── Choice step widgets ───────────────────────────────────────────────────
+
+    private DDHtmlArea choicePrompt_;
+    private DDButton   newSiteBtn_;
+
     // ── Init step widgets ─────────────────────────────────────────────────────
 
     private OptionFileChooser initParentDir_;
@@ -112,8 +118,8 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         context_    = context;
         sitesFile_  = sitesFile;
         mode_       = mode;
-        // New Site goes straight to creating the folder: Docker and the script were already
-        // checked to get here, and the site bar's + button covers adding a site that exists
+        // New Site goes straight to creating the folder: the site bar's + button covers adding a
+        // site that exists.  If a setup step was skipped, the INIT step says so instead of running.
         startIndex_ = (mode == Mode.NEW_SITE) ? indexOf(Step.INIT) : 0;
         buildUI();
         DockerStatus.addListener(this);
@@ -135,10 +141,15 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
     @Override
     public void onDockerStatusChanged(boolean running) {
         dockerOk_ = running;
-        if (currentStep() == Step.DOCKER) {
-            refreshDockerStep();
-            updateNavButtons();
+        // Every step that runs a command (or offers to) depends on Docker
+        switch (currentStep()) {
+            case DOCKER -> refreshDockerStep();
+            case SCRIPT -> refreshScriptStep();
+            case CHOICE -> refreshChoiceStep();
+            case INIT   -> refreshInitStep();
+            default     -> {}
         }
+        updateNavButtons();
     }
 
     // ── Top-level layout ──────────────────────────────────────────────────────
@@ -178,12 +189,19 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         nextBtn_.setText(PropertyConfig.getMessage("button.wizard.next.label"));
         nextBtn_.addActionListener(_ -> onNext());
 
-        // Shown whenever the wizard was launched from the editor ("Rerun Setup Wizard..." or
-        // "New Site...") — lets the user back out without forcing them through to the end.
+        // Lets someone who only wants to edit config files (or who runs the Docker commands on
+        // another machine) get past a setup step that cannot be completed here.
+        skipBtn_ = new DDButton("wizard.skip", STYLE);
+        skipBtn_.setText(PropertyConfig.getMessage("button.wizard.skip.label"));
+        skipBtn_.addActionListener(_ -> advance());
+
+        // Shown whenever there is an editor to return to: the wizard was launched from it
+        // ("Rerun Setup Wizard..." or "New Site..."), or is a repair pass over existing sites.
+        // Lets the user back out without forcing them through to the end.
         DDButton cancelBtn = new DDButton("wizard.cancelwizard", STYLE);
         cancelBtn.setText(PropertyConfig.getMessage("button.wizard.cancelwizard.label"));
         cancelBtn.addActionListener(_ -> returnToStartMenu(null));
-        cancelBtn.setVisible(mode_ != Mode.FIRST_RUN);
+        cancelBtn.setVisible(mode_ != Mode.FIRST_RUN || !sitesFile_.getSites().isEmpty());
 
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
@@ -197,6 +215,8 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         btnRow.add(backBtn_);
         btnRow.add(Box.createHorizontalStrut(8));
         btnRow.add(nextBtn_);
+        btnRow.add(Box.createHorizontalStrut(8));
+        btnRow.add(skipBtn_);
         btnRow.add(Box.createHorizontalGlue());
         btnRow.add(cancelBtn);
         footer.add(sep,    BorderLayout.NORTH);
@@ -377,10 +397,14 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         scriptOk_ = Files.isExecutable(script);
         if (scriptOk_) {
             scriptStatusArea_.setText(PropertyConfig.getMessage("msg.wizard.script.found", script));
+        } else if (!dockerOk_) {
+            // Reachable by skipping the Docker step; the install runs in a container
+            scriptStatusArea_.setText(PropertyConfig.getMessage("msg.wizard.script.nodocker"));
         } else {
             scriptStatusArea_.setText(PropertyConfig.getMessage("msg.wizard.script.missing"));
         }
-        scriptRunner_.setRunEnabled(true); // always allow (re)running to fetch the latest copy
+        // Needs Docker, but otherwise always allow (re)running to fetch the latest copy
+        scriptRunner_.setRunEnabled(dockerOk_);
     }
 
     private void onScriptInstalled() {
@@ -397,13 +421,12 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
 
-        DDHtmlArea prompt = buildHtmlArea(GuiManager.DEFAULT, STYLE);
-        prompt.setPreferredSize(new Dimension(Integer.MAX_VALUE, 200));
-        prompt.setText(PropertyConfig.getMessage("msg.wizard.choice.prompt"));
+        choicePrompt_ = buildHtmlArea(GuiManager.DEFAULT, STYLE);
+        choicePrompt_.setPreferredSize(new Dimension(Integer.MAX_VALUE, 200));
 
-        DDButton newSiteBtn = new DDButton("wizard.newsite", STYLE);
-        newSiteBtn.setText(PropertyConfig.getMessage("button.wizard.newsite.label"));
-        newSiteBtn.addActionListener(_ -> onChooseNewSite());
+        newSiteBtn_ = new DDButton("wizard.newsite", STYLE);
+        newSiteBtn_.setText(PropertyConfig.getMessage("button.wizard.newsite.label"));
+        newSiteBtn_.addActionListener(_ -> onChooseNewSite());
 
         DDButton existingBtn = new DDButton("wizard.existingsite", STYLE);
         existingBtn.setText(PropertyConfig.getMessage("button.wizard.existingsite.label"));
@@ -413,7 +436,7 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         btnRow.setLayout(new BoxLayout(btnRow, BoxLayout.X_AXIS));
         btnRow.setOpaque(false);
         btnRow.add(Box.createHorizontalGlue());
-        btnRow.add(newSiteBtn);
+        btnRow.add(newSiteBtn_);
         btnRow.add(Box.createHorizontalStrut(16));
         btnRow.add(existingBtn);
         btnRow.add(Box.createHorizontalGlue());
@@ -422,11 +445,19 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         // would otherwise stretch it) and btnRow sits directly below it.
         JPanel topSection = new JPanel(new BorderLayout(0, 16));
         topSection.setOpaque(false);
-        topSection.add(prompt, BorderLayout.NORTH);
-        topSection.add(btnRow, BorderLayout.CENTER);
+        topSection.add(choicePrompt_, BorderLayout.NORTH);
+        topSection.add(btnRow,        BorderLayout.CENTER);
 
         panel.add(topSection, BorderLayout.NORTH);
         return panel;
+    }
+
+    /** Creating a site runs {@code ddphotos init}, so it is only offered when that can run. */
+    private void refreshChoiceStep() {
+        boolean ready = canRunCommands();
+        choicePrompt_.setText(PropertyConfig.getMessage(
+                ready ? "msg.wizard.choice.prompt" : "msg.wizard.choice.prompt.notready"));
+        newSiteBtn_.setEnabled(ready);
     }
 
     // ── INIT step ─────────────────────────────────────────────────────────────
@@ -569,6 +600,11 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
             initOk_ = false;
             initStatusArea_.setText(PropertyConfig.getMessage("msg.wizard.init.exists", full));
             initRunner_.setRunEnabled(false);
+        } else if (!canRunCommands()) {
+            // A good path, but a setup step was skipped (or Docker has stopped since)
+            initOk_ = false;
+            initStatusArea_.setText(PropertyConfig.getMessage("msg.wizard.init.notready", full.toString()));
+            initRunner_.setRunEnabled(false);
         } else {
             // Ready to run init (path doesn't exist, or is an empty leftover folder)
             initOk_ = false;
@@ -675,6 +711,7 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
             case DOCKER -> refreshDockerStep();
             case BASH   -> refreshBashStep();
             case SCRIPT -> refreshScriptStep();
+            case CHOICE -> refreshChoiceStep();
             case INIT   -> refreshInitStep();
             default     -> {}
         }
@@ -720,6 +757,9 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         nextBtn_.setVisible(!isChoice);
         nextBtn_.setEnabled(isNextEnabled());
 
+        // Only offered while Next is blocked; once the step is done, Next does the same thing
+        skipBtn_.setVisible(isSkippable(step) && !isNextEnabled());
+
         if (isLast) {
             nextBtn_.rename("wizard.addnewsite");
         } else {
@@ -736,6 +776,21 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
             case CHOICE  -> false;
             case INIT    -> initOk_;
         };
+    }
+
+    /** The setup steps; each can be left unfinished for someone who does not need it here. */
+    private static boolean isSkippable(Step step) {
+        return step == Step.DOCKER || step == Step.BASH || step == Step.SCRIPT;
+    }
+
+    /**
+     * True when {@code ddphotos} commands can run: Docker is up, the script is installed, and on
+     * Windows Git Bash is found.  False after a setup step was skipped.
+     */
+    private boolean canRunCommands() {
+        return dockerOk_ && isDockerBinaryValid()
+                && Files.isExecutable(PhotosUtils.scriptPath())
+                && (!Utils.ISWINDOWS || isBashBinaryValid());
     }
 
     private boolean isDockerBinaryValid() {
@@ -768,7 +823,11 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
         if (currentStep() == Step.WELCOME && !confirmWelcomeTerms()) {
             return;
         }
+        advance();
+    }
 
+    /** Moves on from the current step - by Next, or by Skip on a setup step. */
+    private void advance() {
         boolean isLast = stepIndex_ == ALL_STEPS.length - 1;
         if (isLast) {
             doAddSite();
@@ -820,6 +879,8 @@ public class WizardPanel extends DDPanel implements DockerStatus.Listener {
 
     private void returnToStartMenu(Site selectSite) {
         TypedHashMap params = new TypedHashMap();
+        // The user has just been through the wizard; any step still unfinished was skipped on purpose
+        params.setBoolean(PhotosBasePhase.PARAM_SKIP_SETUP_CHECK, true);
         if (selectSite != null) {
             params.setObject(PhotosBasePhase.PARAM_SELECT_SITE, selectSite);
         }
