@@ -27,8 +27,9 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 * In @code/photos/src/main/java/com/donohoedigital/ddphotos/WizardPanel.java we disallow moving forward if Docker
   isn't running, but the use case may be that the user just wants to edit an albums.yaml file - maybe the docker-based
   commands are run elsewhere.  Consider adding a 'Skip' button to the docker-ready and install-ddphotos script
-  steps?  Another issue is that if the `ddphotos` script disappears we re-launch the wizard so they can install it.
-  We'd need a dialog that confirms re-running the wizard and an option to not show that warning again.
+  steps?  Another issue is that if the `ddphotos` script disappears (or is never installed) we re-launch 
+  the wizard so they can install it. We'd need a dialog that confirms re-running the wizard and an option to 
+  not show that dialog again (otherwise it gets cumbersome to skip/skip over and over again.)
 
 * **Video previews in the app** - videos (`.mov`, `.mp4`, `.m4v`) are now captionable, reorderable and
   selectable as an album cover, but they show a `video-off` placeholder rather than a real thumbnail. This is

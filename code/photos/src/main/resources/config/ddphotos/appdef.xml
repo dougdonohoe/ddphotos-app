@@ -323,6 +323,29 @@
         </paramlist>
     </phase>
 
+    <!-- Offered at startup when Docker or the ddphotos script is missing but sites exist.  Once
+         hidden, it answers "no" (open the editor), not the default "yes" (run the wizard). -->
+    <phase name="SetupIncompleteConfirm" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
+        <param name="style" strvalue="DisplayMessage"/>
+        <param name="dialog-style" strvalue="DisplayMessage"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.setupIncomplete"/>
+        <param name="dialog-minwidth" intvalue="450"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-help-name" strvalue="empty"/>
+        <param name="dialog-window-close-activates-button" strvalue="no"/>
+        <param name="default-button" strvalue="yes"/>
+        <param name="default-no-show-button" strvalue="no"/>
+        <param name="dialog-no-show-option" boolvalue="true"/>
+        <param name="dialog-no-show-key" strvalue="setup.incomplete.wizard"/>
+        <param name="dialog-no-show-checkbox-name" strvalue="noshowsetupcheck"/>
+        <paramlist name="buttons">
+            <strvalue>yes</strvalue>
+            <strvalue>no</strvalue>
+        </paramlist>
+    </phase>
+
     <phase name="TourWelcome" class="com.donohoedigital.app.engine.DisplayMessage" transient="true">
         <param name="style" strvalue="DisplayMessage"/>
         <param name="dialog-style" strvalue="DisplayMessage"/>

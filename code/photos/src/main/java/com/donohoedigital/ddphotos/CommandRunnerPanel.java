@@ -5,10 +5,12 @@ import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.runner.CommandRunner;
+import com.donohoedigital.ddphotos.runner.DdphotosRunner;
 import com.donohoedigital.ddphotos.runner.Prerequisite;
 import com.donohoedigital.gui.DDTabbedPane;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -171,6 +173,15 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
             EngineUtils.displayWarningDialog(context_,
                     PropertyConfig.getMessage("msg.docker.required", runner_.getDisplayName()),
                     "msg.windowtitle.dockerRequired", null);
+            notifyAborted();
+            return;
+        }
+
+        // The wizard's script step can be skipped, and the script can be deleted after setup
+        if (runner_ instanceof DdphotosRunner && !Files.isExecutable(PhotosUtils.scriptPath())) {
+            EngineUtils.displayWarningDialog(context_,
+                    PropertyConfig.getMessage("msg.script.required", runner_.getDisplayName()),
+                    "msg.windowtitle.scriptRequired", null);
             notifyAborted();
             return;
         }

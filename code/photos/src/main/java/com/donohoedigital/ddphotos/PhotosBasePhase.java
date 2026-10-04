@@ -50,6 +50,13 @@ public class PhotosBasePhase extends BasePhase {
     public static final String PARAM_RERUN_WIZARD = "rerun-wizard";
     public static final String PARAM_NEW_SITE     = "new-site";
     public static final String PARAM_SELECT_SITE  = "select-site";
+    /** Opens the wizard to finish a setup the user was told is incomplete - see offerSetupWizard. */
+    public static final String PARAM_REPAIR_WIZARD = "repair-wizard";
+    /** Opens the editor without checking setup, because the user has just left the wizard. */
+    public static final String PARAM_SKIP_SETUP_CHECK = "skip-setup-check";
+
+    /** "do not show again" key for the incomplete-setup prompt; matches SetupIncompleteConfirm in appdef.xml. */
+    private static final String NO_SHOW_SETUP_INCOMPLETE = "setup.incomplete.wizard";
 
     public static final String HELP_STYLE = "PhotosHelp";
 
@@ -128,10 +135,15 @@ public class PhotosBasePhase extends BasePhase {
             // File -> New Site: everything the setup steps check has already been checked, so the
             // wizard opens on the step that creates the site folder.
             buildWizardUI(WizardPanel.Mode.NEW_SITE);
-        } else if (rerun || sitesFile_.getSites().isEmpty() || setupIncomplete()) {
-            buildWizardUI(rerun ? WizardPanel.Mode.RERUN : WizardPanel.Mode.FIRST_RUN);
+        } else if (rerun) {
+            buildWizardUI(WizardPanel.Mode.RERUN);
+        } else if (sitesFile_.getSites().isEmpty() || phase_.getBoolean(PARAM_REPAIR_WIZARD, false)) {
+            buildWizardUI(WizardPanel.Mode.FIRST_RUN);
         } else {
-            buildRegularUI((Site) phase_.getObject(PARAM_SELECT_SITE));
+            // With sites to edit, a missing piece of setup no longer forces the wizard: the user
+            // may only want to edit config files, or run the Docker commands elsewhere.
+            boolean offerSetup = !phase_.getBoolean(PARAM_SKIP_SETUP_CHECK, false) && setupIncomplete();
+            buildRegularUI((Site) phase_.getObject(PARAM_SELECT_SITE), offerSetup);
         }
     }
 
@@ -146,9 +158,38 @@ public class PhotosBasePhase extends BasePhase {
      * executable - that is what makes a cleared preference read as missing here.
      */
     private static boolean setupIncomplete() {
-        return !Files.isExecutable(PhotosUtils.scriptPath())
-                || !Files.isExecutable(Path.of(DockerStatus.dockerPath()))
-                || (Utils.ISWINDOWS && !Files.isExecutable(Path.of(BashSupport.bashPath())));
+        return !missingSetup().isEmpty();
+    }
+
+    /** Message keys naming each missing piece of setup (see {@link #setupIncomplete()}), in wizard order. */
+    private static List<String> missingSetup() {
+        List<String> missing = new ArrayList<>();
+        if (!Files.isExecutable(Path.of(DockerStatus.dockerPath()))) missing.add("msg.setup.incomplete.docker");
+        if (Utils.ISWINDOWS && !Files.isExecutable(Path.of(BashSupport.bashPath()))) missing.add("msg.setup.incomplete.bash");
+        if (!Files.isExecutable(PhotosUtils.scriptPath())) missing.add("msg.setup.incomplete.script");
+        return missing;
+    }
+
+    /**
+     * Asks whether to run the setup wizard to fill in what {@link #missingSetup()} reports.  True
+     * means yes.  Once the user ticks "don't ask again" and answers no, the dialog answers no on
+     * its own from then on; answering yes clears the tick, so it only ever remembers a no.
+     */
+    private boolean offerSetupWizard() {
+        String missing = null;
+        for (String key : missingSetup()) {
+            String item = PropertyConfig.getMessage(key).trim();
+            missing = missing == null ? item : PropertyConfig.getMessage("msg.setup.incomplete.and", missing, item);
+        }
+        if (missing == null) return false; // fixed since the editor opened
+
+        TypedHashMap params = new TypedHashMap();
+        params.setString(DisplayMessage.PARAM_MESSAGE, PropertyConfig.getMessage("msg.setup.incomplete", missing));
+        Phase confirm = context_.processPhaseNow("SetupIncompleteConfirm", params);
+        AppButton pressed = (AppButton) confirm.getResult();
+        boolean yes = pressed != null && "yes".equals(pressed.getName());
+        if (yes) DialogPhase.setDialogHidden(NO_SHOW_SETUP_INCOMPLETE, false);
+        return yes;
     }
 
     private void buildWizardUI(WizardPanel.Mode mode) {
@@ -173,7 +214,7 @@ public class PhotosBasePhase extends BasePhase {
         refreshMenus();
     }
 
-    private void buildRegularUI(Site selectSite) {
+    private void buildRegularUI(Site selectSite, boolean offerSetup) {
         // all set explicitly: finishing the wizard re-enters this phase, which may reuse the
         // instance (and its hidden logo strip, and the wizard it has just finished with) rather
         // than building a fresh one
@@ -254,8 +295,17 @@ public class PhotosBasePhase extends BasePhase {
 
         // Offer the new-user tour on every launch until it is completed or opted out of (the
         // Welcome dialog's no-show option suppresses it after that). Deferred so the frame is
-        // realized first, like the showHelp call above.
-        SwingUtilities.invokeLater(tourController_::start);
+        // realized first, like the showHelp call above.  Unfinished setup is offered first, and
+        // the tour only if the user stays in the editor.
+        SwingUtilities.invokeLater(() -> {
+            if (offerSetup && offerSetupWizard()) {
+                TypedHashMap params = new TypedHashMap();
+                params.setBoolean(PARAM_REPAIR_WIZARD, true);
+                context_.processPhaseNow("StartMenu", params);
+            } else {
+                tourController_.start();
+            }
+        });
 
         // Ask GitHub whether a newer DD Photos has been released.  Only from here: the wizard has
         // enough to say already, and the check runs off the EDT and stays quiet unless there is
