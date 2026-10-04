@@ -122,15 +122,21 @@ public class EngineWindow extends BaseFrame {
                     KeyEvent.VK_W, KeyEvent.META_DOWN_MASK);
         }
 
-        // debug dump action
-        GuiUtils.addKeyAction(base_, JComponent.WHEN_IN_FOCUSED_WINDOW,
-                "debug", new DumpAction(),
-                KeyEvent.VK_D, Utils.ISMAC ? KeyEvent.META_DOWN_MASK : KeyEvent.CTRL_DOWN_MASK);
+        // debug thread dump action
+        if (DebugConfig.isTestingOn()) {
+            GuiUtils.addKeyAction(base_, JComponent.WHEN_IN_FOCUSED_WINDOW,
+                    "debug", new DumpAction(),
+                    KeyEvent.VK_D, Utils.ISMAC ? KeyEvent.META_DOWN_MASK : KeyEvent.CTRL_DOWN_MASK);
+        }
 
-        // Help action
-        GuiUtils.addKeyAction(base_, JComponent.WHEN_IN_FOCUSED_WINDOW,
-                "help", new HelpAction(),
-                KeyEvent.VK_SLASH, Utils.ISMAC ? KeyEvent.META_DOWN_MASK : KeyEvent.CTRL_DOWN_MASK);
+        // ctrl-/ opens help on windows/linux.  The Help menu item carries the same accelerator,
+        // but only the main window has a menu bar there, so this covers the other windows.
+        // Mac version is the menu item's apple-/ alone: every window has its own menu bar copy.
+        if (!Utils.ISMAC) {
+            GuiUtils.addKeyAction(base_, JComponent.WHEN_IN_FOCUSED_WINDOW,
+                    "help", new HelpAction(),
+                    KeyEvent.VK_SLASH, KeyEvent.CTRL_DOWN_MASK);
+        }
 
         // the base_ is the content pane for the BaseApp frame_
         setContentPane(base_);

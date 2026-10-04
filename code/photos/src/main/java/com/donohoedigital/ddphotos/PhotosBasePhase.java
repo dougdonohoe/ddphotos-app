@@ -611,7 +611,9 @@ public class PhotosBasePhase extends BasePhase {
 
         menu.addSeparator();
 
+        // EngineWindow also binds Ctrl-/ off the Mac, for windows without this menu.
         DDMenuItem help = new DDMenuItem("help");
+        help.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, GuiUtils.MENU_SHORTCUT_MASK));
         help.addActionListener(_ -> PhotosMain.getBaseApp().showHelp());
         menu.add(help);
 
