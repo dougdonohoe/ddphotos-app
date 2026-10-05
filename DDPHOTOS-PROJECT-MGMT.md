@@ -8,8 +8,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
-  a settings menu to win/linux)?  Would want to show size of cache.  
 * Another possible thing in a Settings dialog could be image name used in install (currently we can override this
   via a debug setting, but someone with a forked ddphotos might want to use their own)
 * Undo support - Still open: reverting `albums.yaml` / `passwords.yaml` /
@@ -110,3 +108,22 @@ Two files in `.idea/` configure this project-wide (already committed):
 ```
 
 After cloning on a new machine, do **File > Invalidate Caches > Invalidate and Restart** to pick up the scope.
+
+## Thumbnail cache
+
+Create a File -> Thumbnail Cache... menu item after "Reset Hidden Dialogs" (in same group). 
+It brings up a dialog:
+
+----------------------------------------------------
+| The thumbnail cache is used ... (short explainer) 
+| Cache Size: []kb/mb/gb [Clear]
+| Location:   /path/to/cache [folder open icon]
+|          [ok]
+
+Where cache size is human-readable bytes/kilobytes/megabytes/etc.  We have a couple of places
+that do this - consolidate and make consistent.  
+ + formatSize in FileBrowserPanel
+ + formatFileSize in PhotoChooserDialog
+
+[Clear] button has confirmation dialog "Are you sure you want to clear the cache?  You'll
+recover (size).  Thumbs will be automatically recreated as needed."
