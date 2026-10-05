@@ -1,6 +1,7 @@
 package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.config.AppButton;
+import com.donohoedigital.base.Utils;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.gui.*;
 import org.apache.logging.log4j.LogManager;
@@ -565,15 +566,6 @@ public class PhotoChooserDialog extends PhotosDialog {
 
     private static String formatFileSize(Path path) {
         long bytes = path.toFile().length();
-        if (bytes <= 0) return "";
-        String[] units = {"bytes", "KB", "MB", "GB"};
-        double value = bytes;
-        int unit = 0;
-        while (value >= 1024 && unit < units.length - 1) {
-            value /= 1024;
-            unit++;
-        }
-        String amount = unit == 0 ? String.valueOf(bytes) : String.format("%.1f", value);
-        return PropertyConfig.getMessage("msg.photochooser.filesize", amount, units[unit]);
+        return bytes <= 0 ? "" : Utils.formatBytes(bytes);
     }
 }

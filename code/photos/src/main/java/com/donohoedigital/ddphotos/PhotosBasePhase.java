@@ -397,6 +397,10 @@ public class PhotosBasePhase extends BasePhase {
         resetHiddenDialogs.addActionListener(mainWindowAction(this::doResetHiddenDialogs));
         menu.add(resetHiddenDialogs);
 
+        DDMenuItem thumbCache = new DDMenuItem("thumbcache");
+        thumbCache.addActionListener(mainWindowAction(() -> ThumbnailCacheDialog.open(context_)));
+        menu.add(thumbCache);
+
         menu.addSeparator();
 
         // Mac has Quit item under main app menu; see BaseApp.setupMac

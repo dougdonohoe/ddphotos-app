@@ -22,23 +22,25 @@ import java.awt.Insets;
  *   <li>{@link #detail} - label anchored WEST, tighter insets, and the field spans columns
  *       1-2 when there is no trailing widget so it lines up with {@link #span} rows.</li>
  *   <li>{@link #dialog} - label anchored EAST, and the field always stops at column 1 so
- *       rows without a trailing widget stay aligned with the rows that have one.</li>
+ *       rows without a trailing widget stay aligned with the rows that have one.  Trailing
+ *       widgets are anchored WEST, so a small one (a folder button) sits beside its field even
+ *       when a wider one (a text button) sets the column's width.</li>
  * </ul>
  */
 final class GridBagForm {
 
     /** The bits that differ between a detail-panel row and a dialog row. */
     private record RowStyle(int labelAnchor, Insets label, Insets field,
-                            Insets fieldNoTrailing, Insets trailing,
+                            Insets fieldNoTrailing, Insets trailing, int trailingAnchor,
                             boolean spanFieldWhenNoTrailing) {}
 
     private static final RowStyle DETAIL = new RowStyle(GridBagConstraints.WEST,
             new Insets(3, 0, 3, 8), new Insets(3, 0, 3, 2),
-            new Insets(3, 0, 3, 0), new Insets(3, 0, 3, 0), true);
+            new Insets(3, 0, 3, 0), new Insets(3, 0, 3, 0), GridBagConstraints.CENTER, true);
 
     private static final RowStyle DIALOG = new RowStyle(GridBagConstraints.EAST,
             new Insets(4, 4, 4, 8), new Insets(4, 0, 4, 2),
-            new Insets(4, 0, 4, 2), new Insets(4, 2, 4, 4), false);
+            new Insets(4, 0, 4, 2), new Insets(4, 2, 4, 4), GridBagConstraints.WEST, false);
 
     private final JPanel panel_;
     private final String style_;
@@ -96,6 +98,7 @@ final class GridBagForm {
             GridBagConstraints bc = new GridBagConstraints();
             bc.gridx = 2; bc.gridy = row_;
             bc.insets = rowStyle_.trailing();
+            bc.anchor = rowStyle_.trailingAnchor();
             panel_.add(trailing, bc);
         }
         row_++;

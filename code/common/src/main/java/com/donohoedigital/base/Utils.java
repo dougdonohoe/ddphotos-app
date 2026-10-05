@@ -326,6 +326,25 @@ public class Utils
         return false;
     }
 
+    private static final String[] BYTE_UNITS = {"bytes", "KB", "MB", "GB", "TB"};
+
+    /**
+     * Formats a byte count for display using 1024-based units: "512 bytes", "1.5 MB".
+     * Counts of a kilobyte or more get one decimal place, formatted for the default locale.
+     */
+    public static String formatBytes(long bytes)
+    {
+        double value = bytes;
+        int unit = 0;
+        while (value >= 1024 && unit < BYTE_UNITS.length - 1)
+        {
+            value /= 1024;
+            unit++;
+        }
+        String amount = unit == 0 ? String.valueOf(bytes) : String.format("%.1f", value);
+        return amount + " " + BYTE_UNITS[unit];
+    }
+
     public static SimpleDateFormat getRFC822()
     {
         return new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US);

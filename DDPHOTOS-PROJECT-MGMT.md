@@ -8,8 +8,6 @@ cd code && mvn -pl common,gui,engine,photos compile -q
 
 ## TODO
 
-* Clear thumb cache menu item? Or "Thumb cache..." with a clear button. Or part of a Settings dialog (would need to add
-  a settings menu to win/linux)?  Would want to show size of cache.  
 * Another possible thing in a Settings dialog could be image name used in install (currently we can override this
   via a debug setting, but someone with a forked ddphotos might want to use their own)
 * Undo support - Still open: reverting `albums.yaml` / `passwords.yaml` /

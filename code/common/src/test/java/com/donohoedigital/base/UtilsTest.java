@@ -49,4 +49,17 @@ public class UtilsTest
         assertTrue(text.contains(message), text);
         assertTrue(text.contains("testFormatExceptionText"), "should include the stack trace: " + text);
     }
+
+    /** Expected values use String.format so the test passes whatever the default locale's decimal mark. */
+    @Test
+    public void testFormatBytes()
+    {
+        assertEquals("0 bytes", Utils.formatBytes(0));
+        assertEquals("1023 bytes", Utils.formatBytes(1023));
+        assertEquals(String.format("%.1f KB", 1.0), Utils.formatBytes(1024));
+        assertEquals(String.format("%.1f KB", 1.5), Utils.formatBytes(1536));
+        assertEquals(String.format("%.1f MB", 1.0), Utils.formatBytes(1024L * 1024));
+        assertEquals(String.format("%.1f GB", 2.5), Utils.formatBytes(1024L * 1024 * 1024 * 5 / 2));
+        assertEquals(String.format("%.1f TB", 2048.0), Utils.formatBytes(1024L * 1024 * 1024 * 1024 * 2048));
+    }
 }
