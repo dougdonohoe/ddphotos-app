@@ -108,22 +108,3 @@ Two files in `.idea/` configure this project-wide (already committed):
 ```
 
 After cloning on a new machine, do **File > Invalidate Caches > Invalidate and Restart** to pick up the scope.
-
-## Thumbnail cache
-
-Create a File -> Thumbnail Cache... menu item after "Reset Hidden Dialogs" (in same group). 
-It brings up a dialog:
-
-----------------------------------------------------
-| The thumbnail cache is used ... (short explainer) 
-| Cache Size: []kb/mb/gb [Clear]
-| Location:   /path/to/cache [folder open icon]
-|          [ok]
-
-Where cache size is human-readable bytes/kilobytes/megabytes/etc.  We have a couple of places
-that do this - consolidate and make consistent.  
- + formatSize in FileBrowserPanel
- + formatFileSize in PhotoChooserDialog
-
-[Clear] button has confirmation dialog "Are you sure you want to clear the cache?  You'll
-recover (size).  Thumbs will be automatically recreated as needed."

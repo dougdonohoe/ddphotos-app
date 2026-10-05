@@ -36,8 +36,12 @@ public final class Thumbs {
 
     private static final Logger logger = LogManager.getLogger(Thumbs.class);
 
-    /** Disk cache directory for generated thumbnails. */
-    private static final Path THUMB_CACHE_DIR = AppConfigUtils.getCacheDir().toPath().resolve("thumbs");
+    // Disk cache directory for generated thumbnails.  Holder idiom: resolved on first use rather
+    // than when Thumbs loads, so tests can exercise the directory-based cache helpers without the
+    // app config being initialized.
+    private static final class CacheDir {
+        static final Path PATH = AppConfigUtils.getCacheDir().toPath().resolve("thumbs");
+    }
 
     // Shared, capped pool for all asynchronous thumbnail decoding (see loadAsync).  A small, fixed
     // size bounds the memory burst from concurrent full-resolution decodes and keeps thumbnail work
@@ -156,6 +160,54 @@ public final class Thumbs {
         return thumb;
     }
 
+    /** The thumbnail cache directory.  It may not exist yet if no thumbnail has been written. */
+    public static Path cacheDir() {
+        return CacheDir.PATH;
+    }
+
+    /** Total size in bytes of the cached thumbnails; 0 when the cache is empty or missing. */
+    public static long cacheSize() {
+        return cacheSize(CacheDir.PATH);
+    }
+
+    /**
+     * Deletes every cached thumbnail, leaving the directory in place, and returns the bytes freed.
+     * Thumbnails are regenerated on demand by {@link #load}.  A loader that writes an entry
+     * mid-clear just leaves a fresh, valid entry behind.
+     */
+    public static long clearCache() {
+        return clearCache(CacheDir.PATH);
+    }
+
+    static long cacheSize(Path dir) {
+        if (!Files.isDirectory(dir)) return 0;
+        try (var stream = Files.list(dir)) {
+            return stream.filter(Files::isRegularFile).mapToLong(p -> p.toFile().length()).sum();
+        } catch (IOException e) {
+            logger.warn("Failed to measure thumbnail cache: {}", dir);
+            return 0;
+        }
+    }
+
+    static long clearCache(Path dir) {
+        if (!Files.isDirectory(dir)) return 0;
+        long freed = 0;
+        try (var stream = Files.list(dir)) {
+            for (Path p : (Iterable<Path>) stream.filter(Files::isRegularFile)::iterator) {
+                long size = p.toFile().length();
+                try {
+                    if (Files.deleteIfExists(p)) freed += size;
+                } catch (IOException e) {
+                    logger.warn("Failed to delete thumbnail cache entry: {}", p);
+                }
+            }
+        } catch (IOException e) {
+            logger.warn("Failed to clear thumbnail cache: {}", dir);
+        }
+        logger.info("Cleared thumbnail cache: recovered {} in {}", Utils.formatBytes(freed), dir);
+        return freed;
+    }
+
     private static BufferedImage scaled(BufferedImage src, int maxWidth, int maxHeight, String crop) {
         int iw = src.getWidth();
         int ih = src.getHeight();
@@ -196,7 +248,7 @@ public final class Thumbs {
         try {
             String prefix = cacheKeyPrefix(path, maxWidth, maxHeight);
             String suffix = cacheKeySuffix(crop);
-            try (var stream = Files.list(THUMB_CACHE_DIR)) {
+            try (var stream = Files.list(CacheDir.PATH)) {
                 stream.filter(p -> {
                     String name = p.getFileName().toString();
                     return name.startsWith(prefix) && name.endsWith(suffix) && !p.equals(keep);
@@ -213,7 +265,7 @@ public final class Thumbs {
     private static Path cachePathFor(Path path, int maxWidth, int maxHeight, String crop) {
         try {
             long mtime = path.toFile().lastModified();
-            return THUMB_CACHE_DIR.resolve(cacheKeyPrefix(path, maxWidth, maxHeight) + mtime + cacheKeySuffix(crop));
+            return CacheDir.PATH.resolve(cacheKeyPrefix(path, maxWidth, maxHeight) + mtime + cacheKeySuffix(crop));
         } catch (Exception e) {
             return null;
         }

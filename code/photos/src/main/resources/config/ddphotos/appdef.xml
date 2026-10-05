@@ -126,6 +126,22 @@
         </paramlist>
     </phase>
 
+    <!-- dialog-maxwidth is off (0) because the dialog sizes itself to fit the cache path,
+         which can be wider than the 750 default. -->
+    <phase name="ThumbnailCacheDialog" class="com.donohoedigital.ddphotos.ThumbnailCacheDialog" transient="true">
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-maxwidth" intvalue="0"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.ThumbnailCacheDialog"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="okay"/>
+        <param name="default-button" strvalue="okay"/>
+        <paramlist name="buttons">
+            <strvalue>okay</strvalue>
+        </paramlist>
+    </phase>
+
     <phase name="BaseDialog" class="com.donohoedigital.ddphotos.BaseDialog" transient="true">
         <param name="style" strvalue="OptionsDialog"/>
         <param name="dialog-background-image" strvalue="dialog-background"/>
