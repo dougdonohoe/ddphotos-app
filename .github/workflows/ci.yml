@@ -1,4 +1,4 @@
-name: DD Photos CI
+name: DD Photos App CI
 
 on:
   push:
