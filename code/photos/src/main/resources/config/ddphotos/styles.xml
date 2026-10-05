@@ -367,6 +367,7 @@
 	<color name="DisplayMessage.button.fg" default="true"/>
 	<color name="DisplayMessage.button.bg" default="true"/>
 	 <font name="DisplayMessage.button" fontname="SansSerif" pointsize="16"/>
+	<color name="DisplayMessage.scrollpane.bg" default="true"/>
 	<!-- DisplayMessage -->
 
 	<!-- SITE BAR -->
