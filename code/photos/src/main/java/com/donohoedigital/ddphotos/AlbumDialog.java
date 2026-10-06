@@ -9,12 +9,15 @@ import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SyncEntry;
 import com.donohoedigital.ddphotos.sync.SyncAlbumInfo;
 import com.donohoedigital.ddphotos.sync.SyncProvider;
+import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.gui.DDButton;
+import com.donohoedigital.gui.DDHtmlArea;
 import com.donohoedigital.gui.DDLabel;
 import com.donohoedigital.gui.DDTextField;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import java.awt.Component;
@@ -23,10 +26,14 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Adds an album.  A <b>Local</b> album gets a slug and a name, and its source folder is picked
- * afterward in the detail panel.  A <b>Sync</b> album gets a slug and an upstream album id,
- * usually picked with <b>Choose...</b>; it has no name, source or base in {@code albums.yaml},
- * because photogen supplies all three.
+ * Adds an album.  A <b>Local</b> album gets a base, a source folder, a slug and a name; its base
+ * and source follow the same rules as in the detail panel (see {@link AlbumSourceFields}).  A
+ * <b>Sync</b> album gets a slug and an upstream album id, usually picked with <b>Choose...</b>; it
+ * has no name, source or base in {@code albums.yaml}, because photogen supplies all three.
+ *
+ * <p>Picking a folder suggests a slug and a name from the folder's name; picking an upstream
+ * album suggests a slug from the album's name.  A later pick replaces a suggestion, but never
+ * text the user typed.  A new local album starts under the site's first base, if it has one.
  *
  * <p>When the album was picked with Choose..., its upstream name and description are written to
  * a stub {@code metadata.yaml} in the album's sync folder, so the app can show them before
@@ -39,6 +46,10 @@ public class AlbumDialog extends PhotosDialog
     public static final String PARAM_SITE = "site";
 
     private static final int PREFERRED_WIDTH = 650;
+    /** The source field's starting width; the form stretches it to fill the row. */
+    private static final int SOURCE_TEXT_WIDTH = 300;
+    /** The form panel's left and right border, which the warning area has to fit inside. */
+    private static final int FORM_SIDE_BORDERS = 16;
 
     private Site site_;
     private AlbumsFile af_;
@@ -49,11 +60,15 @@ public class AlbumDialog extends PhotosDialog
     private int instructionsHeight_;
 
     private DDTextField slugField_;
+    private Suggestion slugSuggestion_;
     private SourceTypeRow sourceType_;
 
     // Local
+    private AlbumSourceFields localSource_;
+    private DDHtmlArea warningArea_;
     private DDLabel nameLabel_;
     private DDTextField nameField_;
+    private Suggestion nameSuggestion_;
 
     // Sync
     private DDLabel albumIdLabel_;
@@ -84,6 +99,7 @@ public class AlbumDialog extends PhotosDialog
             if (af_ == null) return true;
             return af_.getAlbums().stream().noneMatch(a -> text.equalsIgnoreCase(a.getSlug()));
         });
+        slugSuggestion_ = new Suggestion(slugField_);
 
         sourceType_ = new SourceTypeRow(STYLE);
         sourceType_.getCredentialsButton().addActionListener(_ -> {
@@ -92,10 +108,25 @@ public class AlbumDialog extends PhotosDialog
         });
         sourceType_.addChangeListener(this::modeChanged);
 
+        localSource_ = new AlbumSourceFields(STYLE, new TypedHashMap(), SOURCE_TEXT_WIDTH,
+                                             () -> af_, () -> !sourceType_.isSync());
+        localSource_.rebuildBaseList();
+        localSource_.selectBase(localSource_.firstBase());
+        localSource_.getSource().getTextField().addValidationListener(this::folderChanged);
+        localSource_.addBaseListener(this::checkButtons);
+
+        warningArea_ = new DDHtmlArea("albumwarning", "OptionsError");
+        warningArea_.setEditable(false);
+        warningArea_.setDisplayOnly(true);
+        warningArea_.setOpaque(false);
+        warningArea_.setVisible(false);
+        warningArea_.setBorder(BorderFactory.createEmptyBorder(0, 4, 4, 4));
+
         nameLabel_ = new DDLabel("albumname", STYLE);
         nameField_ = new DDTextField("albumname", STYLE);
         nameField_.setRegExp(PhotosConstants.REGEXP_REQUIRED);
         nameField_.setTextLengthLimit(PhotosConstants.MAX_TEXT_LENGTH);
+        nameSuggestion_ = new Suggestion(nameField_);
 
         albumIdLabel_ = new DDLabel("syncalbumid", STYLE);
         albumIdField_ = new DDTextField("syncalbumid", STYLE);
@@ -111,11 +142,15 @@ public class AlbumDialog extends PhotosDialog
         syncDescLabel_ = new DDLabel("syncalbumdescription", STYLE);
         syncDescField_ = displayOnlyField("syncalbumdescription");
 
-        // Source type first: it decides the other rows, and in Sync mode choosing the album
-        // suggests a slug.  showModeRows() hides the rows the other mode uses.
+        // Source type first: it decides the other rows.  Then where the photos come from, which
+        // suggests a slug.  showModeRows() hides the rows the other mode uses.  The source field
+        // brings its own label; adding it to the form's label column moves it out of the field.
         GridBagForm form = GridBagForm.dialog(STYLE)
                 .row("sourcetype", sourceType_, null)
                 .row(albumIdLabel_, albumIdField_, chooseBtn_)
+                .row(localSource_.getBaseLabel(), localSource_.getBaseCombo(), null)
+                .row(localSource_.getSource().getLabelComponent(), localSource_.getSource(), null)
+                .span(warningArea_)
                 .row("albumslug", slugField_, null)
                 .row(nameLabel_, nameField_, null)
                 .row(syncNameLabel_, syncNameField_, null)
@@ -141,7 +176,7 @@ public class AlbumDialog extends PhotosDialog
     @Override
     protected Component getFocusComponent()
     {
-        return slugField_;
+        return sourceType_.isSync() ? slugField_ : localSource_.getSource().getTextField();
     }
 
     @Override
@@ -163,10 +198,36 @@ public class AlbumDialog extends PhotosDialog
         showModeRows();
         // The album id's validity depends on the provider.
         albumIdField_.setCustomValidator(this::isAlbumIdValid);
+        localSource_.getSource().revalidateData();
         checkButtons();
-        // A DialogPhase lives in an InternalDialog inside the app frame, so it is packed through
-        // getDialog() - the Window ancestor would be the app frame itself.
-        if (getDialog() != null) getDialog().pack();
+    }
+
+    /** Shows the rows the selected source type uses and hides the rest. */
+    private void showModeRows()
+    {
+        boolean sync = sourceType_.isSync();
+        for (JComponent c : List.of(nameLabel_, nameField_, localSource_.getBaseLabel(), localSource_.getBaseCombo(),
+                                    localSource_.getSource().getLabelComponent(), localSource_.getSource())) {
+            c.setVisible(!sync);
+        }
+        for (JComponent c : List.of(albumIdLabel_, albumIdField_, chooseBtn_,
+                                    syncNameLabel_, syncNameField_, syncDescLabel_, syncDescField_)) {
+            c.setVisible(sync);
+        }
+        chooseBtn_.setEnabled(sourceType_.getProvider() != null);
+        updateWarnings();
+        fitToRows();
+    }
+
+    /** Shows what is wrong with a local album's source, as the detail panel does. */
+    private void updateWarnings()
+    {
+        int width = width_ - FORM_SIDE_BORDERS;
+        if (sourceType_.isSync()) {
+            EditableDetailPanel.applyWarnings(warningArea_, List.of(), width);
+        } else {
+            EditableDetailPanel.applyStatuses(warningArea_, List.of(localSource_.evaluate()), width);
+        }
     }
 
     /**
@@ -174,17 +235,15 @@ public class AlbumDialog extends PhotosDialog
      * wrapper's height was fixed when it was built, so it is re-fitted to the rows now showing;
      * otherwise the leftover space opens up as gaps above and below the form.
      */
-    private void showModeRows()
+    private void fitToRows()
     {
-        boolean sync = sourceType_.isSync();
-        for (JComponent c : List.of(nameLabel_, nameField_)) c.setVisible(!sync);
-        for (JComponent c : List.of(albumIdLabel_, albumIdField_, chooseBtn_,
-                                    syncNameLabel_, syncNameField_, syncDescLabel_, syncDescField_)) {
-            c.setVisible(sync);
-        }
-        chooseBtn_.setEnabled(sourceType_.getProvider() != null);
-        wrapper_.setPreferredSize(new Dimension(width_, instructionsHeight_ + form_.getPreferredSize().height));
+        Dimension size = new Dimension(width_, instructionsHeight_ + form_.getPreferredSize().height);
+        if (size.equals(wrapper_.getPreferredSize())) return;
+        wrapper_.setPreferredSize(size);
         wrapper_.revalidate();
+        // A DialogPhase lives in an InternalDialog inside the app frame, so it is packed through
+        // getDialog() - the Window ancestor would be the app frame itself.
+        if (getDialog() != null) getDialog().pack();
     }
 
     // -------------------------------------------------------------------------
@@ -220,16 +279,56 @@ public class AlbumDialog extends PhotosDialog
         albumIdField_.setText(info.id());
         syncNameField_.setText(info.name() == null ? "" : info.name());
         syncDescField_.setText(info.description() == null ? "" : info.description().strip());
-        // Name the album after the upstream one if the user has not typed a slug yet.
-        if (slugField_.getText().isBlank()) slugField_.setText(suggestSlug(info.name()));
+        slugSuggestion_.offer(slugFrom(info.name()));
         checkButtons();
     }
 
-    /** A slug from an album name ({@link PhotosUtils#slugify}), cut to the maximum slug length. */
-    static String suggestSlug(String name)
+    /** Names the album, and its slug, after the source folder. */
+    private void folderChanged()
     {
-        String slug = PhotosUtils.slugify(name);
-        return slug.length() > PhotosConstants.MAX_SLUG_LENGTH ? slug.substring(0, PhotosConstants.MAX_SLUG_LENGTH) : slug;
+        String folder = localSource_.folderName();
+        if (folder == null) return;
+        slugSuggestion_.offer(slugFrom(folder));
+        nameSuggestion_.offer(truncate(folder.strip(), PhotosConstants.MAX_TEXT_LENGTH));
+    }
+
+    /** A slug from an album name ({@link PhotosUtils#slugify}), cut to the maximum slug length. */
+    static String slugFrom(String name)
+    {
+        return truncate(PhotosUtils.slugify(name), PhotosConstants.MAX_SLUG_LENGTH);
+    }
+
+    private static String truncate(String s, int max)
+    {
+        return s.length() > max ? s.substring(0, max) : s;
+    }
+
+    /**
+     * A field the dialog fills in from a pick.  It takes a suggestion while it is blank or still
+     * holds the previous one, so a later pick replaces a suggestion but never text the user typed.
+     */
+    private static final class Suggestion
+    {
+        private final DDTextField field_;
+        /** What was last filled in; null once the user types over it. */
+        private String suggested_;
+
+        Suggestion(DDTextField field)
+        {
+            field_ = field;
+            field.addValidationListener(() -> {
+                if (!field_.getText().trim().equals(suggested_)) suggested_ = null;
+            });
+        }
+
+        void offer(String value)
+        {
+            if (value == null || value.isBlank()) return;
+            String current = field_.getText().trim();
+            if (!current.isEmpty() && !current.equals(suggested_)) return;
+            suggested_ = value;
+            if (!value.equals(current)) field_.setText(value);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -239,9 +338,15 @@ public class AlbumDialog extends PhotosDialog
     @Override
     protected void checkButtons()
     {
-        if (okayButton_ == null || sourceType_ == null) return;
+        if (sourceType_ == null || wrapper_ == null) return;
+        if (!sourceType_.isSync()) {
+            updateWarnings();
+            fitToRows();
+        }
+        if (okayButton_ == null) return;
         boolean valid = slugField_.isValidData()
-                && (sourceType_.isSync() ? albumIdField_.isValidData() : nameField_.isValidData());
+                && (sourceType_.isSync() ? albumIdField_.isValidData()
+                                         : nameField_.isValidData() && localSource_.isValid());
         okayButton_.setEnabled(valid);
     }
 
@@ -260,7 +365,8 @@ public class AlbumDialog extends PhotosDialog
             entry.setSync(new SyncEntry(sourceType_.getProviderId(), albumIdField_.getText().strip(), true));
         } else {
             entry.setName(nameField_.getText().trim());
-            entry.setSource(PropertyConfig.getMessage("msg.addalbum.source.placeholder"));
+            entry.setBase(localSource_.selectedBase());
+            entry.setSource(localSource_.sourceText());
         }
 
         try {
