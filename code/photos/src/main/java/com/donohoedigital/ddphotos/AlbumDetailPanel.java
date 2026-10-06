@@ -3,7 +3,6 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.TypedHashMap;
-import com.donohoedigital.config.DataElement;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumEntry;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
@@ -32,12 +31,9 @@ import java.awt.Insets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.prefs.Preferences;
 
 /**
  * Edits one album.  An album is either <b>Local</b> (photos from {@code source}, optionally under
@@ -56,7 +52,6 @@ import java.util.prefs.Preferences;
  */
 public class AlbumDetailPanel extends EditableDetailPanel {
     private static final Logger logger = LogManager.getLogger(AlbumDetailPanel.class);
-    private static final String PREF_BROWSE_LAST_DIR = "browsesource.lastdir";
     public static final int PREFERRED_TEXT_WIDTH = 350;
     public static final int PREFERRED_SHORT_TEXT_WIDTH = 350;
     /** Slugs are short, and the row has to leave room for the password controls. */
@@ -67,18 +62,14 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private static final String SAMPLE_ALBUM_ID = "dddddddd-dddd-dddd-dddd-dddddddddddd";
 
     private final AlbumsListPanel albumsList_;
-    private final Preferences prefs_ = PhotosConstants.getAppPreferences();
     private final TypedHashMap dummy_ = new TypedHashMap();
 
     private AlbumEntry currentEntry_;
     private AlbumEntry originalEntry_;
     private boolean populating_;
 
-    // Base combo — backed by mutable lists so resetValues() picks up site changes
-    private final List<String> baseKeys_ = new ArrayList<>();
-    private final List<String> baseDisplays_ = new ArrayList<>();
-    private final DataElement<String> baseElement_;
-    private DDComboBox<String> baseCombo_;
+    /** Base and Source, shared with the New Album dialog; baseCombo_ and source_ are its fields. */
+    private AlbumSourceFields localSource_;
 
     // Fields
     private OptionText slug_;
@@ -138,7 +129,6 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     public AlbumDetailPanel(AlbumsListPanel albumsList) {
         super("editdetails.album");
         albumsList_ = albumsList;
-        baseElement_ = createBaseElement("albumbase", baseKeys_, baseDisplays_);
         buildUI();
         albumsList_.addSelectionListener(this::loadAlbum);
         loadAlbum(albumsList_.getSelectedAlbum());
@@ -315,45 +305,17 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         DDLabelBorder panel = gridSection("albumsource");
         sourceSection_ = panel;
 
-        DDLabel baseLabel = new DDLabel("albumbase", STYLE);
-
-        // Both validators delegate to the same evaluation that updateWarnings() uses, so the
-        // field's red state and the warning message can never disagree.
-        Predicate<String> sourceValidator = _ -> isSourceValid();
-        Predicate<String> coverValidator  = _ -> evalCover().isValid();
-
-        baseCombo_ = editable(createBaseCombo(baseElement_));
-        baseCombo_.addActionListener(_ -> {
-            // Check again now that the base (and thus resolution) changed.
-            source_.revalidateData();
+        // The source's validator and updateWarnings() share one evaluation, so the field's red
+        // state and the warning message can never disagree.  Likewise for the cover.
+        localSource_ = new AlbumSourceFields(STYLE, dummy_, PREFERRED_TEXT_WIDTH,
+                                             this::currentAlbumsFile, () -> !isSyncMode());
+        DDLabel baseLabel = localSource_.getBaseLabel();
+        DDComboBox<String> baseCombo = editable(localSource_.getBaseCombo());
+        source_ = editable(localSource_.getSource());
+        localSource_.addBaseListener(() -> {
+            // The cover resolves against the source, which resolves against the base.
             cover_.revalidateData();
             checkButtons();
-        });
-
-        source_ = editable(new OptionFileChooser(null, "albumsourcepath", STYLE, dummy_,
-                PhotosConstants.MAX_PATH_LENGTH, PREFERRED_TEXT_WIDTH, null));
-        source_.getTextField().setRegExp(PhotosConstants.REGEXP_OPTIONAL);
-        source_.setDirectoryMode(true);
-        source_.setChooserTitle(PropertyConfig.getMessage("msg.filechooser.title.source"));
-        source_.setStartDirSupplier(() -> {
-            Path baseAbsPath = resolveBasePath();
-            return baseAbsPath != null
-                    ? baseAbsPath.toString()
-                    : prefs_.get(PREF_BROWSE_LAST_DIR, System.getProperty("user.home"));
-        });
-        source_.setPickedPathProcessor(chosen -> {
-            Path baseAbsPath = resolveBasePath();
-            if (baseAbsPath == null) {
-                prefs_.put(PREF_BROWSE_LAST_DIR, chosen);
-                return chosen;
-            }
-            try {
-                Path realBase = baseAbsPath.toRealPath();
-                Path realChosen = Path.of(chosen).toRealPath();
-                return realBase.relativize(realChosen).toString();
-            } catch (IOException | IllegalArgumentException ex) {
-                return chosen;
-            }
         });
 
         albumId_ = editable(new OptionText(null, "albumsyncid", STYLE, dummy_,
@@ -391,8 +353,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         PhotoChooser.install(cover_, albumsList_.getContext(), "msg.filechooser.title.cover",
                              this::resolveSourcePath, true);
 
-        source_.setCustomValidator(sourceValidator);
-        cover_.setCustomValidator(coverValidator);
+        cover_.setCustomValidator(_ -> evalCover().isValid());
         source_.getTextField().addValidationListener(cover_::revalidateData);
 
         notSyncedArea_ = new DDHtmlArea("albumnotsynced", STYLE);
@@ -418,7 +379,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         localRows_ = new JPanel(new GridBagLayout());
         localRows_.setOpaque(false);
         GridBagForm.detail(localRows_, STYLE)
-                .row(baseLabel, baseCombo_, null)
+                .row(baseLabel, baseCombo, null)
                 .span(source_);
 
         JPanel idRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -499,8 +460,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     }
 
     private void rebuildBaseList() {
-        populateBaseList(baseKeys_, baseDisplays_, currentAlbumsFile());
-        baseCombo_.resetValues();
+        localSource_.rebuildBaseList();
     }
 
     private void populate(AlbumEntry entry) {
@@ -516,7 +476,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         descOverride_.setSelected(!isBlank(entry.getDescription()));
         name_.getTextField().setText(sync != null && !nameOverride_.isSelected() ? nvl(metaName_, "") : nvl(entry.getName(), ""));
         description_.setText(sync != null && !descOverride_.isSelected() ? nvl(metaDesc_, "") : nvl(entry.getDescription(), ""));
-        baseCombo_.setSelectedItem(nvl(entry.getBase(), NONE_BASE));
+        localSource_.selectBase(entry.getBase());
         source_.setText(nvl(entry.getSource(), ""));
         cover_.setText(nvl(entry.getCover(), ""));
         recurse_.getCheckBox().setSelected(entry.isRecurse());
@@ -535,7 +495,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         descOverride_.setSelected(false);
         name_.getTextField().setText("");
         description_.setText("");
-        baseCombo_.setSelectedItem(NONE_BASE);
+        localSource_.selectBase(null);
         source_.setText("");
         cover_.setText("");
         recurse_.getCheckBox().setSelected(false);
@@ -561,14 +521,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         if (isSyncMode()) {
             return PathValidation.PathStatus.resolved(synced_ ? syncDir() : null);
         }
-        return PathValidation.evaluateUnderBase(source_.getText(), resolveBasePath(),
-                selectedBase() != null, false, "source");
-    }
-
-    /** A local album needs a source, which the field's regexp cannot require only sometimes. */
-    private boolean isSourceValid() {
-        if (isSyncMode()) return true;
-        return !source_.getText().isBlank() && evalSource().isValid();
+        return localSource_.evaluate();
     }
 
     /** Evaluates the cover against the resolved source directory. */
@@ -932,13 +885,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     // -------------------------------------------------------------------------
 
     private String selectedBase() {
-        return selectedBaseKey(baseCombo_);
-    }
-
-    private Path resolveBasePath() {
-        String base = selectedBase();
-        AlbumsFile af = currentAlbumsFile();
-        return (base != null && af != null) ? af.resolveBasePath(base) : null;
+        return localSource_.selectedBase();
     }
 
     /** The folder the album's photos are in: its source, or its sync folder once one exists. */
@@ -981,14 +928,15 @@ public class AlbumDetailPanel extends EditableDetailPanel {
 
         // Mid-edit, keep the pending base choice (None included) if it still exists; otherwise
         // show the saved base.  Same idea as SiteDetailsPanel.rebuildHeroBaseList().
-        String preserved = isEditing() ? nvl(selectedBase(), NONE_BASE) : null;
+        boolean editing = isEditing();
+        String preserved = selectedBase();
 
         rebuildBaseList();
 
-        if (preserved != null && baseKeys_.contains(preserved)) {
-            baseCombo_.setSelectedItem(preserved);
+        if (editing && localSource_.hasBase(preserved)) {
+            localSource_.selectBase(preserved);
         } else if (currentEntry_ != null) {
-            baseCombo_.setSelectedItem(nvl(currentEntry_.getBase(), NONE_BASE));
+            localSource_.selectBase(currentEntry_.getBase());
         }
 
         updateWarnings();
