@@ -93,9 +93,9 @@
 	<color name="Console.error"  r="180" g="50"  b="50"/>
 	<color name="Console.system" copy="green"/>
 	<color name="Console.link"   r="30"  g="100" b="220"/>
-	<color name="Console.searchMatch"   r="255" g="235" b="120"/>
-	<color name="Console.searchCurrent" r="255" g="160" b="40"/>
-	<color name="Console.searchBorder"  r="80"  g="80"  b="80"/>
+	<color name="Find.match"   r="255" g="235" b="120"/>
+	<color name="Find.current" r="255" g="160" b="40"/>
+	<color name="Find.border"  r="80"  g="80"  b="80"/>
 
 	 <font name="ConsoleBig.label" fontname="Monospaced" pointsize="18" bold="true"/>
 	<color name="ConsoleBig.label.fg" copy="primaryfont"/>
