@@ -13,12 +13,13 @@ import java.io.File;
 import java.util.Properties;
 
 /**
- * Standalone support window - shows version/log info and provides
+ * Standalone support window - shows version/log info (searchable with Cmd/Ctrl-F) and provides
  * buttons to copy it to the clipboard or open the folder containing it.
  */
 public class Support extends BasePhase {
     private LogoWindowPanel base_;
     private DDTextArea log_;
+    private TextFindSupport find_;
     private boolean bRunning_;
 
     /**
@@ -66,7 +67,8 @@ public class Support extends BasePhase {
 
         DDScrollPane scroll = new DDScrollPane(log_, STYLE, DDScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 DDScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        middlebase.add(scroll, BorderLayout.CENTER);
+        find_ = new TextFindSupport(log_, scroll, "Options");
+        middlebase.add(find_.getComponent(), BorderLayout.CENTER);
 
         DDPanel buttons = new DDPanel();
         buttons.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
@@ -135,6 +137,7 @@ public class Support extends BasePhase {
 
         log_.setText(data.toString());
         log_.setCaretPosition(0);
+        find_.clear();
     }
 
     /**

@@ -32,7 +32,8 @@ import java.util.Objects;
  * expected to be the next.
  *
  * <p>These files are for advanced users who already have an editor they like, so this is a plain
- * text box - no syntax coloring, no gutter - with undo/redo courtesy of {@link DDTextArea}.
+ * text box - no syntax coloring, no gutter - with undo/redo courtesy of {@link DDTextArea} and
+ * find (Cmd/Ctrl-F) courtesy of {@link TextFindSupport}.
  *
  * <p>One window per site per file type, keyed in {@link #OPEN}: {@link #open} focuses an existing
  * window rather than opening a duplicate.  Each window gets its own name so the engine remembers
@@ -204,7 +205,7 @@ public abstract class TextEditorPhase extends BasePhase {
         // DDScrollPane clears that border, so restore it here.
         scroll.setBorder(UIManager.getBorder("ScrollPane.border"));
         text_.setScrollPane(scroll);
-        center.add(scroll, BorderLayout.CENTER);
+        center.add(new TextFindSupport(text_, scroll, "Options").getComponent(), BorderLayout.CENTER);
 
         buttons_ = new EditorButtonBar(STYLE, this::onCancel, this::onSave, this::onSaveClose, this::onClose);
         center.add(buttons_, BorderLayout.SOUTH);

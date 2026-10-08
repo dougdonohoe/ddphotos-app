@@ -9,6 +9,7 @@ import com.donohoedigital.gui.DDPanel;
 import com.donohoedigital.gui.DDScrollPane;
 import com.donohoedigital.gui.DDTextArea;
 import com.donohoedigital.gui.OptionTextArea;
+import com.donohoedigital.gui.TextFindSupport;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -23,6 +24,7 @@ import java.awt.Dimension;
 /**
  * Edits the text of an {@link OptionTextArea} in a large, resizable dialog - the editor behind the
  * option's pencil button.  Save writes the text back to the option; Cancel leaves it alone.
+ * Cmd/Ctrl-F searches the text ({@link TextFindSupport}).
  */
 public class TextAreaDialog extends PhotosDialog
 {
@@ -84,7 +86,7 @@ public class TextAreaDialog extends PhotosDialog
         DDPanel main = new DDPanel();
         main.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         main.setPreferredSize(contentSize());
-        main.add(scroll, BorderLayout.CENTER);
+        main.add(new TextFindSupport(text_, scroll, "Options").getComponent(), BorderLayout.CENTER);
 
         saveBtn_ = getMatchingButton("save");
         return main;
