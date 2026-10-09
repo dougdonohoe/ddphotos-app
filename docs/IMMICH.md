@@ -60,7 +60,7 @@ See a live example at [ddphotos.donohoe.info↗](https://ddphotos.donohoe.info).
 ## How to set it up
 
 **1. Connect to Immich.** Enter your server address and an API key. The key only needs the
-`album.read`, `asset.read` and `asset.download` permissions. Press **Test** to check it works.
+`album.read`, `asset.read` and `asset.download` permissions. Press **Test** to check that it works.
 
 ![Immich credentials dialog](../images/immich/ddphotos-immich-creds.png)
 
