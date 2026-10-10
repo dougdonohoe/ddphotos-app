@@ -81,6 +81,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     private OptionTextArea description_;
     private DDCheckBox descOverride_;
     private DDLabel descHint_;
+    private OptionTextArea longDescription_;
     private DDLabelBorder sourceSection_;
     private JPanel localRows_;
     private JPanel syncRows_;
@@ -220,6 +221,11 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         descHint_ = hintIcon();
         descOverride_.addActionListener(_ -> overrideToggled(descOverride_));
         panel.add(overrideRow(description_, descOverride_, descHint_));
+
+        // Never synced, so no override box: it is always the albums.yaml value.
+        longDescription_ = editable(new OptionTextArea(null, "albumlongdescription", STYLE, null, dummy_,
+                PhotosConstants.MAX_LONG_DESCRIPTION_LENGTH, null, 6, 350));
+        panel.add(longDescription_);
 
         recurse_ = editable(new OptionBoolean(null, "albumrecurse", STYLE, dummy_));
         manualSort_ = editable(new OptionBoolean(null, "albummanualsort", STYLE, dummy_));
@@ -476,6 +482,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         descOverride_.setSelected(!isBlank(entry.getDescription()));
         name_.getTextField().setText(sync != null && !nameOverride_.isSelected() ? nvl(metaName_, "") : nvl(entry.getName(), ""));
         description_.setText(sync != null && !descOverride_.isSelected() ? nvl(metaDesc_, "") : nvl(entry.getDescription(), ""));
+        longDescription_.setText(nvl(entry.getLongDescriptionHtml(), ""));
         localSource_.selectBase(entry.getBase());
         source_.setText(nvl(entry.getSource(), ""));
         cover_.setText(nvl(entry.getCover(), ""));
@@ -495,6 +502,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         descOverride_.setSelected(false);
         name_.getTextField().setText("");
         description_.setText("");
+        longDescription_.setText("");
         localSource_.selectBase(null);
         source_.setText("");
         cover_.setText("");
@@ -718,6 +726,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         descOverride_.setEnabled(editing);
         name_.setDisplayOnly(!editing || (sync && !nameOverride_.isSelected()));
         description_.setDisplayOnly(!editing || (sync && !descOverride_.isSelected()));
+        longDescription_.setDisplayOnly(!editing);
         updateHint(nameHint_, nameOverride_, metaName_);
         updateHint(descHint_, descOverride_, metaDesc_);
 
@@ -840,6 +849,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         e.setCover(emptyToNull(cover_.getText().trim()));
         e.setRecurse(recurse_.getCheckBox().isSelected());
         e.setManualSortOrder(manualSort_.getCheckBox().isSelected());
+        e.setLongDescriptionHtml(emptyToNull(longDescription_.getText().trim()));
         if (isSyncMode()) {
             // Start from the saved block so a mock: sub-block (not editable here) is carried over.
             SyncEntry saved = currentEntry_ != null ? currentEntry_.getSync() : null;

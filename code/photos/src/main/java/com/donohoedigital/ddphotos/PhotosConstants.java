@@ -78,6 +78,9 @@ public class PhotosConstants {
     /** A multi-line description. */
     public static final int MAX_DESCRIPTION_LENGTH = 500;
 
+    /** An album's long description, HTML shown on the album page. */
+    public static final int MAX_LONG_DESCRIPTION_LENGTH = 10000;
+
     // Gap between horizontal GUI items
     public static final int HORIZONTAL_GAP = 25;
 

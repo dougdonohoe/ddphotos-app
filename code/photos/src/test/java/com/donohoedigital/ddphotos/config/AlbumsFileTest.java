@@ -453,6 +453,61 @@ public class AlbumsFileTest {
     }
 
     @Test
+    public void load_longDescription() throws Exception {
+        Path f = writeYaml("""
+                albums:
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+                    long_description_html: |
+                      <p>One.</p>
+                      <p>Two.</p>
+                """);
+        AlbumEntry a = AlbumsFile.load(f).getAlbums().getFirst();
+        assertEquals("<p>One.</p>\n<p>Two.</p>\n", a.getLongDescriptionHtml());
+        assertNull(a.getDescription(), "long description is its own field");
+    }
+
+    @Test
+    public void roundTrip_addLongDescription_afterDescriptionAsLiteralBlock() throws Exception {
+        AlbumsFile af = loadFixture("testdata/albums.yaml");
+        AlbumEntry a = af.getAlbums().getFirst();
+        assertNotNull(a.getDescription(), "precondition: first fixture album has a description");
+        a.setLongDescriptionHtml("<p>One.</p>\n<p>Two.</p>");
+
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
+        af.save(out);
+
+        String yaml = Files.readString(out, StandardCharsets.UTF_8);
+        int desc = yaml.indexOf("description: Photos from the 2004 expedition.");
+        int longDesc = yaml.indexOf("long_description_html: |-");
+        int base = yaml.indexOf("source: 2004-Antarctica");
+        assertTrue(desc >= 0 && longDesc > desc && base > longDesc,
+                "long_description_html should be a literal block right after description:\n" + yaml);
+
+        AlbumEntry reloaded = AlbumsFile.load(out).getAlbums().getFirst();
+        assertEquals("<p>One.</p>\n<p>Two.</p>", reloaded.getLongDescriptionHtml());
+    }
+
+    @Test
+    public void roundTrip_clearLongDescription() throws Exception {
+        Path f = writeYaml("""
+                albums:
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+                    long_description_html: <p>One.</p>
+                """);
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getAlbums().getFirst().setLongDescriptionHtml(null);
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
+        af.save(out);
+
+        assertFalse(Files.readString(out, StandardCharsets.UTF_8).contains("long_description_html"));
+        assertNull(AlbumsFile.load(out).getAlbums().getFirst().getLongDescriptionHtml());
+    }
+
+    @Test
     public void saveNewFile() throws Exception {
         AlbumsFile af = new AlbumsFile();
         af.getSettings().setId("mysite");
@@ -631,6 +686,7 @@ public class AlbumsFileTest {
                 cmp(errs, label, pfx + ".slug",        ae.getSlug(),        be.getSlug());
                 cmp(errs, label, pfx + ".name",        ae.getName(),        be.getName());
                 cmp(errs, label, pfx + ".description", ae.getDescription(), be.getDescription());
+                cmp(errs, label, pfx + ".longDescriptionHtml", ae.getLongDescriptionHtml(), be.getLongDescriptionHtml());
                 cmp(errs, label, pfx + ".base",        ae.getBase(),        be.getBase());
                 cmp(errs, label, pfx + ".source",      ae.getSource(),      be.getSource());
                 cmp(errs, label, pfx + ".cover",       ae.getCover(),       be.getCover());
