@@ -792,6 +792,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         currentEntry_.setSlug(updated.getSlug());
         currentEntry_.setName(updated.getName());
         currentEntry_.setDescription(updated.getDescription());
+        currentEntry_.setLongDescriptionHtml(updated.getLongDescriptionHtml());
         currentEntry_.setBase(updated.getBase());
         currentEntry_.setSource(updated.getSource());
         currentEntry_.setSync(updated.getSync());
