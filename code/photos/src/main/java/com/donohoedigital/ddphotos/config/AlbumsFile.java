@@ -9,6 +9,7 @@ import org.snakeyaml.engine.v2.api.lowlevel.Compose;
 import org.snakeyaml.engine.v2.comments.CommentLine;
 import org.snakeyaml.engine.v2.comments.CommentType;
 import org.snakeyaml.engine.v2.common.FlowStyle;
+import org.snakeyaml.engine.v2.common.ScalarStyle;
 import org.snakeyaml.engine.v2.exceptions.YamlEngineException;
 import org.snakeyaml.engine.v2.nodes.*;
 
@@ -680,6 +681,7 @@ public class AlbumsFile extends ConfigFile {
         a.setSlug(getString(n, "slug"));
         a.setName(getString(n, "name"));
         a.setDescription(getString(n, "description"));
+        a.setLongDescriptionHtml(getString(n, "long_description_html"));
         a.setBase(getString(n, "base"));
         a.setSource(getString(n, "source"));
         a.setCover(getString(n, "cover"));
@@ -812,12 +814,33 @@ public class AlbumsFile extends ConfigFile {
         setOptionalString(n, "slug", a.getSlug());
         setOptionalString(n, "name", a.getName());
         setOptionalString(n, "description", a.getDescription());
+        syncLongDescription(n, a.getLongDescriptionHtml());
         syncSyncEntry(n, a.getSync());
         setOptionalString(n, "base", a.getBase());
         setOptionalString(n, "source", a.getSource());
         setOptionalString(n, "cover", a.getCover());
         setBoolean(n, "manual_sort_order", a.isManualSortOrder());
         setBoolean(n, "recurse", a.isRecurse());
+    }
+
+    /**
+     * Writes an album's {@code long_description_html}.  An existing key is updated in place,
+     * keeping its scalar style; a new one goes straight after the album's name and description
+     * rather than at the end, and multi-line HTML is written as a literal block ({@code |}) so
+     * it stays readable instead of becoming one escaped double-quoted line.
+     */
+    private static void syncLongDescription(MappingNode album, String html) {
+        String key = "long_description_html";
+        if (isBlank(html) || findTupleIndex(album, key) >= 0) {
+            setOptionalString(album, key, html);
+            return;
+        }
+        int after = -1;
+        for (String k : List.of("slug", "name", "description")) {
+            after = Math.max(after, findTupleIndex(album, k));
+        }
+        ScalarStyle style = html.contains("\n") ? ScalarStyle.LITERAL : ScalarStyle.PLAIN;
+        album.getValue().add(after + 1, new NodeTuple(scalar(key), new ScalarNode(Tag.STR, html, style)));
     }
 
     /**

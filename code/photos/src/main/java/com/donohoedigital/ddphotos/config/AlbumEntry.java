@@ -6,6 +6,7 @@ public class AlbumEntry {
     private String slug;
     private String name;
     private String description;
+    private String longDescriptionHtml;
     private String base;
     private String source;
     private String cover;
@@ -19,6 +20,7 @@ public class AlbumEntry {
         this.slug          = other.slug;
         this.name          = other.name;
         this.description   = other.description;
+        this.longDescriptionHtml = other.longDescriptionHtml;
         this.base          = other.base;
         this.source        = other.source;
         this.cover         = other.cover;
@@ -35,6 +37,10 @@ public class AlbumEntry {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    /** HTML shown on the album page between the header and the photos; inline only, never synced. */
+    public String getLongDescriptionHtml() { return longDescriptionHtml; }
+    public void setLongDescriptionHtml(String longDescriptionHtml) { this.longDescriptionHtml = longDescriptionHtml; }
 
     public String getBase() { return base; }
     public void setBase(String base) { this.base = base; }
@@ -67,6 +73,7 @@ public class AlbumEntry {
             && Objects.equals(slug,        e.slug)
             && Objects.equals(name,        e.name)
             && Objects.equals(description, e.description)
+            && Objects.equals(longDescriptionHtml, e.longDescriptionHtml)
             && Objects.equals(base,        e.base)
             && Objects.equals(source,      e.source)
             && Objects.equals(cover,       e.cover)
@@ -75,6 +82,6 @@ public class AlbumEntry {
 
     @Override
     public int hashCode() {
-        return Objects.hash(slug, name, description, base, source, cover, manualSortOrder, recurse, sync);
+        return Objects.hash(slug, name, description, longDescriptionHtml, base, source, cover, manualSortOrder, recurse, sync);
     }
 }
