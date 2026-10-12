@@ -14,16 +14,15 @@ for a walkthrough with screenshots.
 
 ## About
 
-DD Photos is a desktop app for quickly and easily publishing your own beautiful photo/video albums, like our
-[sample site↗](https://ddphotos.donohoe.info).  A DD Photos site is wicked-fast,
-mobile friendly, and distraction free.  
+The DD Photos App is a desktop app for quickly and easily publishing your own beautiful photo/video albums, like our
+[sample site↗](https://ddphotos.donohoe.info).  A DD Photos site is wicked-fast, mobile friendly, and distraction free.  
 
 Publish for free via [Cloudflare Pages↗](https://pages.cloudflare.com) or [Surge↗](https://surge.sh).  More technical users can self-publish 
 via AWS S3 or `rsync`.
 
-The DD Photos app is a front end to the [ddphotos↗](https://github.com/dougdonohoe/ddphotos)
+The DD Photos App is a front end to the [ddphotos↗](https://github.com/dougdonohoe/ddphotos)
 open-source static photo album site generator. Rather than hand-editing complex configuration
-files, DD Photos provides a friendly interface for managing your site and album data.
+files, the app provides a friendly interface for managing your site and album data.
 You can also run all the major `ddphotos` commands to generate, test and deploy your site.
 
 ![screenshots.gif](images/screenshots.gif)
@@ -54,7 +53,7 @@ It's that simple.
 If you keep your photos in [Immich↗](https://immich.app), you can skip the export: an album
 can sync straight from it.
 
-With DD Photos, you define where your albums live in the **Config** tab, and
+With the DD Photos App, you define where your albums live in the **Config** tab, and
 can specify a name, description, and choose your cover photo.  Here, you also define
 details about your site, like name, description, optional HTML text and the
 hero image.  You can also set captions for your photos/videos, and site or album passwords.
@@ -94,13 +93,13 @@ We are grateful that they provided us an open source license.
 
 ### Required Software
 
-DD Photos uses the [ddphotos↗](https://github.com/dougdonohoe/ddphotos) command-line
+The DD Photos App uses the [ddphotos↗](https://github.com/dougdonohoe/ddphotos) command-line
 tool to generate, test, and deploy your site. That tool runs inside Docker, so you
 need a couple of things installed before DD Photos can do its work. The built-in
 Setup Wizard checks for these on first launch and links you to them, but you can
 install them ahead of time:
 
-- **[Docker↗](https://www.docker.com/get-started/)** (_all platforms_) — DD Photos runs
+- **[Docker↗](https://www.docker.com/get-started/)** (_all platforms_) — the DD Photos App runs
   every `ddphotos` command (`photogen`, `run`, `build`, `serve`, etc.) inside a Docker
   container, so Docker must be installed and running. On Mac and Windows, install
   **Docker Desktop**. On Linux, use the **Docker Desktop** or
@@ -112,7 +111,7 @@ install them ahead of time:
   which already have Bash. When installing, it is fine to accept all the default
   options.
 
-## TL;DR Running DD Photos From Source
+## TL;DR Running the DD Photos App from Source
 
 If you are an impatient developer and just want to run the DD Photos app from source without
 reading all the [developer documentation](README-DEV.md), follow these steps:
@@ -130,7 +129,7 @@ ddphotos-app
 
 ## Developer Notes
 
-For full details on how to build and run DD Photos from source, please see [README-DEV.md](README-DEV.md).
+For full details on how to build and run the DD Photos App from source, please see [README-DEV.md](README-DEV.md).
 
 ## Copyright and Licenses
 
@@ -151,11 +150,11 @@ If you'd like to use this project under different terms, contact doug [at] donoh
 
 ## Third Party Licenses and Other Open Source Code
 
-The core architecture of DD Photos was adapted from the 
+The core architecture of the DD Photos App was adapted from the 
 [DD Poker↗](https://github.com/dougdonohoe/ddpoker) open source project,
 which is licensed under the [GNU General Public License v3.0↗](https://www.gnu.org/licenses/gpl-3.0.html) (GPL v3).
 
-DD Photos incorporates other open source code, primarily as Maven dependencies 
+The DD Photos App incorporates other open source code, primarily as Maven dependencies 
 (see the `pom.xml` files).  These are explained in 
 [code/photos/src/main/resources/config/ddphotos/help/credits.html](code/photos/src/main/resources/config/ddphotos/help/credits.html) and the licenses 
 mentioned therein can be found in the `docs/license` directory.
