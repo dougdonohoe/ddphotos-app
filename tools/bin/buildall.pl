@@ -347,7 +347,7 @@ sub build
 		        : "Create the GitHub release for $VERSION with these notes?");
 
 		cd($INSTALLERDIR);
-		$cmd = "gh release create $VERSION --title 'DD Photos $VERSION' " .
+		$cmd = "gh release create $VERSION --title 'DD Photos App $VERSION' " .
 		       "--notes-file $notesfile " . installerNames();
 
 		if ($githubdryrun)
