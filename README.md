@@ -113,7 +113,7 @@ install them ahead of time:
 
 ## TL;DR Running the DD Photos App from Source
 
-If you are an impatient developer and just want to run the DD Photos app from source without
+If you are an impatient developer and just want to run the DD Photos App from source without
 reading all the [developer documentation](README-DEV.md), follow these steps:
 
 1. Clone this repo
