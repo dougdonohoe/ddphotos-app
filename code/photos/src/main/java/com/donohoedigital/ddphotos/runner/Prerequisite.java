@@ -62,6 +62,12 @@ public abstract class Prerequisite {
     /** Returns the next prerequisite to run after this one passes, or null if this is the last. */
     public Prerequisite next() { return null; }
 
+    /**
+     * Whether the remediation fixed the problem, judged from its combined output and exit code.
+     * Defaults to a zero exit; override for tools whose exit code does not prove success.
+     */
+    public boolean remediationSucceeded(String output, int exitCode) { return exitCode == 0; }
+
     // -------------------------------------------------------------------------
     // Output matching helpers
     // -------------------------------------------------------------------------
