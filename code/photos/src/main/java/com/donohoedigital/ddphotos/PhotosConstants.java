@@ -91,32 +91,7 @@ public class PhotosConstants {
      */
     public static final Version VERSION = latest(
             new Version(1, 0, 18),
-            new Version(1, 0, 17),
-            new Version(1, 0, 16),
-            new Version(1, 0, 15),
-            new Version(1, 0, 14),
-            new Version(1, 0, 13),
-            new Version(1, 0, 12),
-            new Version(1, 0, 11),
-            new Version(1, 0, 10),
-            new Version(1, 0, 9),
-            new Version(1, 0, 8),
-            new Version(1, 0, 7),
-            new Version(1, 0, 6),
-            new Version(1, 0, 5),
-            new Version(1, 0, 4),
-            new Version(1, 0, 3),
-            new Version(1, 0, 2),
-            new Version(1, 0, 1),
-            new Version(1, 0, 0),
-            new Version(Version.TYPE_BETA, 1, 0, 8, 0),
-            new Version(Version.TYPE_BETA, 1, 0, 7, 0),
-            new Version(Version.TYPE_BETA, 1, 0, 6, 0),
-            new Version(Version.TYPE_BETA, 1, 0, 5, 0),
-            new Version(Version.TYPE_BETA, 1, 0, 4, 0),
-            new Version(Version.TYPE_BETA, 1, 0, 3, 0),
-            new Version(Version.TYPE_BETA, 1, 0, 2, 0),
-            new Version(Version.TYPE_BETA, 1, 0, 1, 0)
+            new Version(1, 0, 17)
     );
 
     /** Returns the current (most recent) version, i.e. the first in the history. */
