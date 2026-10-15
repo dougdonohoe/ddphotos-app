@@ -226,6 +226,39 @@ public class PrerequisiteCheckTest {
         assertEquals(Result.ERROR, SurgeRunner.checkAuth(out, 0));
     }
 
+    // ── surge login --browser ────────────────────────────────────────────────
+
+    /** Real: the browser sign-in completed. */
+    private static final String SURGE_LOGIN_OK = MOUNTS + """
+            npm notice run npx
+            npm notice run 'surge' login --browser
+
+               Continue in the browser to sign in.
+
+                       url: https://auth.surge.sh/login/cli/58b38dd7-8ccb-4116-999c-2a62c0e82332
+                      code: NPBX
+
+
+               Success - Logged in as doug@donohoe.info.
+            """;
+
+    @Test
+    public void surgeLogin_success() {
+        assertTrue(SurgeRunner.checkLogin(SURGE_LOGIN_OK, 0));
+    }
+
+    /** No success line means no login, even if surge exits 0. */
+    @Test
+    public void surgeLogin_noSuccessLine_fails() {
+        String out = SURGE_LOGIN_OK.substring(0, SURGE_LOGIN_OK.indexOf("Success"));
+        assertFalse(SurgeRunner.checkLogin(out, 0));
+    }
+
+    @Test
+    public void surgeLogin_nonZeroExit_fails() {
+        assertFalse(SurgeRunner.checkLogin(SURGE_LOGIN_OK, 1));
+    }
+
     // ── ddphotos version --image ─────────────────────────────────────────────
 
     private static final String VERSION_OUTPUT = MOUNTS + """

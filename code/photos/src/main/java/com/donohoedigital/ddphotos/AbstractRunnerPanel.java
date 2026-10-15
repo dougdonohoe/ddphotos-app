@@ -676,7 +676,7 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
         switch (prereq.remediation()) {
             case Prerequisite.RunCommand(List<String> cmd) -> {
                 console_.appendSystem(prereq.failedMessage());
-                runRemediation(userValues, next, cmd);
+                runRemediation(prereq, userValues, next, cmd);
             }
             case Prerequisite.ShowDialog(String html, String titleKey) -> {
                 updateButtonState();
@@ -698,13 +698,17 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                     onRunAborted();
                     return;
                 }
-                runRemediation(userValues, next, cmd);
+                runRemediation(prereq, userValues, next, cmd);
             }
         }
     }
 
-    /** Runs a remediation command; on exit 0, continues with {@code next} or the main command. */
-    private void runRemediation(Map<String, String> userValues, Prerequisite next, List<String> cmd) {
+    /**
+     * Runs a remediation command. If {@link Prerequisite#remediationSucceeded}, continues with
+     * {@code next} or the main command.
+     */
+    private void runRemediation(Prerequisite prereq, Map<String, String> userValues,
+                                Prerequisite next, List<String> cmd) {
         cmd = activeRunner_.finalCommand(cmd);
         console_.appendSystem(PropertyConfig.getMessage("msg.cmd.running", String.join(" ", cmd)));
         Process p;
@@ -720,27 +724,35 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
         process_ = p;
         updateButtonState();
 
+        // A StringBuffer because stdout and stderr are read on separate threads.
+        StringBuffer captured = new StringBuffer();
+        Consumer<String> capture = line -> captured.append(line).append("\n");
         ProcessPump.start(p, "remediation",
-                console_.lineHandler(false, null),
-                console_.lineHandler(true, null),
-                code -> SwingUtilities.invokeLater(() -> {
-                    process_ = null;
-                    if (wasUserStop(code)) {
-                        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
-                        updateButtonState();
-                        onRunAborted();
-                    } else if (code == 0) {
-                        if (next != null) {
-                            runWithPrerequisite(next, userValues);
+                console_.lineHandler(false, capture),
+                console_.lineHandler(true, capture),
+                code -> {
+                    String output = captured.toString();
+                    SwingUtilities.invokeLater(() -> {
+                        process_ = null;
+                        if (wasUserStop(code)) {
+                            console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
+                            updateButtonState();
+                            onRunAborted();
+                        } else if (prereq.remediationSucceeded(output, code)) {
+                            if (next != null) {
+                                runWithPrerequisite(next, userValues);
+                            } else {
+                                launchMainCommand(userValues);
+                            }
                         } else {
-                            launchMainCommand(userValues);
+                            console_.appendSystem(code == 0
+                                    ? PropertyConfig.getMessage("msg.cmd.notConfirmed")
+                                    : PropertyConfig.getMessage("msg.cmd.failedExit", code));
+                            updateButtonState();
+                            onRunAborted();
                         }
-                    } else {
-                        console_.appendSystem(PropertyConfig.getMessage("msg.cmd.failedExit", code));
-                        updateButtonState();
-                        onRunAborted();
-                    }
-                }));
+                    });
+                });
     }
 
     /**

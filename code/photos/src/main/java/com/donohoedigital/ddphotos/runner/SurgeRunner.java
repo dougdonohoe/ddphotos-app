@@ -28,6 +28,9 @@ public class SurgeRunner extends DdphotosRunner {
     private static final Pattern ACCOUNT_LINE =
             Pattern.compile("(?m)^\\s*[^\\s@/]+@[^\\s@/]+\\.[^\\s@/]+\\s*(-.*)?$");
 
+    /** What 'surge login' prints once the browser sign-in completes. */
+    private static final String LOGIN_SUCCESS = "Success - Logged in";
+
     @Override
     public String getSubCommand() { return "surge"; }
 
@@ -61,6 +64,11 @@ public class SurgeRunner extends DdphotosRunner {
         return ERROR;
     }
 
+    /** Whether 'surge login' reported success. The exit code alone is not trusted. */
+    static boolean checkLogin(String output, int exitCode) {
+        return exitCode == 0 && Prerequisite.containsAny(PhotosUtils.stripAnsi(output), LOGIN_SUCCESS);
+    }
+
     // ──────────────────────────────────────────────────────────────────────────────
     // Prerequisites
     // ──────────────────────────────────────────────────────────────────────────────
@@ -68,8 +76,9 @@ public class SurgeRunner extends DdphotosRunner {
     @Override
     public Prerequisite getPrerequisite(Site site, Map<String, String> userValues) {
         List<String> checkCmd = buildWrappedCommand(site, Map.of(), "surge", "account", "whoami");
-        String notAuthMsg = PropertyConfig.getMessage("msg.surge.notAuthenticated",
-                PhotosUtils.scriptPath());
+        // --browser: sign in on a web page instead of answering email/password prompts, which
+        // the app has no way to do. The ddphotos script (v1.33.3+) opens the page it prints.
+        List<String> loginCmd = buildWrappedCommand(site, Map.of(), "surge", "login", "--browser");
         return new Prerequisite(checkCmd) {
             @Override
             public Result check(String output, int exitCode) {
@@ -78,11 +87,22 @@ public class SurgeRunner extends DdphotosRunner {
 
             @Override
             public Remediation remediation() {
-                return new ShowDialog(notAuthMsg, "msg.windowtitle.surgeLogin");
+                return new ConfirmThenRun(
+                        "msg.surge.confirmLogin",
+                        "msg.windowtitle.surgeLogin",
+                        loginCmd);
+            }
+
+            @Override
+            public boolean remediationSucceeded(String output, int exitCode) {
+                return checkLogin(output, exitCode);
             }
 
             @Override
             public String checkingMessage() { return PropertyConfig.getMessage("msg.surge.checkingAuth"); }
+
+            @Override
+            public String failedMessage() { return PropertyConfig.getMessage("msg.surge.notAuthenticated"); }
 
             @Override
             public String errorDialogMessage(int exitCode) {
