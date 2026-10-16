@@ -10,7 +10,8 @@ This page shows how it works and how to set it up.
 
 PhotoPrism's shared albums work well, but they have some limits:
 
-- The album grid shows a lot of camera and file details under each photo, not your captions.
+- A shared link seems to show only one album at a time (it works sometimes, but inconsistently).
+- The album grid shows a lot of camera and file details under each photo, not just your captions.
 - You can't arrange the photos in your own order.
 - The link only works while your PhotoPrism server is up and reachable from the internet.
 
@@ -27,7 +28,8 @@ And here is what a friend sees when you share the Uganda album from PhotoPrism:
 ![PhotoPrism shared album](../images/providers/photoprism-shared-album-uganda.png)
 
 It works, but there is a bit too
-much clutter and technical details, and the lightbox doesn't take full advantage of the entire screen.
+much clutter and technical details, the lightbox doesn't take full advantage of the entire screen,
+and friends can't always discover or browse your other albums.
 
 ## End up with a site like this
 
