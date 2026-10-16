@@ -50,8 +50,9 @@ It doesn't matter, but once you get a selection of photos that comprise an album
 you export the photos into a folder.  All the photos (and videos) in a folder make up an album.
 It's that simple.
 
-If you keep your photos in [Immich↗](https://immich.app), you can skip the export: an album
-can sync straight from it.
+If you keep your photos in [Immich↗](https://immich.app) or
+[PhotoPrism↗](https://www.photoprism.app), you can skip the export: an album can sync
+straight from it.
 
 With the DD Photos App, you define where your albums live in the **Config** tab, and
 can specify a name, description, and choose your cover photo.  Here, you also define

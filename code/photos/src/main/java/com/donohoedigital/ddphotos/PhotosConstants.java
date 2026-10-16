@@ -56,6 +56,12 @@ public class PhotosConstants {
      */
     public static final String REGEXP_IMMICH_API_KEY = "[A-Za-z0-9_-]{16,128}";
 
+    /**
+     * A PhotoPrism app password: letters and digits in dash-separated groups.  The rule is
+     * the Immich key's, loose enough not to reject a later password format by guesswork.
+     */
+    public static final String REGEXP_PHOTOPRISM_APP_PASSWORD = "[A-Za-z0-9_-]{16,128}";
+
     /** A single folder name: no path separators and no whitespace. */
     public static final String REGEXP_FOLDER_NAME = "[^/\\\\\\s]+";
 

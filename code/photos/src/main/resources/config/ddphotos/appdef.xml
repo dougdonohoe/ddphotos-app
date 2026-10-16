@@ -109,14 +109,32 @@
         </paramlist>
     </phase>
 
-    <!-- dialog-maxwidth is off (0) because the dialog sizes itself to fit a whole API key,
-         which can be wider than the 750 default. -->
-    <phase name="ImmichCredentialsDialog" class="com.donohoedigital.ddphotos.ImmichCredentialsDialog" transient="true">
+    <!-- The sync credentials dialogs, one per provider, sharing a class.  dialog-maxwidth is off
+         (0) because the dialog sizes itself to fit a whole API key, which can be wider than the
+         750 default. -->
+    <phase name="ImmichCredentialsDialog" class="com.donohoedigital.ddphotos.SyncCredentialsDialog" transient="true">
+        <param name="provider" strvalue="immich"/>
         <param name="style" strvalue="OptionsDialog"/>
         <param name="dialog-background-image" strvalue="dialog-background"/>
         <param name="dialog-modal" boolvalue="true"/>
         <param name="dialog-maxwidth" intvalue="0"/>
         <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.ImmichCredentialsDialog"/>
+        <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
+        <param name="dialog-window-close-activates-button" strvalue="cancel"/>
+        <param name="default-button" strvalue="save"/>
+        <paramlist name="buttons">
+            <strvalue>cancel</strvalue>
+            <strvalue>save</strvalue>
+        </paramlist>
+    </phase>
+
+    <phase name="PhotoPrismCredentialsDialog" class="com.donohoedigital.ddphotos.SyncCredentialsDialog" transient="true">
+        <param name="provider" strvalue="photoprism"/>
+        <param name="style" strvalue="OptionsDialog"/>
+        <param name="dialog-background-image" strvalue="dialog-background"/>
+        <param name="dialog-modal" boolvalue="true"/>
+        <param name="dialog-maxwidth" intvalue="0"/>
+        <param name="dialog-windowtitle-prop" strvalue="msg.windowtitle.PhotoPrismCredentialsDialog"/>
         <param name="dialog-windowtitle-image" strvalue="window-title-icon"/>
         <param name="dialog-window-close-activates-button" strvalue="cancel"/>
         <param name="default-button" strvalue="save"/>

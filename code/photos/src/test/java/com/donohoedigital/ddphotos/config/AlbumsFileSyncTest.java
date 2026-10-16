@@ -71,7 +71,7 @@ public class AlbumsFileSyncTest {
     @Test
     public void validate_provider() throws Exception {
         assertLoadFails(album("    sync:\n      album_id: " + ID_A + "\n"),
-                        "sync.provider is required (one of: immich, mock)");
+                        "sync.provider is required (one of: immich, mock, photoprism)");
         assertLoadFails(album(sync("flickr", ID_A)), "sync.provider \"flickr\" is not a known provider");
     }
 
@@ -81,7 +81,11 @@ public class AlbumsFileSyncTest {
         assertLoadFails(album(sync("immich", "ef8acfb8-43fb")), "is not an Immich album UUID");
         // Uppercase is accepted, as photogen accepts it.
         AlbumsFile.load(writeYaml(album(sync("immich", ID_A.toUpperCase()))));
-        // Only Immich ids are shape-checked.
+        assertLoadFails(album(sync("photoprism", "atmyuuj99diyoq1")), "is not a PhotoPrism album UID");
+        assertLoadFails(album(sync("photoprism", "ATMYUUJ99DIYOQ1S")), "is not a PhotoPrism album UID");
+        assertLoadFails(album(sync("photoprism", ID_A)), "is not a PhotoPrism album UID");
+        AlbumsFile.load(writeYaml(album(sync("photoprism", "atmyuuj99diyoq1s"))));
+        // Only Immich and PhotoPrism ids are shape-checked.
         AlbumsFile.load(writeYaml(album(sync("mock", "antarctica")
                 + "      mock:\n        assets: a.json\n        media_dir: m\n")));
     }
@@ -104,6 +108,14 @@ public class AlbumsFileSyncTest {
                 + "  - slug: one\n" + sync("immich", ID_A)
                 + "  - slug: two\n" + sync("immich", ID_A.toUpperCase());
         assertLoadFails(yaml, "albums \"one\" and \"two\": both sync album_id");
+    }
+
+    @Test
+    public void validate_sameAlbumIdFromTwoProvidersIsFine() throws Exception {
+        AlbumsFile.load(writeYaml("albums:\n"
+                + "  - slug: one\n" + sync("photoprism", "atmyuuj99diyoq1s")
+                + "  - slug: two\n" + sync("mock", "atmyuuj99diyoq1s")
+                + "      mock:\n        assets: a.json\n        media_dir: m\n"));
     }
 
     // ── round trip ──────────────────────────────────────────────────────────

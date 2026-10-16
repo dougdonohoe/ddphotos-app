@@ -19,11 +19,14 @@ public class SyncEntry {
     /** The Immich provider key, as written in {@code albums.yaml}. */
     public static final String PROVIDER_IMMICH = "immich";
 
+    /** The PhotoPrism provider key, as written in {@code albums.yaml}. */
+    public static final String PROVIDER_PHOTOPRISM = "photoprism";
+
     /** photogen's offline test provider.  Recognized, preserved, never offered in the UI. */
     public static final String PROVIDER_MOCK = "mock";
 
     /** Every provider photogen accepts, sorted as photogen lists them in its errors. */
-    public static final List<String> KNOWN_PROVIDERS = List.of(PROVIDER_IMMICH, PROVIDER_MOCK);
+    public static final List<String> KNOWN_PROVIDERS = List.of(PROVIDER_IMMICH, PROVIDER_MOCK, PROVIDER_PHOTOPRISM);
 
     /**
      * photogen's {@code validateImmichAlbumID}: 8-4-4-4-12 hex, either case.  Deliberately
@@ -34,6 +37,16 @@ public class SyncEntry {
 
     public static boolean isImmichAlbumId(String id) {
         return id != null && IMMICH_ALBUM_ID.matcher(id).matches();
+    }
+
+    /**
+     * photogen's {@code validatePhotoPrismAlbumID}: an {@code a} and 15 lowercase letters or
+     * digits, as PhotoPrism's {@code rnd.GenerateUID} makes them.
+     */
+    private static final Pattern PHOTOPRISM_ALBUM_ID = Pattern.compile("^a[0-9a-z]{15}$");
+
+    public static boolean isPhotoPrismAlbumId(String id) {
+        return id != null && PHOTOPRISM_ALBUM_ID.matcher(id).matches();
     }
 
     private String provider;

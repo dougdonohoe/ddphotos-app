@@ -10,7 +10,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class ImmichCredentialsFileTest {
+public class SyncCredentialsFileTest {
 
     @TempDir
     Path tmp;
@@ -23,9 +23,9 @@ public class ImmichCredentialsFileTest {
                   IMMICH_INSTANCE_URL='http://localhost:2283/api'
                 not an assignment
                 """);
-        ImmichCredentialsFile c = new ImmichCredentialsFile(f).load();
+        SyncCredentialsFile c = new SyncCredentialsFile(SyncCredentialsFile.IMMICH, f).load();
         assertTrue(c.existsOnDisk());
-        assertEquals("oeW00smAhMkRo0GYb7zAAQWr8mUFNvYSxO7P0TIeg", c.getApiKey());
+        assertEquals("oeW00smAhMkRo0GYb7zAAQWr8mUFNvYSxO7P0TIeg", c.getSecret());
         assertEquals("http://localhost:2283/api", c.getUrl());
         assertTrue(c.isComplete());
     }
@@ -36,34 +36,34 @@ public class ImmichCredentialsFileTest {
         write("IMMICH_INSTANCE_URL=http://localhost:2283\nIMMICH_API_KEY=old-key-0123456789\n");
         AlbumsFile af = new AlbumsFile();
         af.setConfigDir(tmp);
-        assertEquals("old-key-0123456789", af.getImmichCredentialsFile().getApiKey());
+        assertEquals("old-key-0123456789", af.getSyncCredentialsFile(SyncCredentialsFile.IMMICH).getSecret());
 
         // A different length guarantees a different stamp even on a coarse-mtime filesystem.
         write("IMMICH_INSTANCE_URL=http://localhost:2283\nIMMICH_API_KEY=fixed-key-0123456789abcdef\n");
-        assertEquals("fixed-key-0123456789abcdef", af.getImmichCredentialsFile().getApiKey());
+        assertEquals("fixed-key-0123456789abcdef", af.getSyncCredentialsFile(SyncCredentialsFile.IMMICH).getSecret());
     }
 
     @Test
     public void albumsFile_picksUpAFileCreatedLater() throws Exception {
         AlbumsFile af = new AlbumsFile();
         af.setConfigDir(tmp);
-        assertFalse(af.getImmichCredentialsFile().isComplete());
+        assertFalse(af.getSyncCredentialsFile(SyncCredentialsFile.IMMICH).isComplete());
 
         write("IMMICH_INSTANCE_URL=http://localhost:2283\nIMMICH_API_KEY=new-key-0123456789\n");
-        assertTrue(af.getImmichCredentialsFile().isComplete());
+        assertTrue(af.getSyncCredentialsFile(SyncCredentialsFile.IMMICH).isComplete());
     }
 
     @Test
     public void load_missingFile() {
-        ImmichCredentialsFile c = new ImmichCredentialsFile(tmp.resolve("immich.env")).load();
+        SyncCredentialsFile c = new SyncCredentialsFile(SyncCredentialsFile.IMMICH, tmp.resolve("immich.env")).load();
         assertFalse(c.existsOnDisk());
-        assertNull(c.getApiKey());
+        assertNull(c.getSecret());
         assertFalse(c.isComplete());
     }
 
     @Test
     public void load_valueContainingEquals() throws Exception {
-        ImmichCredentialsFile c = new ImmichCredentialsFile(write("IMMICH_INSTANCE_URL=http://h/x?a=b\n")).load();
+        SyncCredentialsFile c = new SyncCredentialsFile(SyncCredentialsFile.IMMICH, write("IMMICH_INSTANCE_URL=http://h/x?a=b\n")).load();
         assertEquals("http://h/x?a=b", c.getUrl());
     }
 
@@ -74,9 +74,9 @@ public class ImmichCredentialsFileTest {
                 IMMICH_INSTANCE_URL=http://old:2283
                 OTHER=keep
                 """);
-        ImmichCredentialsFile c = new ImmichCredentialsFile(f).load();
+        SyncCredentialsFile c = new SyncCredentialsFile(SyncCredentialsFile.IMMICH, f).load();
         c.setUrl(" http://new:2283 ");
-        c.setApiKey("abc123");
+        c.setSecret("abc123");
         c.save();
 
         assertEquals("""
@@ -91,8 +91,8 @@ public class ImmichCredentialsFileTest {
     @Test
     public void save_dropsDuplicateKeyLines() throws Exception {
         Path f = write("IMMICH_API_KEY=one\nIMMICH_API_KEY=two\nIMMICH_INSTANCE_URL=http://h\n");
-        ImmichCredentialsFile c = new ImmichCredentialsFile(f).load();
-        c.setApiKey("three");
+        SyncCredentialsFile c = new SyncCredentialsFile(SyncCredentialsFile.IMMICH, f).load();
+        c.setSecret("three");
         c.save();
         assertEquals("IMMICH_API_KEY=three\nIMMICH_INSTANCE_URL=http://h\n", Files.readString(f));
     }
@@ -101,14 +101,14 @@ public class ImmichCredentialsFileTest {
     public void save_createsOwnerOnlyFile() throws Exception {
         assumeTrue(tmp.getFileSystem().supportedFileAttributeViews().contains("posix"));
         Path f = tmp.resolve("config").resolve("immich.env");
-        ImmichCredentialsFile c = new ImmichCredentialsFile(f).load();
+        SyncCredentialsFile c = new SyncCredentialsFile(SyncCredentialsFile.IMMICH, f).load();
         c.setUrl("http://localhost:2283");
-        c.setApiKey("abc123");
+        c.setSecret("abc123");
         c.save();
 
         assertEquals("IMMICH_API_KEY=abc123\nIMMICH_INSTANCE_URL=http://localhost:2283\n", Files.readString(f));
         assertEquals("rw-------", PosixFilePermissions.toString(Files.getPosixFilePermissions(f)));
-        assertEquals("abc123", new ImmichCredentialsFile(f).load().getApiKey());
+        assertEquals("abc123", new SyncCredentialsFile(SyncCredentialsFile.IMMICH, f).load().getSecret());
     }
 
     @Test
@@ -116,10 +116,39 @@ public class ImmichCredentialsFileTest {
         assumeTrue(tmp.getFileSystem().supportedFileAttributeViews().contains("posix"));
         Path f = write("IMMICH_API_KEY=a\n");
         Files.setPosixFilePermissions(f, PosixFilePermissions.fromString("rw-r-----"));
-        ImmichCredentialsFile c = new ImmichCredentialsFile(f).load();
-        c.setApiKey("b");
+        SyncCredentialsFile c = new SyncCredentialsFile(SyncCredentialsFile.IMMICH, f).load();
+        c.setSecret("b");
         c.save();
         assertEquals("rw-r-----", PosixFilePermissions.toString(Files.getPosixFilePermissions(f)));
+    }
+
+    @Test
+    public void photoprism_roundTrip() throws Exception {
+        Path f = tmp.resolve("photoprism.env");
+        Files.writeString(f, "# PhotoPrism\nPHOTOPRISM_SITE_URL=http://localhost:2342\nIMMICH_API_KEY=ignored\n");
+        SyncCredentialsFile c = new SyncCredentialsFile(SyncCredentialsFile.PHOTOPRISM, f).load();
+        assertEquals("http://localhost:2342", c.getUrl());
+        assertNull(c.getSecret(), "another provider's key is not this file's secret");
+        c.setSecret("abcdef-ghijkl-mnopqr-stuvwx");
+        c.save();
+
+        assertEquals("""
+                # PhotoPrism
+                PHOTOPRISM_SITE_URL=http://localhost:2342
+                IMMICH_API_KEY=ignored
+                PHOTOPRISM_APP_PASSWORD=abcdef-ghijkl-mnopqr-stuvwx
+                """, Files.readString(f));
+    }
+
+    @Test
+    public void albumsFile_keepsEachProvidersFileApart() throws Exception {
+        write("IMMICH_INSTANCE_URL=http://localhost:2283\nIMMICH_API_KEY=immich-key-0123456789\n");
+        AlbumsFile af = new AlbumsFile();
+        af.setConfigDir(tmp);
+        assertTrue(af.getSyncCredentialsFile(SyncCredentialsFile.IMMICH).isComplete());
+        SyncCredentialsFile pp = af.getSyncCredentialsFile(SyncCredentialsFile.PHOTOPRISM);
+        assertEquals(tmp.resolve("photoprism.env"), pp.getPath());
+        assertFalse(pp.isComplete());
     }
 
     private Path write(String content) throws Exception {
