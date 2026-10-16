@@ -34,7 +34,7 @@ final class SyncUi {
      */
     static boolean editCredentials(AppContext context, Site site, SyncProvider provider) {
         TypedHashMap params = new TypedHashMap();
-        params.setObject(ImmichCredentialsDialog.PARAM_SITE, site);
+        params.setObject(SyncCredentialsDialog.PARAM_SITE, site);
         return Boolean.TRUE.equals(context.processPhaseNow(provider.credentialsDialogPhase(), params).getResult());
     }
 

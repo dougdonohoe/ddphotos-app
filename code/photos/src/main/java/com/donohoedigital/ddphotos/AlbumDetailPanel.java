@@ -37,7 +37,7 @@ import java.util.Objects;
 
 /**
  * Edits one album.  An album is either <b>Local</b> (photos from {@code source}, optionally under
- * a {@code base}) or <b>Sync</b> (photogen downloads it from a provider such as Immich into a
+ * a {@code base}) or <b>Sync</b> (photogen downloads it from a provider such as Immich or PhotoPrism into a
  * folder it owns; see {@link AlbumsFile#resolveSyncPath}).
  *
  * <p>For a synced album the name and description may be left out of {@code albums.yaml}, and
@@ -249,7 +249,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         return hint;
     }
 
-    /** A field with its Override checkbox and the "from Immich" info icon beside it, top-aligned. */
+    /** A field with its Override checkbox and the "from <provider>" info icon beside it, top-aligned. */
     private static JPanel overrideRow(JPanel field, DDCheckBox override, DDLabel hint) {
         JPanel side = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         side.setOpaque(false);
@@ -667,7 +667,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
         checkButtons();
     }
 
-    /** Wide enough for an Immich album id, whatever the field's border adds. */
+    /** Wide enough for an Immich album id (the longest provider id), whatever the field's border adds. */
     private void sizeAlbumIdField() {
         DDTextField idField = albumId_.getTextField();
         Insets in = idField.getInsets();

@@ -1,7 +1,7 @@
 package com.donohoedigital.ddphotos.sync;
 
-import com.donohoedigital.ddphotos.config.AlbumsFile;
-import com.donohoedigital.ddphotos.config.ImmichCredentialsFile;
+import com.donohoedigital.ddphotos.PhotosConstants;
+import com.donohoedigital.ddphotos.config.SyncCredentialsFile;
 import com.donohoedigital.ddphotos.config.SyncEntry;
 
 /** <a href="https://immich.app">Immich</a>, with credentials in the site's {@code immich.env}. */
@@ -17,20 +17,16 @@ public final class ImmichProvider implements SyncProvider {
 
     @Override public boolean isValidAlbumId(String albumId) { return SyncEntry.isImmichAlbumId(albumId); }
 
-    @Override
-    public boolean hasCredentials(AlbumsFile albumsFile) {
-        ImmichCredentialsFile f = albumsFile != null ? albumsFile.getImmichCredentialsFile() : null;
-        return f != null && f.isComplete();
-    }
+    @Override public SyncCredentialsFile.Kind credentialsKind() { return SyncCredentialsFile.IMMICH; }
+
+    @Override public String secretRegExp() { return PhotosConstants.REGEXP_IMMICH_API_KEY; }
+
+    @Override public String messagePrefix() { return "immich"; }
 
     @Override public String credentialsDialogPhase() { return "ImmichCredentialsDialog"; }
 
     @Override
-    public SyncClient client(AlbumsFile albumsFile) throws SyncException {
-        ImmichCredentialsFile f = albumsFile != null ? albumsFile.getImmichCredentialsFile() : null;
-        if (f == null || !f.isComplete()) {
-            throw new SyncException("Immich credentials are not set for this site.");
-        }
-        return new ImmichClient(f.getUrl(), f.getApiKey());
+    public HttpSyncClient client(String url, String secret) throws SyncException {
+        return new ImmichClient(url, secret);
     }
 }

@@ -11,10 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * In-memory model of a site's {@code immich.env}: the Immich instance URL and API key photogen
- * uses to sync albums (ddphotos {@code docs/CONFIGURATION.md}, "Immich credentials").  It lives
- * in the config dir beside {@code albums.yaml} and is read by photogen only when an album names
- * the {@code immich} provider.
+ * In-memory model of a sync provider's credentials file, such as {@code immich.env}: the
+ * instance URL and the secret (an API key or app password) photogen uses to sync albums
+ * (ddphotos {@code docs/CONFIGURATION.md}, "Immich credentials" and "PhotoPrism credentials").
+ * It lives in the config dir beside {@code albums.yaml} and is read by photogen only when an
+ * album names that provider.  {@link Kind} says which file and which two keys.
  *
  * <p>Parsing follows photogen's {@code ParseEnvFile}: lines are trimmed, blank and {@code #}
  * lines are skipped, a line splits on its first {@code =}, and one pair of surrounding quotes is
@@ -24,29 +25,39 @@ import java.util.List;
  * <p>A file this class creates is readable by its owner only, because it holds a secret.  An
  * existing file keeps its permissions ({@link AtomicWrite} carries them over).
  */
-public class ImmichCredentialsFile extends ConfigFile {
+public class SyncCredentialsFile extends ConfigFile {
 
-    private static final Logger logger = LogManager.getLogger(ImmichCredentialsFile.class);
+    private static final Logger logger = LogManager.getLogger(SyncCredentialsFile.class);
 
-    public static final String FILE_NAME = "immich.env";
-    public static final String KEY_API_KEY = "IMMICH_API_KEY";
-    public static final String KEY_URL     = "IMMICH_INSTANCE_URL";
+    /**
+     * One provider's credentials file.
+     *
+     * @param fileName  the file's name in the config dir
+     * @param secretKey the variable holding the API key or app password
+     * @param urlKey    the variable holding the instance URL
+     */
+    public record Kind(String fileName, String secretKey, String urlKey) {}
 
+    public static final Kind IMMICH = new Kind("immich.env", "IMMICH_API_KEY", "IMMICH_INSTANCE_URL");
+    public static final Kind PHOTOPRISM = new Kind("photoprism.env", "PHOTOPRISM_APP_PASSWORD", "PHOTOPRISM_SITE_URL");
+
+    private final Kind kind_;
     private final Path path_;
     private boolean existed_;
     private final List<String> lines_ = new ArrayList<>();
-    private String apiKey_;
+    private String secret_;
     private String url_;
 
-    /** @param path the {@code immich.env} file, which may or may not exist yet. */
-    public ImmichCredentialsFile(Path path) {
+    /** @param path the credentials file, which may or may not exist yet. */
+    public SyncCredentialsFile(Kind kind, Path path) {
+        this.kind_ = kind;
         this.path_ = path;
     }
 
-    public ImmichCredentialsFile load() {
+    public SyncCredentialsFile load() {
         existed_ = false;
         lines_.clear();
-        apiKey_ = url_ = null;
+        secret_ = url_ = null;
         restamp();
         if (!Files.exists(path_)) return this;
         try {
@@ -56,8 +67,8 @@ public class ImmichCredentialsFile extends ConfigFile {
             for (String line : lines_) {
                 String[] kv = parse(line);
                 if (kv == null) continue;
-                if (KEY_API_KEY.equals(kv[0])) apiKey_ = kv[1];
-                else if (KEY_URL.equals(kv[0])) url_ = kv[1];
+                if (kind_.secretKey().equals(kv[0])) secret_ = kv[1];
+                else if (kind_.urlKey().equals(kv[0])) url_ = kv[1];
             }
             logger.info("read {}", path_);
         } catch (IOException e) {
@@ -75,18 +86,18 @@ public class ImmichCredentialsFile extends ConfigFile {
         List<String> out = new ArrayList<>(lines_.size() + 2);
         for (String line : lines_) {
             String[] kv = parse(line);
-            if (kv != null && KEY_API_KEY.equals(kv[0])) {
-                if (!sawKey) out.add(KEY_API_KEY + "=" + nvl(apiKey_));
+            if (kv != null && kind_.secretKey().equals(kv[0])) {
+                if (!sawKey) out.add(kind_.secretKey() + "=" + nvl(secret_));
                 sawKey = true;
-            } else if (kv != null && KEY_URL.equals(kv[0])) {
-                if (!sawUrl) out.add(KEY_URL + "=" + nvl(url_));
+            } else if (kv != null && kind_.urlKey().equals(kv[0])) {
+                if (!sawUrl) out.add(kind_.urlKey() + "=" + nvl(url_));
                 sawUrl = true;
             } else {
                 out.add(line);
             }
         }
-        if (!sawKey) out.add(KEY_API_KEY + "=" + nvl(apiKey_));
-        if (!sawUrl) out.add(KEY_URL + "=" + nvl(url_));
+        if (!sawKey) out.add(kind_.secretKey() + "=" + nvl(secret_));
+        if (!sawUrl) out.add(kind_.urlKey() + "=" + nvl(url_));
 
         if (path_.getParent() != null) Files.createDirectories(path_.getParent());
         AtomicWrite.writeStringOwnerOnly(path_, String.join("\n", out) + "\n");
@@ -101,17 +112,20 @@ public class ImmichCredentialsFile extends ConfigFile {
     @Override
     public Path getPath() { return path_; }
 
+    public Kind getKind() { return kind_; }
+
     public boolean existsOnDisk() { return existed_; }
 
-    public String getApiKey() { return apiKey_; }
-    public void setApiKey(String apiKey) { apiKey_ = trimToNull(apiKey); }
+    /** The API key or app password. */
+    public String getSecret() { return secret_; }
+    public void setSecret(String secret) { secret_ = trimToNull(secret); }
 
     public String getUrl() { return url_; }
     public void setUrl(String url) { url_ = trimToNull(url); }
 
     /** True when both values are present, which is what photogen needs to sync. */
     public boolean isComplete() {
-        return apiKey_ != null && url_ != null;
+        return secret_ != null && url_ != null;
     }
 
     // ── helpers ─────────────────────────────────────────────────────────────

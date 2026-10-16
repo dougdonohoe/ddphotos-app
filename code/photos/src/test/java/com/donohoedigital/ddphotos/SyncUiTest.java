@@ -44,6 +44,7 @@ public class SyncUiTest {
     @Test
     public void otherProvider_warns() {
         assertTrue(SyncUi.switchesSyncedAlbum(synced("immich", ID_A), synced("mock", ID_A)));
+        assertTrue(SyncUi.switchesSyncedAlbum(synced("immich", ID_A), synced("photoprism", "atmyuuj99diyoq1s")));
     }
 
     @Test

@@ -9,7 +9,7 @@ import java.util.List;
  */
 public final class SyncProviders {
 
-    private static final List<SyncProvider> ALL = List.of(ImmichProvider.INSTANCE);
+    private static final List<SyncProvider> ALL = List.of(ImmichProvider.INSTANCE, PhotoPrismProvider.INSTANCE);
 
     private SyncProviders() {}
 

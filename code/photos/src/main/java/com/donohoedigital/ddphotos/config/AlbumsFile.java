@@ -49,7 +49,7 @@ public class AlbumsFile extends ConfigFile {
     private List<AlbumEntry> albums;
     private Path siteDir;
     private Path configDir;
-    private ImmichCredentialsFile immichCredentials_;
+    private final Map<SyncCredentialsFile.Kind, SyncCredentialsFile> syncCredentials_ = new HashMap<>();
     private final Map<Path, SyncMetadataFile> syncMetadata_ = new HashMap<>();
     private PasswordsFile passwordsFile_;
     private boolean passwordsSettingUnsaved_;
@@ -403,32 +403,34 @@ public class AlbumsFile extends ConfigFile {
         return new PasswordsFile(path).load();
     }
 
-    // ── immich credentials ──────────────────────────────────────────────────
+    // ── sync credentials ────────────────────────────────────────────────────
 
-    /** {@code <config-dir>/immich.env}; null when the config dir is unknown. */
-    public Path resolveImmichCredentialsPath() {
-        return configDir != null ? configDir.resolve(ImmichCredentialsFile.FILE_NAME) : null;
+    /** The credentials file of a {@link SyncCredentialsFile.Kind}; null when the config dir is unknown. */
+    public Path resolveSyncCredentialsPath(SyncCredentialsFile.Kind kind) {
+        return configDir != null ? configDir.resolve(kind.fileName()) : null;
     }
 
     /**
-     * Returns the site's {@link ImmichCredentialsFile}, loaded on first access and cached.  The
+     * Returns the site's credentials file of this kind, loaded on first access and cached.  The
      * cached copy is reloaded when the file has changed on disk, since the user may fix a key in
      * a text editor.  The file need not exist: a missing one loads empty and
-     * {@link ImmichCredentialsFile#save()} creates it.  Returns null only when the config dir is
+     * {@link SyncCredentialsFile#save()} creates it.  Returns null only when the config dir is
      * unknown.
      */
-    public ImmichCredentialsFile getImmichCredentialsFile() {
-        if (immichCredentials_ == null || immichCredentials_.isChangedOnDisk()) {
-            Path path = resolveImmichCredentialsPath();
+    public SyncCredentialsFile getSyncCredentialsFile(SyncCredentialsFile.Kind kind) {
+        SyncCredentialsFile f = syncCredentials_.get(kind);
+        if (f == null || f.isChangedOnDisk()) {
+            Path path = resolveSyncCredentialsPath(kind);
             if (path == null) return null;
-            immichCredentials_ = new ImmichCredentialsFile(path).load();
+            f = new SyncCredentialsFile(kind, path).load();
+            syncCredentials_.put(kind, f);
         }
-        return immichCredentials_;
+        return f;
     }
 
     /** Forces a fresh load from disk on next access. */
-    public void reloadImmichCredentialsFile() {
-        immichCredentials_ = null;
+    public void reloadSyncCredentialsFile(SyncCredentialsFile.Kind kind) {
+        syncCredentials_.remove(kind);
     }
 
     // ── css file ────────────────────────────────────────────────────────────
@@ -617,6 +619,12 @@ public class AlbumsFile extends ConfigFile {
                 && !SyncEntry.isImmichAlbumId(sync.getAlbumId())) {
             throw new AlbumsFileException(slug + "sync.album_id \"" + sync.getAlbumId()
                     + "\" is not an Immich album UUID - it is the last path segment of the album's URL in Immich");
+        }
+        if (SyncEntry.PROVIDER_PHOTOPRISM.equals(sync.getProvider())
+                && !SyncEntry.isPhotoPrismAlbumId(sync.getAlbumId())) {
+            throw new AlbumsFileException(slug + "sync.album_id \"" + sync.getAlbumId()
+                    + "\" is not a PhotoPrism album UID - it is the path segment after /albums/ in the album's "
+                    + "URL in PhotoPrism");
         }
         String target = sync.getProvider() + "/" + sync.getAlbumId().toLowerCase(Locale.ROOT);
         String prior = seenSyncTargets.putIfAbsent(target, a.getSlug());

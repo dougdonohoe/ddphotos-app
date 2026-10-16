@@ -3,11 +3,13 @@ package com.donohoedigital.ddphotos;
 import com.donohoedigital.app.config.AppButton;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
-import com.donohoedigital.ddphotos.config.ImmichCredentialsFile;
+import com.donohoedigital.ddphotos.config.SyncCredentialsFile;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.sync.ConnectionTest;
-import com.donohoedigital.ddphotos.sync.ImmichClient;
+import com.donohoedigital.ddphotos.sync.HttpSyncClient;
 import com.donohoedigital.ddphotos.sync.SyncException;
+import com.donohoedigital.ddphotos.sync.SyncProvider;
+import com.donohoedigital.ddphotos.sync.SyncProviders;
 import com.donohoedigital.gui.DDButton;
 import com.donohoedigital.gui.DDHtmlArea;
 import com.donohoedigital.gui.DDTextField;
@@ -26,26 +28,33 @@ import java.awt.Insets;
 import java.io.IOException;
 
 /**
- * Edits a site's {@code immich.env}: the Immich instance URL and API key photogen syncs with.
- * <b>Test</b> checks the values as typed, before they are saved, so a typo is caught here rather
- * than on the next photogen run.
+ * Edits a sync provider's credentials file, such as {@code immich.env}: the instance URL and
+ * the API key or app password photogen syncs with.  <b>Test</b> checks the values as typed,
+ * before they are saved, so a typo is caught here rather than on the next photogen run.
+ *
+ * <p>Each provider has its own phase in {@code appdef.xml}, naming it with {@link #PARAM_PROVIDER}.
+ * Field and message names start with the provider's {@link SyncProvider#messagePrefix()}, so
+ * labels and help text stay specific to it.
  *
  * <p>The phase result is {@link Boolean#TRUE} when the file was saved; see
  * {@link SyncUi#editCredentials}.
  */
-public class ImmichCredentialsDialog extends PhotosDialog
+public class SyncCredentialsDialog extends PhotosDialog
 {
-    private static final Logger logger = LogManager.getLogger(ImmichCredentialsDialog.class);
+    private static final Logger logger = LogManager.getLogger(SyncCredentialsDialog.class);
 
     public static final String PARAM_SITE = "site";
+    /** The provider's {@code albums.yaml} key, set in {@code appdef.xml}. */
+    public static final String PARAM_PROVIDER = "provider";
 
     private static final int PREFERRED_WIDTH = 540;
     /** Lines kept free below the fields for the Test result. */
     private static final int RESULT_LINES = 2;
-    /** Immich keys are about 43 characters; sized for a little more. */
-    private static final String SAMPLE_API_KEY = "oeW00smAhMkRo0GYb7zAAQWr8mUFNvYSxO7P0TIegXXX";
+    /** Immich keys, the longest secret, are about 43 characters; sized for a little more. */
+    private static final String SAMPLE_SECRET = "oeW00smAhMkRo0GYb7zAAQWr8mUFNvYSxO7P0TIegXXX";
 
-    private ImmichCredentialsFile file_;
+    private SyncProvider provider_;
+    private SyncCredentialsFile file_;
 
     private DDTextField urlField_;
     private DDTextField keyField_;
@@ -65,45 +74,47 @@ public class ImmichCredentialsDialog extends PhotosDialog
     @Override
     public JComponent createDialogContents()
     {
+        provider_ = SyncProviders.get(phase_.getString(PARAM_PROVIDER, null));
+        String prefix = provider_.messagePrefix();
         Site site = (Site) phase_.getObject(PARAM_SITE);
         AlbumsFile af = site != null ? site.getOrCreateAlbumsFile() : null;
         if (af != null) {
             // Always start from what is on disk: the file may have been edited by hand.
-            af.reloadImmichCredentialsFile();
-            file_ = af.getImmichCredentialsFile();
+            af.reloadSyncCredentialsFile(provider_.credentialsKind());
+            file_ = provider_.credentialsFile(af);
         }
 
-        urlField_ = new DDTextField("immichurl", STYLE);
+        urlField_ = new DDTextField(prefix + "url", STYLE);
         urlField_.setRegExp(PhotosConstants.REGEXP_URL);
         urlField_.setTextLengthLimit(PhotosConstants.MAX_PATH_LENGTH);
 
-        keyField_ = new DDTextField("immichapikey", STYLE);
-        keyField_.setRegExp(PhotosConstants.REGEXP_IMMICH_API_KEY);
+        keyField_ = new DDTextField(prefix + "secret", STYLE);
+        keyField_.setRegExp(provider_.secretRegExp());
         keyField_.setTextLengthLimit(128);
         // Wide enough for a whole key, measured in the field's own font.
         Insets in = keyField_.getInsets();
-        GuiUtils.setPreferredWidth(keyField_, keyField_.getFontMetrics(keyField_.getFont()).stringWidth(SAMPLE_API_KEY)
+        GuiUtils.setPreferredWidth(keyField_, keyField_.getFontMetrics(keyField_.getFont()).stringWidth(SAMPLE_SECRET)
                                               + in.left + in.right + 8);
 
-        testBtn_ = new DDButton("immichtest", STYLE);
+        testBtn_ = new DDButton(prefix + "test", STYLE);
         testBtn_.addActionListener(_ -> runTest());
 
-        testResult_ = new DDHtmlArea("immichtestresult", STYLE);
+        testResult_ = new DDHtmlArea(prefix + "testresult", STYLE);
         testResult_.setDisplayOnly(true);
         testResult_.setOpaque(false);
         testResult_.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
 
         if (file_ != null) {
             urlField_.setText(nvl(file_.getUrl()));
-            keyField_.setText(nvl(file_.getApiKey()));
+            keyField_.setText(nvl(file_.getSecret()));
         }
 
         GridBagForm form = GridBagForm.dialog(STYLE)
-                .row("immichurl", urlField_, null)
-                .row("immichapikey", keyField_, testBtn_)
+                .row(prefix + "url", urlField_, null)
+                .row(prefix + "secret", keyField_, testBtn_)
                 .span(testResult_);
 
-        String path = file_ != null ? file_.getPath().toString() : ImmichCredentialsFile.FILE_NAME;
+        String path = file_ != null ? file_.getPath().toString() : provider_.credentialsKind().fileName();
         // The wrapper fixes the dialog's width, so let it grow to whatever the key row needs.
         JPanel panel = form.panel();
         int width = Math.max(PREFERRED_WIDTH, panel.getPreferredSize().width);
@@ -116,8 +127,8 @@ public class ImmichCredentialsDialog extends PhotosDialog
         testResult_.setPreferredSize(new Dimension(width - fi.left - fi.right,
                                                    RESULT_LINES * lineHeight + ri.top + ri.bottom));
 
-        return wrapWithInstructions("immichinstruct",
-                PropertyConfig.getMessage("msg.immichcreds.instructions", path), panel, width);
+        return wrapWithInstructions(prefix + "instruct",
+                PropertyConfig.getMessage("msg." + prefix + "creds.instructions", path), panel, width);
     }
 
     @Override
@@ -168,7 +179,7 @@ public class ImmichCredentialsDialog extends PhotosDialog
     {
         return !file_.existsOnDisk()
                 || !urlField_.getText().strip().equals(nvl(file_.getUrl()))
-                || !keyField_.getText().strip().equals(nvl(file_.getApiKey()));
+                || !keyField_.getText().strip().equals(nvl(file_.getSecret()));
     }
 
     // -------------------------------------------------------------------------
@@ -182,30 +193,31 @@ public class ImmichCredentialsDialog extends PhotosDialog
         String key = keyField_.getText().strip();
         testedUrl_ = url;
         testedKey_ = key;
-        testResult_.setText(PropertyConfig.getMessage("msg.immichcreds.testing"));
+        testResult_.setText(PropertyConfig.getMessage("msg.synccreds.testing"));
         testBtn_.setEnabled(false);
 
-        Thread.ofVirtual().name("immich-test").start(() -> {
+        String messages = "msg." + provider_.messagePrefix() + "creds.test.";
+        Thread.ofVirtual().name(provider_.id() + "-test").start(() -> {
             String html;
             try {
-                ImmichClient client = new ImmichClient(url, key);
+                HttpSyncClient client = provider_.client(url, key);
                 ConnectionTest result = client.test();
                 if (!result.missingPermissions().isEmpty()) {
-                    html = PropertyConfig.getMessage("msg.immichcreds.test.missing",
+                    html = PropertyConfig.getMessage(messages + "missing",
                                                      PhotosUtils.escapeHtml(String.join(", ", result.missingPermissions())));
                 } else if (!result.uncheckedPermissions().isEmpty()) {
-                    html = PropertyConfig.getMessage("msg.immichcreds.test.unchecked",
+                    html = PropertyConfig.getMessage(messages + "unchecked",
                                                      PhotosUtils.escapeHtml(client.getBaseUrl()),
                                                      PhotosUtils.escapeHtml(String.join(", ", result.uncheckedPermissions())));
                 } else {
-                    html = PropertyConfig.getMessage("msg.immichcreds.test.ok", PhotosUtils.escapeHtml(client.getBaseUrl()));
+                    html = PropertyConfig.getMessage(messages + "ok", PhotosUtils.escapeHtml(client.getBaseUrl()));
                 }
             } catch (SyncException e) {
-                html = PropertyConfig.getMessage("msg.immichcreds.test.failed", PhotosUtils.escapeHtml(e.getMessage()));
+                html = PropertyConfig.getMessage("msg.synccreds.test.failed", PhotosUtils.escapeHtml(e.getMessage()));
             } catch (RuntimeException e) {
                 // Anything unexpected must still be reported, or the dialog stays on "Testing...".
-                logger.error("Immich connection test failed", e);
-                html = PropertyConfig.getMessage("msg.immichcreds.test.failed", PhotosUtils.escapeHtml(e.toString()));
+                logger.error("{} connection test failed", provider_.displayName(), e);
+                html = PropertyConfig.getMessage("msg.synccreds.test.failed", PhotosUtils.escapeHtml(e.toString()));
             }
             String finalHtml = html;
             SwingUtilities.invokeLater(() -> {
@@ -225,7 +237,7 @@ public class ImmichCredentialsDialog extends PhotosDialog
     {
         if (file_ == null) return true;
         file_.setUrl(urlField_.getText());
-        file_.setApiKey(keyField_.getText());
+        file_.setSecret(keyField_.getText());
         try {
             file_.save();
         } catch (IOException e) {

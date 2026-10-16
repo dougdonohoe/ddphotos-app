@@ -6,7 +6,8 @@ import com.donohoedigital.config.DebugConfig;
 import com.donohoedigital.config.Prefs;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.config.StylesConfig;
-import com.donohoedigital.ddphotos.sync.ImmichProvider;
+import com.donohoedigital.ddphotos.sync.SyncProvider;
+import com.donohoedigital.ddphotos.sync.SyncProviders;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
 import com.donohoedigital.ddphotos.runner.BuildRunner;
@@ -367,9 +368,12 @@ public class PhotosBasePhase extends BasePhase {
 
         menu.addSeparator();
 
-        DDMenuItem immichCreds = new DDMenuItem("immichcredentials");
-        immichCreds.addActionListener(mainWindowAction(this::doImmichCredentials));
-        menu.add(immichCreds);
+        // One item per provider, named <prefix>credentials, such as immichcredentials.
+        for (SyncProvider provider : SyncProviders.forUi()) {
+            DDMenuItem creds = new DDMenuItem(provider.messagePrefix() + "credentials");
+            creds.addActionListener(mainWindowAction(() -> doSyncCredentials(provider)));
+            menu.add(creds);
+        }
 
         menu.addSeparator();
 
@@ -541,7 +545,7 @@ public class PhotosBasePhase extends BasePhase {
                 // A command tab running does not gray this one out: it hands the window to the
                 // wizard, and okayToLeaveEditor asks about that when the item is picked.
                 case "newsite" -> item.setEnabled(!busy && site != null);
-                case "immichcredentials", "publishsettings" -> {
+                case "immichcredentials", "photoprismcredentials", "publishsettings" -> {
                     setSiteLabel(item, site);
                     item.setEnabled(!busy && site != null);
                 }
@@ -726,10 +730,10 @@ public class PhotosBasePhase extends BasePhase {
         return PhotosUtils.slugify(title);
     }
 
-    /** Opens the Immich credentials dialog for the selected site. */
-    private void doImmichCredentials() {
+    /** Opens a sync provider's credentials dialog for the selected site. */
+    private void doSyncCredentials(SyncProvider provider) {
         Site site = siteBar_ != null ? siteBar_.getSelectedSite() : null;
-        if (site != null) SyncUi.editCredentials(context_, site, ImmichProvider.INSTANCE);
+        if (site != null) SyncUi.editCredentials(context_, site, provider);
     }
 
     /**

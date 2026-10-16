@@ -1,23 +1,10 @@
 package com.donohoedigital.ddphotos.sync;
 
 import com.donohoedigital.ddphotos.PhotosConstants;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
-import java.nio.channels.UnresolvedAddressException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -32,19 +19,17 @@ import java.util.Map;
  * </ul>
  *
  * <p>Errors mirror photogen's wording ({@code provider_immich.go} {@code statusError}) and never
- * include the API key.  There are no retries: every call is made while the user waits.
+ * include the API key.
  */
-public class ImmichClient implements SyncClient {
+public class ImmichClient extends HttpSyncClient {
 
-    private static final Logger logger = LogManager.getLogger(ImmichClient.class);
+    private static final String DISPLAY_NAME = "Immich";
+    /** photogen strips only a final {@code /api}. */
+    private static final List<String> API_SUFFIXES = List.of("api");
 
     /** What photogen needs, as Immich names them (docs/CONFIGURATION.md). */
     public static final List<String> REQUIRED_PERMISSIONS = List.of("album.read", "asset.read", "asset.download");
 
-    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
-    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
-
-    private final String baseUrl_;
     private final String apiKey_;
 
     /**
@@ -53,8 +38,7 @@ public class ImmichClient implements SyncClient {
      * @throws SyncException when the URL or the API key is not usable
      */
     public ImmichClient(String url, String apiKey) throws SyncException {
-        String configuredUrl = url == null ? "" : url.strip();
-        baseUrl_ = normalizeUrl(configuredUrl);
+        super(DISPLAY_NAME, url, API_SUFFIXES);
         apiKey_ = apiKey == null ? "" : apiKey.strip();
         // Checked here because the HTTP library rejects some characters (smart quotes pasted into
         // immich.env, say) with an unchecked exception.  Same rule as the credentials' dialog.
@@ -64,13 +48,10 @@ public class ImmichClient implements SyncClient {
         }
     }
 
-    /** The normalized instance URL, without {@code /api}. */
-    public String getBaseUrl() { return baseUrl_; }
-
     @Override
     public ConnectionTest test() throws SyncException {
         Response r = get("/api/api-keys/me");
-        if (r.status == 404) {
+        if (r.status() == 404) {
             // A server older than the api-keys/me route.  Listing albums still proves the key and
             // album.read; the other permissions cannot be checked.
             listAlbums();
@@ -92,7 +73,7 @@ public class ImmichClient implements SyncClient {
     @Override
     public List<SyncAlbumInfo> listAlbums() throws SyncException {
         Object body = get("/api/albums").ok();
-        if (!(body instanceof List<?> list)) throw notImmich(null);
+        if (!(body instanceof List<?> list)) throw notProvider(null);
         List<SyncAlbumInfo> albums = new ArrayList<>(list.size());
         for (Object o : list) {
             if (!(o instanceof Map<?, ?> a)) continue;
@@ -116,110 +97,21 @@ public class ImmichClient implements SyncClient {
         return owner != null ? Json.string(owner, "name") : null;
     }
 
-    // ── URL ─────────────────────────────────────────────────────────────────
-
-    /**
-     * Port of photogen's {@code normalizeImmichURL}, minus the Docker rewrite (the app runs on the
-     * host, where {@code localhost} means what it says).  Requires http or https and a host, drops
-     * a trailing {@code /} and a final {@code /api} segment, and keeps any other path prefix, so an
-     * instance behind a reverse proxy at {@code https://host/immich} works.
-     */
+    /** Normalizes an Immich URL: see {@link HttpSyncClient#normalizeUrl(String, String, List)}. */
     public static String normalizeUrl(String raw) throws SyncException {
-        String s = raw == null ? "" : raw.strip();
-        if (s.isEmpty()) throw new SyncException("The Immich URL is empty.");
-        URI u;
-        try {
-            u = new URI(s);
-        } catch (URISyntaxException e) {
-            throw new SyncException("\"" + s + "\" is not a valid URL.");
-        }
-        String scheme = u.getScheme() == null ? "" : u.getScheme().toLowerCase(Locale.ROOT);
-        if (!scheme.equals("http") && !scheme.equals("https")) {
-            throw new SyncException("\"" + s + "\" needs an http:// or https:// prefix.");
-        }
-        if (u.getHost() == null || u.getHost().isEmpty()) {
-            throw new SyncException("\"" + s + "\" has no host.");
-        }
-        String path = u.getPath() == null ? "" : u.getPath();
-        if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
-        int slash = path.lastIndexOf('/');
-        if (path.substring(slash + 1).equalsIgnoreCase("api")) path = path.substring(0, Math.max(slash, 0));
-        try {
-            // Query and fragment are dropped, as photogen drops them.
-            return new URI(scheme, u.getUserInfo(), u.getHost(), u.getPort(), path, null, null).toString();
-        } catch (URISyntaxException e) {
-            throw new SyncException("\"" + s + "\" is not a valid URL.");
-        }
+        return normalizeUrl(raw, DISPLAY_NAME, API_SUFFIXES);
     }
 
     // ── HTTP ────────────────────────────────────────────────────────────────
 
-    private record Response(ImmichClient client, String path, int status, String contentType, String body) {
-        /** The parsed body of a 2xx response; anything else becomes the matching error. */
-        Object ok() throws SyncException {
-            if (status < 200 || status >= 300) throw client.statusError(path, status, body);
-            try {
-                return Json.parse(body);
-            } catch (IllegalArgumentException e) {
-                // JSON that does not parse came from an API, so blaming the URL would mislead;
-                // anything else is some other web server.
-                if (contentType.startsWith("application/json")) throw client.unreadable(path, e);
-                throw client.notImmich(e);
-            }
-        }
-    }
-
-    private Response get(String path) throws SyncException {
-        HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl_ + path))
-                .GET()
-                .header("x-api-key", apiKey_)
-                .header("Accept", "application/json")
-                .header("User-Agent", PhotosConstants.APP_DISPLAY_NAME + "/" + PhotosConstants.VERSION)
-                .timeout(REQUEST_TIMEOUT)
-                .build();
-        try (HttpClient client = HttpClient.newBuilder()
-                // The default (HTTP/2) sends an h2c upgrade on http:// URLs, and Immich drops the
-                // connection on it ("header parser received no bytes").
-                .version(HttpClient.Version.HTTP_1_1)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(CONNECT_TIMEOUT)
-                .build()) {
-            HttpResponse<String> r = client.send(request, HttpResponse.BodyHandlers.ofString());
-            logger.info("immich GET {} -> {}", path, r.statusCode());
-            String contentType = r.headers().firstValue("Content-Type").orElse("").toLowerCase(Locale.ROOT);
-            return new Response(this, path, r.statusCode(), contentType, r.body());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new SyncException("Interrupted while contacting Immich.", e);
-        } catch (HttpConnectTimeoutException e) {
-            throw unreachable("the connection timed out", e);
-        } catch (HttpTimeoutException e) {
-            throw unreachable("it did not answer within " + REQUEST_TIMEOUT.toSeconds() + " seconds", e);
-        } catch (ConnectException e) {
-            throw unreachable(e.getCause() instanceof UnresolvedAddressException
-                              ? "the host name did not resolve" : "the connection was refused", e);
-        } catch (IOException e) {
-            throw unreachable(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName(), e);
-        }
-    }
-
-    private SyncException unreachable(String reason, Exception cause) {
-        logger.info("immich unreachable at {}: {}", baseUrl_, cause.toString());
-        return new SyncException("Could not reach Immich at " + baseUrl_ + ": " + reason + ".", cause);
-    }
-
-    private SyncException notImmich(Exception cause) {
-        return new SyncException("The server at " + baseUrl_ + " answered, but not like Immich. "
-                + "Check the URL.", cause);
-    }
-
-    private SyncException unreadable(String path, Exception cause) {
-        logger.info("immich GET {}: unreadable response: {}", path, cause.toString());
-        return new SyncException("Immich answered GET " + path + ", but its response could not be read.", cause);
+    @Override
+    protected void authorize(HttpRequest.Builder request) {
+        request.header("x-api-key", apiKey_);
     }
 
     /** photogen's {@code statusError}, reworded for a dialog. */
-    SyncException statusError(String path, int status, String body) {
+    @Override
+    protected SyncException statusError(String path, int status, String body) {
         String detail = detail(body);
         String suffix = detail.isEmpty() ? "" : ": " + detail;
         return switch (status) {
@@ -246,10 +138,5 @@ public class ImmichClient implements SyncClient {
         } catch (RuntimeException e) {
             return "";
         }
-    }
-
-    private Map<?, ?> asObject(Object body) throws SyncException {
-        if (body instanceof Map<?, ?> m) return m;
-        throw notImmich(null);
     }
 }
