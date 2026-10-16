@@ -8,6 +8,10 @@
 
 ## News
 
+**PhotoPrism support is here!** Starting with version 1.0.18, DD Photos can sync albums straight
+from [PhotoPrism↗](https://www.photoprism.app), with no export needed. See [DD Photos and PhotoPrism](docs/PHOTOPRISM.md) 
+for a walkthrough with screenshots.
+
 **Immich support is here!** Starting with version 1.0.12, DD Photos can sync albums straight from
 [Immich↗](https://immich.app), with no export needed. See [DD Photos and Immich](docs/IMMICH.md)
 for a walkthrough with screenshots.
@@ -52,7 +56,8 @@ It's that simple.
 
 If you keep your photos in [Immich↗](https://immich.app) or
 [PhotoPrism↗](https://www.photoprism.app), you can skip the export: an album can sync
-straight from it.
+straight from it. See [DD Photos and Immich](docs/IMMICH.md) or
+[DD Photos and PhotoPrism](docs/PHOTOPRISM.md).
 
 With the DD Photos App, you define where your albums live in the **Config** tab, and
 can specify a name, description, and choose your cover photo.  Here, you also define

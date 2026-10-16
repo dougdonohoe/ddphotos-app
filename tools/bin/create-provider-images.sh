@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 #
-# create-immich-images.sh
+# create-provider-images.sh [name.png ...]
 #
-# Build the screenshots used in images/immich/README.md from the full-size
-# originals in images/immich/orig/.
+# Build the screenshots used in docs/IMMICH.md and docs/PHOTOPRISM.md from the
+# full-size originals in images/providers/orig/.  With no arguments, every
+# original is built; otherwise only the named ones (file names in orig/).
 #
 # Each original is scaled by SCALE, then given the same thin gray border and
 # soft drop shadow that the app adds to its own screenshots (see
 # GuiUtils.printToImage and GuiUtils.withDropShadow). The results are written
-# to images/immich/ under the same file names.
+# to images/providers/ under the same file names.
 #
 # Requires ImageMagick 7 (the `magick` command).
 
@@ -32,7 +33,7 @@ SHADOW_ALPHA=90         # 0-255
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-OUT_DIR="$REPO_ROOT/images/immich"
+OUT_DIR="$REPO_ROOT/images/providers"
 ORIG_DIR="$OUT_DIR/orig"
 
 # ── Checks ──────────────────────────────────────────────────────────────────
@@ -43,7 +44,19 @@ if ! command -v magick >/dev/null 2>&1; then
 fi
 
 shopt -s nullglob
-originals=("$ORIG_DIR"/*.png)
+if (( $# > 0 )); then
+    originals=()
+    for name in "$@"; do
+        src="$ORIG_DIR/$(basename "$name")"
+        if [[ ! -f "$src" ]]; then
+            echo "error: no original $src" >&2
+            exit 1
+        fi
+        originals+=("$src")
+    done
+else
+    originals=("$ORIG_DIR"/*.png)
+fi
 if (( ${#originals[@]} == 0 )); then
     echo "error: no .png files found in $ORIG_DIR" >&2
     exit 1

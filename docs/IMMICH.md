@@ -24,11 +24,11 @@ DD Photos takes a different approach.
 
 Here are three albums on a test Immich server:
 
-![Immich albums page](../images/immich/immich-home.png)
+![Immich albums page](../images/providers/immich-home.png)
 
 And here is what a friend sees when you share the Uganda album from Immich:
 
-![Immich shared album](../images/immich/immich-shared-album-uganda.png)
+![Immich shared album](../images/providers/immich-shared-album-uganda.png)
 
 It works, but it is one album per link, there is a lot of white space,
 and friends can't discover or browse your other albums.
@@ -38,17 +38,17 @@ and friends can't discover or browse your other albums.
 DD Photos puts all your albums on one home page, with custom title, subtitle, overview and "hero" image. Each 
 album has a cover photo and a description:
 
-![DD Photos home page with three albums](../images/immich/ddphotos-immich-albums.png)
+![DD Photos home page with three albums](../images/providers/ddphotos-immich-albums.png)
 
 Open an album, and you get a clean grid with less white space. It works great on phones and tablets,
 and there is a dark theme too.
 
-![DD Photos Uganda album](../images/immich/ddphotos-album-uganda.png)
+![DD Photos Uganda album](../images/providers/ddphotos-album-uganda.png)
 
 Tap a photo to see it full size, with its caption. Swipe (or use the arrow keys) to move through the
 album. Videos play right in the album too.
 
-![DD Photos photo with caption](../images/immich/ddphotos-album-lightbox.png)
+![DD Photos photo with caption](../images/providers/ddphotos-album-lightbox.png)
 
 The site is just static files. You can publish it for free on
 [Cloudflare Pages↗](https://pages.cloudflare.com) or [Surge↗](https://surge.sh), or put it anywhere
@@ -62,24 +62,24 @@ See a live example at [ddphotos.donohoe.info↗](https://ddphotos.donohoe.info).
 **1. Connect to Immich.** Enter your server address and an API key. The key only needs the
 `album.read`, `asset.read` and `asset.download` permissions. Press **Test** to check that it works.
 
-![Immich credentials dialog](../images/immich/ddphotos-immich-creds.png)
+![Immich credentials dialog](../images/providers/ddphotos-immich-creds.png)
 
 **2. Add an album.** In the Add Album dialog, choose **Sync** as the source type, then press
 **Choose...**. DD Photos lists your Immich albums. Pick one.
 
-![Choose Album dialog](../images/immich/ddphotos-app-album-chooser.png)
+![Choose Album dialog](../images/providers/ddphotos-app-album-chooser-immich.png)
 
 DD Photos fills in the album's name and description, and suggests a URL name (the "slug"). Press
 **Save**.
 
-![Add Album dialog](../images/immich/ddphotos-app-add-album.png)
+![Add Album dialog](../images/providers/ddphotos-app-add-album-immich.png)
 
 **3. Make it yours.** Keep the name and description from Immich, or override them just for your site.
 Pick a cover photo. Turn on **Use Descriptions as Captions** to show each photo's Immich description
 as its caption. You can also edit captions and set your own photo order, and those changes are kept
 the next time you sync.
 
-![Album details](../images/immich/ddphotos-app-album-details.png)
+![Album details](../images/providers/ddphotos-app-album-details-immich.png)
 
 **4. Preview, Build and Publish.** Run `photogen` from the app. It downloads your photos and videos from
 Immich and resizes them for the web. Later runs only download what is new or changed. Preview the
