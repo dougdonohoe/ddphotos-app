@@ -28,6 +28,15 @@ public class FileCleanup implements UninstallAction {
     @SuppressWarnings("RedundantThrows")
     public boolean uninstall(UninstallerContext uninstallerContext) throws UserCanceledException {
         ProgressInterface progressInterface = uninstallerContext.getProgressInterface();
+
+        // An upgrade runs the previous version's uninstaller (the "Uninstall previous installation"
+        // action in ddphotos.install4j) unattended, so the user never sees the screen with the delete
+        // checkboxes and never agreed to lose anything.  Leave their files and prefs alone.
+        if (uninstallerContext.isUninstallForUpgrade()) {
+            progressInterface.setPercentCompleted(100);
+            return true;
+        }
+
         Prefs.setRootNodeName(APP_NAME + MAJOR_VERSION);
 
         try {

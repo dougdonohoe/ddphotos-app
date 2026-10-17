@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<install4j version="13.0.2" transformSequenceNumber="13">
+<install4j version="13.1.1" transformSequenceNumber="13">
   <directoryPresets config="./custom" />
   <application name="DD Photos" applicationId="0136-5722-1649-9930" mediaDir="../builds" mediaFilePattern="ddphotos${compiler:sys.version}" shortName="ddphotos" publisher="Donohoe Digital LLC" publisherWeb="http://www.donohoedigital.com/" version="1.0" allPathsRelative="true" macVolumeId="d24c5a0cf4cff0ab" javaMinVersion="25" javaMaxVersion="25">
     <languages>
@@ -207,6 +207,22 @@ return console.askOkCancel(message, true);
               <formComponent id="19" beanClass="com.install4j.runtime.beans.formcomponents.InstallationDirectoryChooserComponent" useExternalParametrization="true" externalParametrizationName="Installation Directory Chooser" externalParametrizationMode="include">
                 <serializedBean>
                   <property name="requestFocus" type="boolean" value="true" />
+                  <property name="validationScript">
+                    <object class="com.install4j.api.beans.ScriptProperty">
+                      <property name="value" type="string">// The "Uninstall previous installation" action on the Installation screen removes the version
+// already installed in this directory, including files this build no longer ships.  That is more
+// than an overwrite, so confirm it rather than springing it on the user.
+if (!ApplicationRegistry.isUpdateDirectory(context.getInstallationDirectory())) return true;
+
+return Util.showOptionDialog(
+        context.getApplicationName() + " is already installed in this directory.\n\n" +
+        "The existing installation will be removed and replaced.  Your config files, logs and " +
+        "preferences are stored separately and will not be touched.\n\n" +
+        "Do you want to proceed?",
+        new String[]{"Proceed", "Choose another directory"},
+        JOptionPane.QUESTION_MESSAGE) == 0;</property>
+                    </object>
+                  </property>
                 </serializedBean>
                 <externalParametrizationPropertyNames>
                   <propertyName>suggestAppDir</propertyName>
@@ -317,6 +333,7 @@ return true;
           </screen>
           <screen id="11" beanClass="com.install4j.runtime.beans.screens.InstallationScreen" rollbackBarrier="true">
             <actions>
+              <action name="Uninstall previous installation" id="203" beanClass="com.install4j.runtime.beans.actions.UninstallPreviousAction" commentSet="true" comment="Removes the version already installed here, including files this build no longer ships. The launcher classpath is a scan of the installation directory, so a leftover jar lands on the classpath and can shadow the one we do ship." />
               <action id="12" beanClass="com.install4j.runtime.beans.actions.InstallFilesAction" failureStrategy="quit" errorMessage="${i18n:FileCorrupted}" />
               <action id="13" beanClass="com.install4j.runtime.beans.actions.desktop.CreateDefaultStartMenuEntriesAction" actionElevationType="elevated">
                 <serializedBean>
