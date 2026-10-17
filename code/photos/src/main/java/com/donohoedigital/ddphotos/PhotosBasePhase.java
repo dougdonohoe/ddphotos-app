@@ -79,6 +79,9 @@ public class PhotosBasePhase extends BasePhase {
     // Held so the Run menu can name and enable its items for whichever site is selected.
     private SiteBarPanel siteBar_;
 
+    // Held so the Run menu and the tour can deal with an edit in progress first - see okayToLeaveConfig.
+    private ConfigTab configTab_;
+
     // Held so Run -> Photogen... can select that tab and press its Run button.
     private CommandRunnerPanel photogenTab_;
 
@@ -210,6 +213,7 @@ public class PhotosBasePhase extends BasePhase {
         // The command tabs are gone with the editor - okayToLeaveEditor has already settled
         // anything they were running.
         runnerTabs_ = List.of();
+        configTab_ = null;
 
         // The menu bar is built in init(), before start() has decided wizard or tabs, so the
         // wizard's rules can only be applied from here.
@@ -236,6 +240,7 @@ public class PhotosBasePhase extends BasePhase {
 
         // Held for the tour, which selects these tabs and watches their commands (see TourController).
         ConfigTab configTab = new ConfigTab(context_, siteBar);
+        configTab_ = configTab;
         CommandRunnerPanel photogenTab = new CommandRunnerPanel(siteBar, new PhotogenRunner(), context_);
         photogenTab_ = photogenTab;
         CommandRunnerPanel runTab = new CommandRunnerPanel(siteBar, new RunRunner(), context_);
@@ -578,9 +583,11 @@ public class PhotosBasePhase extends BasePhase {
      * tabs go with it - and with them the only handle on any process they have running, which
      * would otherwise carry on unwatched with no way to stop it.  Each tab is asked the same way
      * quitting asks (see {@link AbstractRunnerPanel#confirmStopRunning}), stopping its command
-     * when the user agrees; a no from any of them abandons the whole thing.
+     * when the user agrees; a no from any of them abandons the whole thing.  Unsaved site or
+     * album edits are asked about first, since stopping a command cannot be taken back.
      */
     private boolean okayToLeaveEditor() {
+        if (siteBar_ != null && !wizardUp_ && !siteBar_.okayToDiscardEdits()) return false;
         for (CommandRunnerPanel tab : runnerTabs_) {
             if (!tab.confirmStopRunning("msg.leave.running.confirm", null)) return false;
         }
@@ -610,6 +617,7 @@ public class PhotosBasePhase extends BasePhase {
      */
     private void doPhotogen() {
         if (tabs_ == null || photogenTab_ == null) return;
+        if (!okayToLeaveConfig()) return;
 
         tabs_.setSelectedComponent(photogenTab_);
         // The tab's UI is built lazily, and we are about to press its Run button. Harmless if the
@@ -644,7 +652,17 @@ public class PhotosBasePhase extends BasePhase {
     }
 
     private void doPublish() {
-        if (publishController_ != null) publishController_.start();
+        if (publishController_ == null || !okayToLeaveConfig()) return;
+        publishController_.start();
+    }
+
+    /**
+     * Photogen, Publish and the tour all move to other tabs and run commands against the config on
+     * disk, so an edit in progress is settled first: asked about if anything was typed, then
+     * ended (see {@link ConfigTab#okayToLeave}).
+     */
+    private boolean okayToLeaveConfig() {
+        return configTab_ == null || configTab_.okayToLeave();
     }
 
     private JMenu buildHelpMenu() {
@@ -661,7 +679,7 @@ public class PhotosBasePhase extends BasePhase {
 
         DDMenuItem rerunTour = new DDMenuItem("reruntour");
         rerunTour.addActionListener(mainWindowAction(() -> {
-            if (tourController_ != null) tourController_.startFromMenu();
+            if (tourController_ != null && okayToLeaveConfig()) tourController_.startFromMenu();
         }));
         menu.add(rerunTour);
 

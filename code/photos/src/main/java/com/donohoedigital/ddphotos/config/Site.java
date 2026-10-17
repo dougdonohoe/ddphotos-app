@@ -138,11 +138,19 @@ public class Site implements NamedObject, Comparable<Site> {
         }
     }
 
-    /** Saves the cached AlbumsFile to disk. No-op if nothing is cached or path is unknown. */
+    /**
+     * Saves the cached AlbumsFile to disk. No-op if nothing is cached or path is unknown.  Refuses
+     * when the model was loaded from or saved to a different file, so one site's albums are never
+     * written over another's.
+     */
     public void saveAlbumsFile() throws AlbumsFileException {
         if (albumsFile_ == null) return;
         Path path = getAlbumsFilePath();
         if (path == null) return;
+        Path modelPath = albumsFile_.getPath();
+        if (modelPath != null && !modelPath.equals(path)) {
+            throw new AlbumsFileException("not saving " + path + ": the albums in memory belong to " + modelPath);
+        }
         albumsFile_.save(path);
     }
 
@@ -211,10 +219,32 @@ public class Site implements NamedObject, Comparable<Site> {
     }
 
     public String getDirPath() { return dirPath; }
-    public void setDirPath(String dirPath) { this.dirPath = dirPath; }
+    public void setDirPath(String dirPath) {
+        Path before = getAlbumsFilePath();
+        this.dirPath = dirPath;
+        locationChanged(before);
+    }
 
     public String getConfigPath() { return configPath; }
-    public void setConfigPath(String configPath) { this.configPath = configPath; }
+    public void setConfigPath(String configPath) {
+        Path before = getAlbumsFilePath();
+        this.configPath = configPath;
+        locationChanged(before);
+    }
+
+    /**
+     * After a folder change: drop the cached model when it now points at a different
+     * {@code albums.yaml}, so the next access loads the new file.  Otherwise, keep it (it may hold
+     * edits) and refresh its site and config dirs.
+     */
+    private void locationChanged(Path albumsPathBefore) {
+        if (albumsFile_ == null) return;
+        if (Objects.equals(albumsPathBefore, getAlbumsFilePath())) {
+            setDirsOn(albumsFile_);
+        } else {
+            albumsFile_ = null;
+        }
+    }
 
     /**
      * Returns true when configPath is explicitly set AND differs from the default

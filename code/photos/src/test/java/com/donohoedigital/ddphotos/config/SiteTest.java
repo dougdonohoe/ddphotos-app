@@ -300,6 +300,90 @@ public class SiteTest {
         assertEquals(TWO_ALBUMS, readAlbums(configDir));
     }
 
+    // ── setDirPath() / setConfigPath() ──────────────────────────────────────
+    // A change that moves the site to a different albums.yaml must drop the cached model, or the
+    // next save writes the old site's albums over the new site's file.
+
+    @Test
+    public void setDirPath_toAnotherSite_loadsThatSitesAlbums() throws Exception {
+        Path oldConfig = Files.createDirectories(tmp.resolve("old").resolve("config"));
+        Path newConfig = Files.createDirectories(tmp.resolve("new").resolve("config"));
+        writeMinimalAlbums(oldConfig, "old-site");
+        writeMinimalAlbums(newConfig, "new-site");
+
+        Site site = new Site("My Site", oldConfig.getParent().toString(), null);
+        assertEquals("old-site", site.getAlbumsFile().getSettings().getId());
+
+        site.setDirPath(newConfig.getParent().toString());
+        assertEquals("new-site", site.getAlbumsFile().getSettings().getId());
+
+        site.saveAlbumsFile();
+        assertTrue(readAlbums(newConfig).contains("id: new-site"));
+    }
+
+    @Test
+    public void setConfigPath_toAnotherFolder_loadsThatFolder() throws Exception {
+        Path oldConfig = Files.createDirectory(tmp.resolve("old-config"));
+        Path newConfig = Files.createDirectory(tmp.resolve("new-config"));
+        writeMinimalAlbums(oldConfig, "old-site");
+        writeMinimalAlbums(newConfig, "new-site");
+
+        Site site = new Site("My Site", "/irrelevant", oldConfig.toString());
+        assertEquals("old-site", site.getAlbumsFile().getSettings().getId());
+
+        site.setConfigPath(newConfig.toString());
+        assertEquals("new-site", site.getAlbumsFile().getSettings().getId());
+
+        site.saveAlbumsFile();
+        assertTrue(readAlbums(newConfig).contains("id: new-site"));
+    }
+
+    @Test
+    public void setDirPath_withConfigOverride_keepsTheModelAndUpdatesItsSiteDir() throws Exception {
+        // The albums.yaml is the same file, so in-memory edits stay; only base resolution moves.
+        Path config = Files.createDirectory(tmp.resolve("config"));
+        writeMinimalAlbums(config, "my-site");
+        Path newSiteDir = Files.createDirectory(tmp.resolve("moved"));
+
+        Site site = new Site("My Site", tmp.resolve("site").toString(), config.toString());
+        AlbumsFile before = site.getAlbumsFile();
+
+        site.setDirPath(newSiteDir.toString());
+        assertSame(before, site.getAlbumsFile());
+        assertEquals(newSiteDir, before.getSiteDir());
+    }
+
+    @Test
+    public void setDirPath_toTheSameValue_keepsTheModel() throws Exception {
+        Path config = Files.createDirectories(tmp.resolve("site").resolve("config"));
+        writeMinimalAlbums(config, "my-site");
+
+        Site site = new Site("My Site", config.getParent().toString(), null);
+        AlbumsFile before = site.getAlbumsFile();
+
+        site.setDirPath(config.getParent().toString());
+        site.setConfigPath(null);
+        assertSame(before, site.getAlbumsFile());
+    }
+
+    // ── saveAlbumsFile() ────────────────────────────────────────────────────
+
+    @Test
+    public void saveAlbumsFile_refusesWhenTheModelBelongsToAnotherFile() throws Exception {
+        // Backstop for any path that swaps the site's location without going through the setters.
+        Path config = Files.createDirectory(tmp.resolve("config"));
+        Path other = Files.createDirectory(tmp.resolve("other"));
+        writeMinimalAlbums(config, "my-site");
+        writeMinimalAlbums(other, "other-site");
+
+        Site site = new Site("My Site", "/irrelevant", config.toString());
+        site.getAlbumsFile().save(other.resolve("albums.yaml"));   // model now points at other/
+
+        AlbumsFileException e = assertThrows(AlbumsFileException.class, site::saveAlbumsFile);
+        assertTrue(e.getMessage().contains(other.resolve("albums.yaml").toString()), e.getMessage());
+        assertEquals("settings:\n  id: my-site\n", readAlbums(config));
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private Path writeTwoAlbums() throws Exception {

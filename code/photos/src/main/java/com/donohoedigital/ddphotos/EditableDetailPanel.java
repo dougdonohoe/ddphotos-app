@@ -71,6 +71,11 @@ abstract class EditableDetailPanel extends DDPanel {
         return editing_;
     }
 
+    /** Leaves edit mode, dropping anything typed, as Cancel does.  No-op when not editing. */
+    public final void discardEdit() {
+        if (editing_) cancelEdit();
+    }
+
     /**
      * The single point at which edit mode changes.  Subclasses must never touch the
      * flag directly: routing every transition (edit / save / cancel / reload) through

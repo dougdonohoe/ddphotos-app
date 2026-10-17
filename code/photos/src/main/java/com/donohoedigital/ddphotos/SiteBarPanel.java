@@ -119,6 +119,7 @@ public class SiteBarPanel extends DDPanel
 
     private void onAdd()
     {
+        if (!okayToDiscardEdits()) return;
         refreshCombo(PhotosUtils.openAddSiteDialog(context_, sitesFile_));
     }
 
@@ -126,6 +127,10 @@ public class SiteBarPanel extends DDPanel
     {
         Site selected = (Site) siteCombo_.getSelectedItem();
         if (selected == null) return;
+
+        // Closing the dialog reloads every panel from the site, even on Cancel, and a folder
+        // change swaps in a different albums.yaml, so pending edits cannot survive either way.
+        if (!okayToDiscardEdits()) return;
 
         TypedHashMap params = new TypedHashMap();
         params.setObject(SiteDialog.PARAM_SITES_FILE,      sitesFile_);
@@ -140,6 +145,7 @@ public class SiteBarPanel extends DDPanel
     {
         Site selected = (Site) siteCombo_.getSelectedItem();
         if (selected == null) return;
+        if (!okayToDiscardEdits()) return;
 
         if (!EngineUtils.displayConfirmationDialog(context_, PropertyConfig.getMessage("msg.confirm.remove.site", selected.getDisplayName()))) {
             return;
@@ -167,6 +173,18 @@ public class SiteBarPanel extends DDPanel
     public void setDirtyChecker(BooleanSupplier checker)
     {
         dirtyChecker_ = checker;
+    }
+
+    /**
+     * True when nothing is pending, or the user agreed to discard it.  For anything that reloads
+     * or replaces the panels bound to the site: add, edit and delete here, and leaving the editor
+     * for the wizard (see {@code PhotosBasePhase.okayToLeaveEditor}).
+     */
+    public boolean okayToDiscardEdits()
+    {
+        return dirtyChecker_ == null || !dirtyChecker_.getAsBoolean()
+            || EngineUtils.displayConfirmationDialog(context_,
+                       PropertyConfig.getMessage("msg.confirm.unsaved.discard"));
     }
 
     private void notifySiteListeners(Site site)

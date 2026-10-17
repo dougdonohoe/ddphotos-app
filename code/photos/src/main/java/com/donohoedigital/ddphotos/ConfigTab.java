@@ -143,6 +143,19 @@ public class ConfigTab extends DDTabPanel implements AppEngine.CloseListener
         }
     }
 
+    /**
+     * For things that take the user to another tab: Photogen, Publish and the tour.  Asks before
+     * discarding unsaved edits (see {@link SiteBarPanel#okayToDiscardEdits}), then ends any edit
+     * still open, so the other tabs unlock and nothing runs against a half-edited config.
+     */
+    public boolean okayToLeave()
+    {
+        if (!siteBar_.okayToDiscardEdits()) return false;
+        if (siteDetailsPanel_ != null) siteDetailsPanel_.discardEdit();
+        if (albumDetailPanel_ != null) albumDetailPanel_.discardEdit();
+        return true;
+    }
+
     public boolean isDirty()
     {
         return (siteDetailsPanel_ != null && siteDetailsPanel_.isDirty())
