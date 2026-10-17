@@ -166,7 +166,9 @@ public class PhotosBasePhase extends BasePhase {
     private static List<String> missingSetup() {
         List<String> missing = new ArrayList<>();
         if (!Files.isExecutable(Path.of(DockerStatus.dockerPath()))) missing.add("msg.setup.incomplete.docker");
-        if (Utils.ISWINDOWS && !Files.isExecutable(Path.of(BashSupport.bashPath()))) missing.add("msg.setup.incomplete.bash");
+        // Blank must be checked explicitly: Path.of("") is the current directory, which Windows reports as executable.
+        String bash = BashSupport.bashPath();
+        if (Utils.ISWINDOWS && (bash.isBlank() || !Files.isExecutable(Path.of(bash)))) missing.add("msg.setup.incomplete.bash");
         if (!Files.isExecutable(PhotosUtils.scriptPath())) missing.add("msg.setup.incomplete.script");
         return missing;
     }
