@@ -139,15 +139,13 @@ public abstract class CommandRunner {
         configureEnvironment(pb);
         // The ddphotos script names its container with this so stop()/kill() can target it.
         if (containerName != null) pb.environment().put(ENV_CONTAINER_NAME, containerName);
-        // The ddphotos.cmd wrapper reads the confirmed Git Bash location from this env var.
-        if (Utils.ISWINDOWS && usesBashWrapper()) BashSupport.applyBashEnv(pb);
         return pb.start();
     }
 
     /**
      * Resolves a freshly-built command to the form it must actually run in. On Windows the ddphotos
-     * script is a bash script and can't be run directly, so it is wrapped to run through its
-     * companion {@code ddphotos.cmd} under {@code cmd /c} (only ddphotos-script runners opt in via
+     * script is a bash script and can't be run directly, so it is wrapped to run under Git Bash
+     * (see {@link BashSupport#wrap}; only ddphotos-script runners opt in via
      * {@link #usesBashWrapper()} - docker invocations stay native). Callers resolve a raw command
      * here once, then pass the result to both the "Running:" echo and {@link #launchCommand}.
      *
@@ -162,8 +160,7 @@ public abstract class CommandRunner {
 
     /**
      * Windows only: when true, the command (whose first element is the ddphotos script path) is run
-     * through the {@code ddphotos.cmd} wrapper via {@link BashSupport#wrap}, with the Git Bash
-     * location supplied through {@link BashSupport#applyBashEnv}. Default false; overridden by
+     * under Git Bash via {@link BashSupport#wrap}. Default false; overridden by
      * {@link DdphotosRunner}. Runners that shell out to docker directly leave this off.
      */
     protected boolean usesBashWrapper() { return false; }

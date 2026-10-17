@@ -9,22 +9,20 @@ import java.util.List;
 
 /**
  * Windows-only support for running the (bash) {@code ddphotos} script. Windows cannot execute a
- * shebang script directly, so on Windows every ddphotos invocation is launched through the
- * companion {@code ddphotos.cmd} wrapper installed alongside the script:
- * {@code cmd /c <script>.cmd <args...>}. The wrapper finds the Git Bash to run the script with via
- * the {@link #ENV_DDPHOTOS_BASH} environment variable, which we set to the path located here.
+ * shebang script directly, so on Windows every ddphotos invocation is run by Git Bash:
+ * {@code <bash.exe> <script> <args...>}. We launch {@code bash.exe} directly rather than through
+ * the {@code ddphotos.cmd} wrapper because {@code cmd /c} mangles the command line when more than
+ * one argument is quoted (e.g. a script path under a user home containing a space plus a
+ * directory argument containing a space), and would also interpret {@code & | ^ %} in arguments.
  * <p>
  * Mirrors the binary-location half of {@link DockerStatus}: the wizard pre-populates its UI
  * field from {@link #findBashBinary()} and stores the chosen path in prefs; runtime invocations
- * use {@link #bashPath()} / {@link #wrap} / {@link #applyBashEnv}.
+ * use {@link #bashPath()} / {@link #wrap}.
  */
 public final class BashSupport {
 
     /** Prefs key (under {@link PhotosConstants#PREFS_NODE_APP}) where the bash binary path is stored. */
     public static final String PREFS_KEY_BASH_BINARY = "wizard.bashbinary";
-
-    /** Environment variable the {@code ddphotos.cmd} wrapper reads to locate {@code bash.exe}. */
-    public static final String ENV_DDPHOTOS_BASH = "DDPHOTOS_BASH";
 
     private BashSupport() {}
 
@@ -51,34 +49,26 @@ public final class BashSupport {
     }
 
     /**
-     * Returns the bash binary the {@code ddphotos.cmd} wrapper should use, passed via
-     * {@link #ENV_DDPHOTOS_BASH}: the path stored in prefs by the wizard UI field, or
-     * {@code "bash.exe"} as a PATH fallback when prefs is empty.
+     * Returns the Git Bash binary used to run the ddphotos script: the path stored in prefs by the
+     * wizard UI field, or {@code ""} when none is stored. There is deliberately no bare
+     * {@code "bash.exe"} fallback: Windows resolves a bare name via System32 before PATH, which
+     * finds WSL's {@code bash.exe} rather than Git Bash. A blank path fails the setup-complete
+     * check, so the wizard runs again before any command can launch.
      */
     public static String bashPath() {
-        String stored = DDOption.getOptionPrefs(PhotosConstants.PREFS_NODE_APP)
-                                .get(PREFS_KEY_BASH_BINARY, "").trim();
-        return stored.isBlank() ? "bash.exe" : stored;
+        return DDOption.getOptionPrefs(PhotosConstants.PREFS_NODE_APP)
+                       .get(PREFS_KEY_BASH_BINARY, "").trim();
     }
 
     /**
-     * Wraps a command whose first element is the ddphotos script path so it runs through the
-     * companion {@code ddphotos.cmd} wrapper under {@code cmd}:
-     * {@code [cmd, /c, <script>.cmd, <args...>]}. The {@code .cmd} extension is appended to the
-     * script path (the wrapper lives next to the script); the remaining arguments are passed
-     * through untouched. The Git Bash location is supplied separately via {@link #applyBashEnv}.
+     * Wraps a command whose first element is the ddphotos script path so it runs under Git Bash:
+     * {@code [<bash.exe>, <script>, <args...>]}. The script path and arguments are passed through
+     * untouched.
      */
     public static List<String> wrap(List<String> cmd) {
-        List<String> wrapped = new ArrayList<>(cmd.size() + 2);
-        wrapped.add("cmd");
-        wrapped.add("/c");
-        wrapped.add(cmd.getFirst() + ".cmd");
-        wrapped.addAll(cmd.subList(1, cmd.size()));
+        List<String> wrapped = new ArrayList<>(cmd.size() + 1);
+        wrapped.add(bashPath());
+        wrapped.addAll(cmd);
         return wrapped;
-    }
-
-    /** Sets {@link #ENV_DDPHOTOS_BASH} on the process so {@code ddphotos.cmd} can find Git Bash. */
-    public static void applyBashEnv(ProcessBuilder pb) {
-        pb.environment().put(ENV_DDPHOTOS_BASH, bashPath());
     }
 }
