@@ -156,7 +156,9 @@ public final class ConfigWatcher {
             if (!WATCHES.contains(w)) continue;
             ConfigFile f = w.current();
             if (f != w.last || f == null) continue;
-            if (!f.isChangedOnDisk()) continue;
+            // Judged on the stamp taken off the EDT, not a fresh stat here, so the state reported
+            // is the state recorded as suppressed.
+            if (!f.isChangedFrom(stamps.get(i))) continue;
             if (stamps.get(i).equals(w.suppressed)) continue;
 
             logger.info("changed on disk: {}", f.getPath());
