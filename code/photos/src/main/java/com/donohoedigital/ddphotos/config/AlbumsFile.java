@@ -309,8 +309,8 @@ public class AlbumsFile extends ConfigFile {
     }
 
     /**
-     * If the given absolute path falls within the site dir, returns the relative path.
-     * Otherwise, returns the original string unchanged.
+     * If the given absolute path falls within the site dir, returns the relative path, or
+     * {@code "."} for the site dir itself.  Otherwise, returns the original string unchanged.
      */
     public String toRelativeBasePath(String path) {
         if (siteDir == null || path == null || path.isBlank()) return path;
@@ -320,6 +320,7 @@ public class AlbumsFile extends ConfigFile {
             Path realSiteDir = siteDir.toRealPath();
             Path realPath    = absolute.toRealPath();
             Path relative    = realSiteDir.relativize(realPath);
+            if (relative.toString().isEmpty()) return ".";
             if (!relative.startsWith("..")) return relative.toString();
         } catch (IOException | IllegalArgumentException ignored) {}
         return path;

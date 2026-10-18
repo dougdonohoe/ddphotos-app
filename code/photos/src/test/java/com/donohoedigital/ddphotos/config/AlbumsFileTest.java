@@ -1150,6 +1150,33 @@ public class AlbumsFileTest {
     }
 
     @Test
+    public void toRelativeBasePath_siteDirItself() throws Exception {
+        // The site folder relative to itself is "", which syncBases() skips as blank, so the base
+        // was dropped on save and albums using it no longer loaded.
+        Path siteDir = Files.createDirectory(tmp.resolve("site"));
+        Path f = Files.writeString(siteDir.resolve("albums.yaml"), """
+                bases:
+                  here: placeholder
+                albums:
+                  - slug: way
+                    name: The Way
+                    base: here
+                    source: way
+                """);
+        AlbumsFile af = AlbumsFile.load(f);
+        af.setSiteDir(siteDir);
+
+        String relative = af.toRelativeBasePath(siteDir.toString());
+        assertEquals(".", relative);
+
+        af.getBases().put("here", relative);
+        af.save(f);
+        AlbumsFile reloaded = AlbumsFile.load(f);
+        reloaded.setSiteDir(siteDir);
+        assertEquals(siteDir, reloaded.resolveBasePath("here"));
+    }
+
+    @Test
     public void toRelativeBasePath_outsideSiteDir() throws Exception {
         File siteDir   = Files.createDirectory(tmp.resolve("site")).toFile();
         File outsideDir = Files.createDirectory(tmp.resolve("outside")).toFile();
