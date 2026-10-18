@@ -201,6 +201,34 @@ public class AlbumsFileTest {
     }
 
     @Test
+    public void save_rejectsSlugAndSiteIdPhotogenRejects() throws Exception {
+        // Loads, so the user can fix it in the app; only a save is refused.
+        Path f = writeYaml("settings:\n  id: My_Site\nalbums:\n  - slug: my trip\n    name: A\n    source: /tmp/p\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        AlbumEntry a = af.getAlbums().getFirst();
+
+        assertSaveFails(af, f, "album \"my trip\": slug must start with a letter or digit");
+        a.setSlug("x".repeat(65));
+        assertSaveFails(af, f, "slug must be at most 64 characters");
+        a.setSlug("my_trip-" + "x".repeat(56));
+        assertSaveFails(af, f, "settings.id \"My_Site\" must contain only lowercase letters, digits, and hyphens");
+        af.getSettings().setId("x".repeat(65));
+        assertSaveFails(af, f, "must be at most 64 characters");
+
+        af.getSettings().setId("my-site");
+        af.save(f);
+        af.getSettings().setId(null);   // not set yet, as for a new site
+        af.save(f);
+    }
+
+    private static void assertSaveFails(AlbumsFile af, Path f, String expected) throws Exception {
+        String before = Files.readString(f, StandardCharsets.UTF_8);
+        AlbumsFileException e = assertThrows(AlbumsFileException.class, () -> af.save(f));
+        assertTrue(e.getMessage().contains(expected), e.getMessage());
+        assertEquals(before, Files.readString(f, StandardCharsets.UTF_8), "file must not change");
+    }
+
+    @Test
     public void validate_heroMissingImage() throws Exception {
         Path f = writeYaml("settings:\n  hero:\n    crop: top\nalbums:\n  - slug: a\n    name: A\n    source: /tmp/p\n");
         try {
@@ -620,6 +648,150 @@ public class AlbumsFileTest {
     }
 
     @Test
+    public void roundTrip_keepsListLikeLinesInBlockScalars() throws Exception {
+        // The blank lines between album items must not also go inside | and > values.
+        String original = """
+                settings:
+                  site_overview_html: >
+                    - Nepal
+
+                    - Peru
+                albums:
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+                    long_description_html: |
+                      <pre>
+                      - Day 1: Rome
+                      - Day 2: Florence
+                      </pre>
+
+                  - slug: nepal
+                    name: Nepal
+                    source: /tmp/n
+                """;
+        AlbumsFile af = AlbumsFile.load(writeYaml(original));
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
+        af.save(out);
+
+        AlbumsFile reloaded = AlbumsFile.load(out);
+        assertEquals("- Nepal\n- Peru\n", reloaded.getSettings().getSiteOverviewHtml());
+        assertEquals("<pre>\n- Day 1: Rome\n- Day 2: Florence\n</pre>\n",
+                reloaded.getAlbums().getFirst().getLongDescriptionHtml());
+        assertEquals(2, reloaded.getAlbums().size());
+        assertTrue(Files.readString(out, StandardCharsets.UTF_8).contains("recurse: false\n\n  - slug: nepal"),
+                "albums should still be separated by a blank line");
+    }
+
+    @Test
+    public void roundTrip_blankLineGoesAboveAlbumComments() throws Exception {
+        String original = """
+                albums:
+                  # First comment
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+                    manual_sort_order: false
+                    recurse: false
+
+                  # Nepal comment
+                  # second line
+                  - slug: nepal
+                    name: Nepal
+                    source: /tmp/n
+                    manual_sort_order: false
+                    recurse: false
+                """;
+        Path f = writeYaml(original);
+        AlbumsFile.load(f).save(f);
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertEquals(original, yaml.substring(yaml.indexOf("albums:")));
+    }
+
+    @Test
+    public void roundTrip_renameAlbumKeepsItsNode() throws Exception {
+        Path f = writeYaml("""
+                albums:
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+
+                  # Nepal comment
+                  - slug: nepal
+                    name: "Nepal"
+                    sync:
+                      provider: mock
+                      album_id: n1
+                      mock:
+                        assets: assets.json
+                        media_dir: media
+                """);
+        AlbumsFile af = AlbumsFile.load(f);
+        AlbumEntry nepal = af.getAlbums().get(1);
+        nepal.setSlug("nepal-2018");
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.contains("# Nepal comment\n  - slug: nepal-2018\n    name: \"Nepal\"\n    sync:"),
+                "renamed album should keep its comment, quoting and key order:\n" + yaml);
+        assertEquals("assets.json", AlbumsFile.load(f).getAlbums().get(1).getSync().getMock().getAssets());
+
+        // A second rename from the same model still finds the node.
+        nepal.setSlug("nepal-trip");
+        af.save(f);
+        yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.contains("# Nepal comment\n  - slug: nepal-trip\n    name: \"Nepal\"\n    sync:"),
+                "second rename should keep the node too:\n" + yaml);
+        assertEquals("assets.json", AlbumsFile.load(f).getAlbums().get(1).getSync().getMock().getAssets());
+    }
+
+    @Test
+    public void roundTrip_swapAlbumSlugs() throws Exception {
+        Path f = writeYaml("""
+                albums:
+                  # A comment
+                  - slug: a
+                    name: A
+                    source: /tmp/a
+
+                  # B comment
+                  - slug: b
+                    name: B
+                    source: /tmp/b
+                """);
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getAlbums().get(0).setSlug("b");
+        af.getAlbums().get(1).setSlug("a");
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.contains("# A comment\n  - slug: b\n    name: A"), yaml);
+        assertTrue(yaml.contains("# B comment\n  - slug: a\n    name: B"), yaml);
+    }
+
+    @Test
+    public void roundTrip_newAlbumDoesNotTakeRenamedAlbumsNode() throws Exception {
+        Path f = writeYaml("""
+                albums:
+                  # Way comment
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+                """);
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getAlbums().getFirst().setSlug("camino");
+        af.getAlbums().add(albumWith("way", null, "/tmp/new"));
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.contains("# Way comment\n  - slug: camino\n    name: The Way"), yaml);
+        List<AlbumEntry> reloaded = AlbumsFile.load(f).getAlbums();
+        assertEquals("/tmp/p", reloaded.get(0).getSource());
+        assertEquals("way", reloaded.get(1).getSlug());
+        assertEquals("/tmp/new", reloaded.get(1).getSource());
+    }
+
+    @Test
     public void saveNewFile() throws Exception {
         AlbumsFile af = new AlbumsFile();
         af.getSettings().setId("mysite");
@@ -1003,6 +1175,33 @@ public class AlbumsFileTest {
         af.setSiteDir(siteDir.toPath());
 
         assertEquals("sample/source", af.toRelativeBasePath(sourceDir.getAbsolutePath()));
+    }
+
+    @Test
+    public void toRelativeBasePath_siteDirItself() throws Exception {
+        // The site folder relative to itself is "", which syncBases() skips as blank, so the base
+        // was dropped on save and albums using it no longer loaded.
+        Path siteDir = Files.createDirectory(tmp.resolve("site"));
+        Path f = Files.writeString(siteDir.resolve("albums.yaml"), """
+                bases:
+                  here: placeholder
+                albums:
+                  - slug: way
+                    name: The Way
+                    base: here
+                    source: way
+                """);
+        AlbumsFile af = AlbumsFile.load(f);
+        af.setSiteDir(siteDir);
+
+        String relative = af.toRelativeBasePath(siteDir.toString());
+        assertEquals(".", relative);
+
+        af.getBases().put("here", relative);
+        af.save(f);
+        AlbumsFile reloaded = AlbumsFile.load(f);
+        reloaded.setSiteDir(siteDir);
+        assertEquals(siteDir, reloaded.resolveBasePath("here"));
     }
 
     @Test

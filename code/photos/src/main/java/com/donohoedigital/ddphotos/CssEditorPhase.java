@@ -73,14 +73,12 @@ public class CssEditorPhase extends TextEditorPhase {
         }
 
         // Writing the stylesheet may have defaulted settings.css, which lives in albums.yaml.
-        if (albumsFile_.isCssSettingUnsaved()) {
-            try {
-                site_.saveAlbumsFile();
-            } catch (AlbumsFileException e) {
-                logger.error("Failed to save albums file: {}", site_.getAlbumsFilePath(), e);
-                PhotosUtils.showSaveError(context_, site_.getAlbumsFilePath(), e);
-                return false;
-            }
+        try {
+            site_.saveCssSetting(albumsFile_);
+        } catch (AlbumsFileException e) {
+            logger.error("Failed to save albums file: {}", site_.getAlbumsFilePath(), e);
+            PhotosUtils.showSaveError(context_, site_.getAlbumsFilePath(), e);
+            return false;
         }
         return true;
     }

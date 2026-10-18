@@ -57,6 +57,20 @@ public class ConfigFileTest {
     }
 
     @Test
+    public void isChangedFrom_comparesTheGivenStamp() throws Exception {
+        Path p = write("a.yaml", "one");
+        Stub f = new Stub(p);
+        f.restamp();
+        FileStamp before = FileStamp.of(p);
+        touch(p, "two");
+
+        // Judged on the stamp passed in, not on the file as it is now.
+        assertFalse(f.isChangedFrom(before));
+        assertTrue(f.isChangedFrom(FileStamp.of(p)));
+        assertFalse(new Stub(null).isChangedFrom(FileStamp.of(p)), "a model with no path never differs");
+    }
+
+    @Test
     public void afterExternalWrite_readsAsChanged() throws Exception {
         Path p = write("a.yaml", "one");
         Stub f = new Stub(p);

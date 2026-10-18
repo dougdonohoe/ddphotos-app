@@ -155,6 +155,20 @@ public class Site implements NamedObject, Comparable<Site> {
     }
 
     /**
+     * Saves the site's model after the CSS editor wrote the stylesheet, if that defaulted
+     * {@code settings.css} on {@code editorModel}, the model the editor opened with.  The site's
+     * model may have been replaced since (a base change reloads it), so the setting is copied
+     * onto the current one first; saving only that would leave the setting out.
+     */
+    public void saveCssSetting(AlbumsFile editorModel) throws AlbumsFileException {
+        if (!editorModel.isCssSettingUnsaved()) return;
+        AlbumsSettings current = getOrCreateAlbumsFile().getSettings();
+        String css = current.getCss();
+        if (css == null || css.isBlank()) current.setCss(editorModel.getSettings().getCss());
+        saveAlbumsFile();
+    }
+
+    /**
      * Adds an album at the end of the list and saves.  If the save fails the album is taken back
      * out, so the in-memory list still matches the file and a later save does not write it.
      */
@@ -196,16 +210,35 @@ public class Site implements NamedObject, Comparable<Site> {
         return -1;
     }
 
-    private AlbumsFile loadFromDisk() {
-        Path path = getAlbumsFilePath();
-        if (path == null || !Files.exists(path)) return null;
+    /**
+     * Loads the albums file if it is not cached yet, and returns why it could not be read: null
+     * when it loaded, was already cached or does not exist.  Startup calls this to drop a site
+     * with a broken file before {@link #getAlbumsFile()}, which throws, is reached.
+     */
+    public String getAlbumsFileLoadError() {
+        if (albumsFile_ != null) return null;
         try {
-            AlbumsFile af = AlbumsFile.load(path);
-            setDirsOn(af);
-            return af;
+            albumsFile_ = loadChecked();
+            return null;
+        } catch (AlbumsFileException e) {
+            return e.getMessage();
+        }
+    }
+
+    private AlbumsFile loadFromDisk() {
+        try {
+            return loadChecked();
         } catch (AlbumsFileException e) {
             throw new ApplicationError(e);
         }
+    }
+
+    private AlbumsFile loadChecked() throws AlbumsFileException {
+        Path path = getAlbumsFilePath();
+        if (path == null || !Files.exists(path)) return null;
+        AlbumsFile af = AlbumsFile.load(path);
+        setDirsOn(af);
+        return af;
     }
 
     /**

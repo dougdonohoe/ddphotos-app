@@ -1,5 +1,6 @@
 package com.donohoedigital.ddphotos.config;
 
+import com.donohoedigital.ddphotos.PhotosConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.snakeyaml.engine.v2.api.Dump;
@@ -103,6 +104,7 @@ public class AlbumsFile extends ConfigFile {
     public void save(Path path) throws AlbumsFileException {
         logger.info("save {}", path);
         validate();
+        validateNames();
         MappingNode node = rootNode != null ? rootNode : buildRootNode();
         syncToNode(node);
         // Relocate comments that SnakeYAML stores on the first-key node (causing them
@@ -309,8 +311,8 @@ public class AlbumsFile extends ConfigFile {
     }
 
     /**
-     * If the given absolute path falls within the site dir, returns the relative path.
-     * Otherwise, returns the original string unchanged.
+     * If the given absolute path falls within the site dir, returns the relative path, or
+     * {@code "."} for the site dir itself.  Otherwise, returns the original string unchanged.
      */
     public String toRelativeBasePath(String path) {
         if (siteDir == null || path == null || path.isBlank()) return path;
@@ -320,6 +322,7 @@ public class AlbumsFile extends ConfigFile {
             Path realSiteDir = siteDir.toRealPath();
             Path realPath    = absolute.toRealPath();
             Path relative    = realSiteDir.relativize(realPath);
+            if (relative.toString().isEmpty()) return ".";
             if (!relative.startsWith("..")) return relative.toString();
         } catch (IOException | IllegalArgumentException ignored) {}
         return path;
@@ -523,6 +526,35 @@ public class AlbumsFile extends ConfigFile {
 
     // ── validation ──────────────────────────────────────────────────────────
 
+    /**
+     * Checks photogen's rules for album slugs and {@code settings.id}.  Only on save, not in
+     * {@link #validate()}: a hand-edited file that breaks them still loads, so the user can fix
+     * the field in the app, where the same rules apply.  The site ID may be unset, as it is for a
+     * new site.
+     */
+    private void validateNames() throws AlbumsFileException {
+        for (AlbumEntry a : albums) {
+            if (!a.getSlug().matches(PhotosConstants.REGEXP_SLUG)) {
+                throw new AlbumsFileException("album \"" + a.getSlug() + "\": slug must start with a letter "
+                        + "or digit and contain only letters, digits, dashes and underscores");
+            }
+            if (a.getSlug().length() > PhotosConstants.MAX_SLUG_LENGTH) {
+                throw new AlbumsFileException("album \"" + a.getSlug() + "\": slug must be at most "
+                        + PhotosConstants.MAX_SLUG_LENGTH + " characters");
+            }
+        }
+        String id = settings.getId();
+        if (isBlank(id)) return;
+        if (!id.matches(PhotosConstants.REGEXP_SITE_ID)) {
+            throw new AlbumsFileException("settings.id \"" + id
+                    + "\" must contain only lowercase letters, digits, and hyphens");
+        }
+        if (id.length() > PhotosConstants.MAX_SLUG_LENGTH) {
+            throw new AlbumsFileException("settings.id \"" + id + "\" must be at most "
+                    + PhotosConstants.MAX_SLUG_LENGTH + " characters");
+        }
+    }
+
     void validate() throws AlbumsFileException {
         // Lowercased slug -> slug as written.  Mirrors photogen's check, which rejects the whole
         // file: slugs that differ only by case are one directory on macOS and Windows.
@@ -687,6 +719,7 @@ public class AlbumsFile extends ConfigFile {
     private AlbumEntry readAlbumEntry(MappingNode n) {
         AlbumEntry a = new AlbumEntry();
         a.setSlug(getString(n, "slug"));
+        a.setNodeSlug(a.getSlug());
         a.setName(getString(n, "name"));
         a.setDescription(getString(n, "description"));
         a.setLongDescriptionHtml(getString(n, "long_description_html"));
@@ -801,7 +834,9 @@ public class AlbumsFile extends ConfigFile {
         List<Node> oldItems = new ArrayList<>(seqNode.getValue());
 
         // Build slug → original node map so reorder/insert reuses the right node,
-        // preserving each album's ScalarStyle (quoted vs plain) and key ordering.
+        // preserving each album's comments, ScalarStyle (quoted vs plain) and key ordering.
+        // Albums are matched on the slug their node had, so a renamed album keeps its node
+        // and a new album never takes another album's.
         Map<String, MappingNode> nodeBySlug = new LinkedHashMap<>();
         for (Node n : oldItems) {
             if (n instanceof MappingNode mn) {
@@ -812,13 +847,14 @@ public class AlbumsFile extends ConfigFile {
 
         List<Node> newItems = new ArrayList<>(albums.size());
         for (AlbumEntry a : albums) {
-            MappingNode existing = nodeBySlug.get(a.getSlug());
+            MappingNode existing = a.getNodeSlug() == null ? null : nodeBySlug.remove(a.getNodeSlug());
             if (existing != null) {
                 syncAlbumEntry(existing, a);
                 newItems.add(existing);
             } else {
                 newItems.add(buildAlbumNode(a));
             }
+            a.setNodeSlug(a.getSlug());
         }
 
         seqNode.getValue().clear();
@@ -984,15 +1020,18 @@ public class AlbumsFile extends ConfigFile {
     }
 
     /**
-     * Inserts a blank line before each block-sequence item indicator that follows a
-     * non-key line.  The first item in a sequence follows "key:" so it gets no blank
-     * line; subsequent items follow a value line so they do.
+     * Inserts a blank line before each {@code albums} item that follows a non-key line,
+     * above any comment lines directly before the item, so the comment stays with it.
+     * The first item follows "albums:" so it gets no blank line; subsequent items follow
+     * a value line so they do.
      *
-     * Pattern: any character that is not ':' or newline, followed by newline, followed
-     * by an indented '-' indicator — replace with the same but with a blank line inserted.
+     * Pattern: a line that is not a comment and does not end in ':', then any comment
+     * lines, then "  - " at exactly the albums item indent.  Lines of a | or > value are
+     * indented at least four spaces, so a value line starting with "- " or "#" is never
+     * matched.
      */
     private static String insertBlankLinesBetweenSequenceItems(String yaml) {
-        return yaml.replaceAll("(?m)([^:\n])\n( *- )", "$1\n\n$2");
+        return yaml.replaceAll("(?m)^(?! *#)([^\n]*[^:\n])\n((?: {2}#[^\n]*\n)* {2}- )", "$1\n\n$2");
     }
 
     // ── node helpers ────────────────────────────────────────────────────────

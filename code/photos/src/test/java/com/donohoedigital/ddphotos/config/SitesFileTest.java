@@ -293,6 +293,51 @@ public class SitesFileTest {
         assertEquals(broken, Files.readString(f, StandardCharsets.UTF_8));
     }
 
+    // ── removeUnreadableSites ───────────────────────────────────────────────
+
+    @Test
+    public void removeUnreadableSites_dropsOnlySitesWithBrokenAlbums() throws Exception {
+        Path good = siteDir("good", "settings:\n  id: good\nalbums: []\n");
+        Path broken = siteDir("broken", "settings:\n  id: broken\n  site_name: \"Broken\n");
+        Path noFile = Files.createDirectories(tmp.resolve("nofile"));
+        Path f = writeYaml("sites:\n"
+                + "  - display_name: Good\n    dir_path: " + good + "\n"
+                + "  - display_name: Broken\n    dir_path: " + broken + "\n"
+                + "  - display_name: No File\n    dir_path: " + noFile + "\n");
+        SitesFile sf = new SitesFile(f).load();
+
+        List<String> removed = sf.removeUnreadableSites();
+        assertEquals(1, removed.size());
+        assertTrue(removed.getFirst().startsWith("Broken: parse " + broken.resolve("config/albums.yaml")),
+                removed.getFirst());
+        assertEquals(List.of("Good", "No File"), sf.getSites().stream().map(Site::getDisplayName).toList());
+        assertEquals("good", sf.getSites().getFirst().getIdOrDefault());
+
+        sf.save();
+        assertEquals(List.of("Good", "No File"),
+                new SitesFile(f).load().getSites().stream().map(Site::getDisplayName).toList());
+        assertTrue(Files.readString(broken.resolve("config/albums.yaml")).contains("\"Broken"),
+                "the broken albums.yaml itself is left alone");
+    }
+
+    @Test
+    public void removeUnreadableSites_dropsSiteThatFailsValidation() throws Exception {
+        Path site = siteDir("noname", "albums:\n  - slug: a\n    source: /tmp/a\n");
+        Path f = writeYaml("sites:\n  - display_name: No Name\n    dir_path: " + site + "\n");
+        SitesFile sf = new SitesFile(f).load();
+
+        List<String> removed = sf.removeUnreadableSites();
+        assertEquals(1, removed.size());
+        assertTrue(removed.getFirst().contains("name is required"), removed.getFirst());
+        assertTrue(sf.getSites().isEmpty());
+    }
+
+    private Path siteDir(String name, String albumsYaml) throws Exception {
+        Path dir = Files.createDirectories(tmp.resolve(name).resolve("config")).getParent();
+        Files.writeString(dir.resolve("config/albums.yaml"), albumsYaml, StandardCharsets.UTF_8);
+        return dir;
+    }
+
     private Path writeYaml(String content) throws Exception {
         File f = Files.createFile(tmp.resolve("test.yaml")).toFile();
         Files.writeString(f.toPath(), content, StandardCharsets.UTF_8);

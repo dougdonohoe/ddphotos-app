@@ -49,9 +49,16 @@ public abstract class ConfigFile {
      * saved.  False for a model with no path - there is nothing it could disagree with.
      */
     public final boolean isChangedOnDisk() {
-        Path path = getPath();
-        if (path == null) return false;
-        return !stamp_.equals(FileStamp.of(path));
+        return isChangedFrom(FileStamp.of(getPath()));
+    }
+
+    /**
+     * {@link #isChangedOnDisk()} against a stamp the caller already took, so the stat can happen
+     * off the event thread (see {@code ConfigWatcher}).
+     */
+    public final boolean isChangedFrom(FileStamp onDisk) {
+        if (getPath() == null) return false;
+        return !stamp_.equals(onDisk);
     }
 
     /**

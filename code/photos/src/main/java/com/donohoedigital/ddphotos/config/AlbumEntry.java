@@ -13,6 +13,9 @@ public class AlbumEntry {
     private boolean manualSortOrder;
     private boolean recurse;
     private SyncEntry sync;
+    // The slug in this album's YAML node, so a save finds the node after a rename.  Null for an
+    // album not yet saved.  Not part of equals(): it tracks the file, not the album's settings.
+    private String nodeSlug;
 
     public AlbumEntry() {}
 
@@ -27,6 +30,7 @@ public class AlbumEntry {
         this.manualSortOrder = other.manualSortOrder;
         this.recurse       = other.recurse;
         this.sync          = other.sync == null ? null : new SyncEntry(other.sync);
+        this.nodeSlug      = other.nodeSlug;
     }
 
     public String getSlug() { return slug; }
@@ -63,6 +67,9 @@ public class AlbumEntry {
 
     /** True when photogen downloads this album from a provider rather than reading {@code source}. */
     public boolean isSynced() { return sync != null; }
+
+    String getNodeSlug() { return nodeSlug; }
+    void setNodeSlug(String nodeSlug) { this.nodeSlug = nodeSlug; }
 
     @Override
     public boolean equals(Object o) {
