@@ -16,11 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class DockerStatus {
 
     private static final Logger logger = LogManager.getLogger(DockerStatus.class);
     private static final int POLL_INTERVAL_MS = 10_000;
+    private static final long PROBE_TIMEOUT_MS = 5_000;
 
     /** Prefs key (under {@link PhotosConstants#PREFS_NODE_APP}) where the docker binary path is stored. */
     public static final String PREFS_KEY_DOCKER_BINARY = "wizard.dockerbinary";
@@ -31,6 +33,8 @@ public final class DockerStatus {
 
     private static volatile boolean running_;
     private static volatile boolean initialized_;
+    private static final AtomicBoolean checking_ = new AtomicBoolean();
+    private static volatile boolean recheck_;
 
     private static final List<Listener> listeners_ = new CopyOnWriteArrayList<>();
 
@@ -146,10 +150,24 @@ public final class DockerStatus {
         checkAsync();
     }
 
+    /**
+     * Starts a check unless one is already running, so a slow {@code docker info} never has
+     * others piling up behind it.  A check asked for meanwhile (the binary changed) runs once the
+     * current one is done, since that one may be probing the old binary.
+     */
     private static void checkAsync() {
+        if (!checking_.compareAndSet(false, true)) {
+            recheck_ = true;
+            return;
+        }
         Thread.ofVirtual().start(() -> {
             boolean r = probe();
+            checking_.set(false);
             SwingUtilities.invokeLater(() -> updateStatus(r));
+            if (recheck_) {
+                recheck_ = false;
+                checkAsync();
+            }
         });
     }
 
@@ -163,12 +181,21 @@ public final class DockerStatus {
     }
 
     private static boolean probe() {
+        return runCheck(dockerProcessBuilder("info"), PROBE_TIMEOUT_MS);
+    }
+
+    /** Runs the command and returns true if it exits 0 within the timeout; it is killed if not. */
+    static boolean runCheck(ProcessBuilder pb, long timeoutMs) {
         try {
-            ProcessBuilder pb = dockerProcessBuilder("info");
             pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
             pb.redirectError(ProcessBuilder.Redirect.DISCARD);
             Process p = pb.start();
-            return p.waitFor(5, TimeUnit.SECONDS) && p.exitValue() == 0;
+            if (!p.waitFor(timeoutMs, TimeUnit.MILLISECONDS)) {
+                // A hung command would otherwise stay around, one more process every poll.
+                p.destroyForcibly();
+                return false;
+            }
+            return p.exitValue() == 0;
         } catch (Exception e) {
             logger.debug("Docker check failed: {}", e.getMessage());
             return false;
