@@ -201,6 +201,34 @@ public class AlbumsFileTest {
     }
 
     @Test
+    public void save_rejectsSlugAndSiteIdPhotogenRejects() throws Exception {
+        // Loads, so the user can fix it in the app; only a save is refused.
+        Path f = writeYaml("settings:\n  id: My_Site\nalbums:\n  - slug: my trip\n    name: A\n    source: /tmp/p\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        AlbumEntry a = af.getAlbums().getFirst();
+
+        assertSaveFails(af, f, "album \"my trip\": slug must start with a letter or digit");
+        a.setSlug("x".repeat(65));
+        assertSaveFails(af, f, "slug must be at most 64 characters");
+        a.setSlug("my_trip-" + "x".repeat(56));
+        assertSaveFails(af, f, "settings.id \"My_Site\" must contain only lowercase letters, digits, and hyphens");
+        af.getSettings().setId("x".repeat(65));
+        assertSaveFails(af, f, "must be at most 64 characters");
+
+        af.getSettings().setId("my-site");
+        af.save(f);
+        af.getSettings().setId(null);   // not set yet, as for a new site
+        af.save(f);
+    }
+
+    private static void assertSaveFails(AlbumsFile af, Path f, String expected) throws Exception {
+        String before = Files.readString(f, StandardCharsets.UTF_8);
+        AlbumsFileException e = assertThrows(AlbumsFileException.class, () -> af.save(f));
+        assertTrue(e.getMessage().contains(expected), e.getMessage());
+        assertEquals(before, Files.readString(f, StandardCharsets.UTF_8), "file must not change");
+    }
+
+    @Test
     public void validate_heroMissingImage() throws Exception {
         Path f = writeYaml("settings:\n  hero:\n    crop: top\nalbums:\n  - slug: a\n    name: A\n    source: /tmp/p\n");
         try {

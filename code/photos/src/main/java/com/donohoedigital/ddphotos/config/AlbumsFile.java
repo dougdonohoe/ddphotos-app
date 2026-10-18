@@ -1,5 +1,6 @@
 package com.donohoedigital.ddphotos.config;
 
+import com.donohoedigital.ddphotos.PhotosConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.snakeyaml.engine.v2.api.Dump;
@@ -103,6 +104,7 @@ public class AlbumsFile extends ConfigFile {
     public void save(Path path) throws AlbumsFileException {
         logger.info("save {}", path);
         validate();
+        validateNames();
         MappingNode node = rootNode != null ? rootNode : buildRootNode();
         syncToNode(node);
         // Relocate comments that SnakeYAML stores on the first-key node (causing them
@@ -523,6 +525,35 @@ public class AlbumsFile extends ConfigFile {
     }
 
     // ── validation ──────────────────────────────────────────────────────────
+
+    /**
+     * Checks photogen's rules for album slugs and {@code settings.id}.  Only on save, not in
+     * {@link #validate()}: a hand-edited file that breaks them still loads, so the user can fix
+     * the field in the app, where the same rules apply.  The site ID may be unset, as it is for a
+     * new site.
+     */
+    private void validateNames() throws AlbumsFileException {
+        for (AlbumEntry a : albums) {
+            if (!a.getSlug().matches(PhotosConstants.REGEXP_SLUG)) {
+                throw new AlbumsFileException("album \"" + a.getSlug() + "\": slug must start with a letter "
+                        + "or digit and contain only letters, digits, dashes and underscores");
+            }
+            if (a.getSlug().length() > PhotosConstants.MAX_SLUG_LENGTH) {
+                throw new AlbumsFileException("album \"" + a.getSlug() + "\": slug must be at most "
+                        + PhotosConstants.MAX_SLUG_LENGTH + " characters");
+            }
+        }
+        String id = settings.getId();
+        if (isBlank(id)) return;
+        if (!id.matches(PhotosConstants.REGEXP_SITE_ID)) {
+            throw new AlbumsFileException("settings.id \"" + id
+                    + "\" must contain only lowercase letters, digits, and hyphens");
+        }
+        if (id.length() > PhotosConstants.MAX_SLUG_LENGTH) {
+            throw new AlbumsFileException("settings.id \"" + id + "\" must be at most "
+                    + PhotosConstants.MAX_SLUG_LENGTH + " characters");
+        }
+    }
 
     void validate() throws AlbumsFileException {
         // Lowercased slug -> slug as written.  Mirrors photogen's check, which rejects the whole
