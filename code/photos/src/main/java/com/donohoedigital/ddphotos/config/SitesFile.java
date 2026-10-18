@@ -15,6 +15,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,6 +127,25 @@ public class SitesFile extends ConfigFile {
     public void addSite(Site site) {
         int idx = Collections.binarySearch(sites, site);
         sites.add(idx >= 0 ? idx : -idx - 1, site);
+    }
+
+    /**
+     * Takes out of the list every site whose {@code albums.yaml} exists but cannot be read, so the
+     * app never reaches it.  Does not save.  Returns one {@code <site>: <reason>} line per site
+     * removed; empty when none was.
+     */
+    public List<String> removeUnreadableSites() {
+        List<String> removed = new ArrayList<>();
+        for (Iterator<Site> it = sites.iterator(); it.hasNext(); ) {
+            Site site = it.next();
+            String error = site.getAlbumsFileLoadError();
+            if (error != null) {
+                logger.warn("Removing site '{}': {}", site.getDisplayName(), error);
+                removed.add(site.getDisplayName() + ": " + error);
+                it.remove();
+            }
+        }
+        return removed;
     }
 
     public void sortSites() {

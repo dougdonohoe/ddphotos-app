@@ -10,6 +10,7 @@ import com.donohoedigital.ddphotos.sync.SyncProvider;
 import com.donohoedigital.ddphotos.sync.SyncProviders;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
+import com.donohoedigital.ddphotos.config.SitesFileException;
 import com.donohoedigital.ddphotos.runner.BuildRunner;
 import com.donohoedigital.ddphotos.runner.DeployRunner;
 import com.donohoedigital.ddphotos.runner.ExportRunner;
@@ -25,6 +26,8 @@ import com.donohoedigital.app.config.AppPhase;
 import com.donohoedigital.app.engine.*;
 import com.donohoedigital.gui.*;
 import com.formdev.flatlaf.FlatClientProperties;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
@@ -47,6 +50,8 @@ import java.util.function.Function;
 import static javax.swing.JTabbedPane.TOP;
 
 public class PhotosBasePhase extends BasePhase {
+
+    private static final Logger logger = LogManager.getLogger(PhotosBasePhase.class);
 
     public static final String PARAM_RERUN_WIZARD = "rerun-wizard";
     public static final String PARAM_NEW_SITE     = "new-site";
@@ -144,6 +149,7 @@ public class PhotosBasePhase extends BasePhase {
             sitesLoadErrorShown_ = true;
             SwingUtilities.invokeLater(() -> PhotosUtils.showLoadError(context_, sitesFile_));
         }
+        removeUnreadableSites();
 
         boolean rerun = phase_.getBoolean(PARAM_RERUN_WIZARD, false);
         if (phase_.getBoolean(PARAM_NEW_SITE, false)) {
@@ -160,6 +166,26 @@ public class PhotosBasePhase extends BasePhase {
             boolean offerSetup = !phase_.getBoolean(PARAM_SKIP_SETUP_CHECK, false) && setupIncomplete();
             buildRegularUI((Site) phase_.getObject(PARAM_SELECT_SITE), offerSetup);
         }
+    }
+
+    /**
+     * Drops every site whose {@code albums.yaml} cannot be read from the sites list and saves it,
+     * so the app opens on the remaining sites (or the wizard, when none are left) instead of
+     * failing as it builds the site list.  The user is told which sites went and why, deferred
+     * like the sites.yaml error above.
+     */
+    private void removeUnreadableSites() {
+        List<String> removed = sitesFile_.removeUnreadableSites();
+        if (removed.isEmpty()) return;
+        try {
+            sitesFile_.save();
+        } catch (SitesFileException e) {
+            logger.error("Failed to save sites file: {}", sitesFile_.getPath(), e);
+            SwingUtilities.invokeLater(() -> PhotosUtils.showSaveError(context_, sitesFile_.getPath(), e));
+        }
+        String lines = String.join("<br><br>", removed.stream().map(PhotosUtils::escapeHtml).toList());
+        SwingUtilities.invokeLater(() -> EngineUtils.displayErrorDialog(context_,
+                PropertyConfig.getMessage("msg.error.site.removed", lines), "msg.windowtitle.loadError", null));
     }
 
     /**

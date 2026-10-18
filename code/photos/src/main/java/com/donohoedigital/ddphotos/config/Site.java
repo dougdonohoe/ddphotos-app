@@ -196,16 +196,35 @@ public class Site implements NamedObject, Comparable<Site> {
         return -1;
     }
 
-    private AlbumsFile loadFromDisk() {
-        Path path = getAlbumsFilePath();
-        if (path == null || !Files.exists(path)) return null;
+    /**
+     * Loads the albums file if it is not cached yet, and returns why it could not be read: null
+     * when it loaded, was already cached or does not exist.  Startup calls this to drop a site
+     * with a broken file before {@link #getAlbumsFile()}, which throws, is reached.
+     */
+    public String getAlbumsFileLoadError() {
+        if (albumsFile_ != null) return null;
         try {
-            AlbumsFile af = AlbumsFile.load(path);
-            setDirsOn(af);
-            return af;
+            albumsFile_ = loadChecked();
+            return null;
+        } catch (AlbumsFileException e) {
+            return e.getMessage();
+        }
+    }
+
+    private AlbumsFile loadFromDisk() {
+        try {
+            return loadChecked();
         } catch (AlbumsFileException e) {
             throw new ApplicationError(e);
         }
+    }
+
+    private AlbumsFile loadChecked() throws AlbumsFileException {
+        Path path = getAlbumsFilePath();
+        if (path == null || !Files.exists(path)) return null;
+        AlbumsFile af = AlbumsFile.load(path);
+        setDirsOn(af);
+        return af;
     }
 
     /**
