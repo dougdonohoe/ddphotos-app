@@ -6,6 +6,7 @@ import com.donohoedigital.app.engine.EngineUtils;
 import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
+import com.donohoedigital.ddphotos.config.ConfigFile;
 import com.donohoedigital.ddphotos.config.FileErrors;
 import com.donohoedigital.ddphotos.config.PasswordsFile;
 import com.donohoedigital.ddphotos.config.PasswordsFileException;
@@ -107,6 +108,30 @@ public class PhotosUtils {
                 PropertyConfig.getMessage("msg.error.save",
                         escapeHtml(String.valueOf(path)), saveErrorDetail(e)),
                 "msg.windowtitle.saveError", null);
+    }
+
+    /**
+     * Shows the Load Error dialog and returns true when the file exists but could not be read.
+     * Editors check this before opening: one opened over such a file starts out blank, and the
+     * model refuses to save over the real file anyway (see {@code ConfigFile.saveRefusal}).
+     */
+    public static boolean showLoadError(AppContext context, ConfigFile file) {
+        return showLoadErrors(context, file == null ? List.of() : List.of(file));
+    }
+
+    /** {@link #showLoadError} for an editor over several files (the caption editor), in one dialog. */
+    public static boolean showLoadErrors(AppContext context, List<? extends ConfigFile> files) {
+        List<ConfigFile> failed = files.stream().filter(f -> f.getLoadError() != null)
+                                       .map(f -> (ConfigFile) f).toList();
+        if (failed.isEmpty()) return false;
+        String message = failed.size() == 1
+                ? PropertyConfig.getMessage("msg.error.load",
+                        escapeHtml(String.valueOf(failed.getFirst().getPath())),
+                        escapeHtml(failed.getFirst().getLoadError()))
+                : PropertyConfig.getMessage("msg.error.loadmulti", String.join("<br>",
+                        failed.stream().map(f -> escapeHtml(f.getLoadError())).toList()));
+        EngineUtils.displayErrorDialog(context, message, "msg.windowtitle.loadError", null);
+        return true;
     }
 
     /**

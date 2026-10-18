@@ -119,4 +119,12 @@ public class SyncMetadataFileTest {
         SyncMetadataFile.writeStub(tmp, "immich", "id", "A longer name", "");
         assertTrue(m.isChangedOnDisk());
     }
+
+    @Test
+    public void load_brokenYaml_recordsTheError() throws Exception {
+        Files.writeString(tmp.resolve(SyncMetadataFile.FILE_NAME), "provider: [unclosed\n");
+        SyncMetadataFile m = new SyncMetadataFile(tmp).load();
+        assertNotNull(m.getLoadError());
+        assertFalse(m.existsOnDisk());
+    }
 }

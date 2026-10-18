@@ -46,12 +46,14 @@ public abstract class TextFile extends ConfigFile {
     }
 
     public TextFile load() {
+        setLoadError(null);
         try {
             if (Files.exists(path_)) {
                 loadInternal();
             }
         } catch (TextFileException e) {
             logger.warn("Failed to load text file: {}", path_, e);
+            setLoadError(e.getMessage());
         }
         return this;
     }
@@ -77,6 +79,8 @@ public abstract class TextFile extends ConfigFile {
      * when the file did not exist at load time.
      */
     public void save() throws TextFileException {
+        String refusal = saveRefusal();
+        if (refusal != null) throw new TextFileException(refusal);
         if (!existed_) {
             return;
         }
@@ -90,6 +94,8 @@ public abstract class TextFile extends ConfigFile {
      * so an untouched site never gets a stray file.
      */
     public void saveOrCreate() throws TextFileException {
+        String refusal = saveRefusal();
+        if (refusal != null) throw new TextFileException(refusal);
         if (!existed_ && isEmpty()) {
             return;
         }

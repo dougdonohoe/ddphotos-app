@@ -87,12 +87,14 @@ public class PasswordsFile extends ConfigFile {
     }
 
     public PasswordsFile load() {
+        setLoadError(null);
         try {
             if (Files.exists(path_)) {
                 loadInternal();
             }
         } catch (PasswordsFileException e) {
             logger.warn("Failed to load passwords file: {}", path_, e);
+            setLoadError(e.getMessage());
         }
         return this;
     }
@@ -106,7 +108,6 @@ public class PasswordsFile extends ConfigFile {
         }
 
         logger.info("read {}", path_);
-        existed_ = true;
 
         Optional<Node> opt;
         try {
@@ -118,6 +119,7 @@ public class PasswordsFile extends ConfigFile {
 
         // An empty file is legal — it just means "nothing configured yet".
         if (opt.isEmpty()) {
+            existed_ = true;
             restamp();
             return this;
         }
@@ -126,6 +128,8 @@ public class PasswordsFile extends ConfigFile {
         }
         rootNode_ = root;
         readFromNode(root);
+        // Only now: a file that did not parse must not count as present (see save()).
+        existed_ = true;
         restamp();
         return this;
     }
@@ -135,6 +139,8 @@ public class PasswordsFile extends ConfigFile {
      * first place — it is a no-op when the file did not exist at load time.
      */
     public void save() throws PasswordsFileException {
+        String refusal = saveRefusal();
+        if (refusal != null) throw new PasswordsFileException(refusal);
         if (!existed_) {
             return;
         }
@@ -148,6 +154,8 @@ public class PasswordsFile extends ConfigFile {
      * file (empty model) remains a no-op, so an untouched site never gets a stray file.
      */
     public void saveOrCreate() throws PasswordsFileException {
+        String refusal = saveRefusal();
+        if (refusal != null) throw new PasswordsFileException(refusal);
         if (!existed_ && isEmpty()) {
             return;
         }
@@ -155,6 +163,8 @@ public class PasswordsFile extends ConfigFile {
     }
 
     private void write() throws PasswordsFileException {
+        String refusal = saveRefusal();
+        if (refusal != null) throw new PasswordsFileException(refusal);
         validate();
         logger.info("save {}", path_);
 

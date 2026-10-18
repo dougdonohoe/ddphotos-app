@@ -76,6 +76,9 @@ public class PhotosBasePhase extends BasePhase {
     // True while the wizard owns the window instead of the tabs - see buildWizardUI.
     private boolean wizardUp_;
 
+    // Set once the sites.yaml load error has been reported - see start().
+    private boolean sitesLoadErrorShown_;
+
     // Held so the Run menu can name and enable its items for whichever site is selected.
     private SiteBarPanel siteBar_;
 
@@ -134,6 +137,14 @@ public class PhotosBasePhase extends BasePhase {
 
     @Override
     public void start() {
+        // A sites.yaml that exists but could not be read loads as no sites, and the app will not
+        // save over it.  Said once per launch (start() runs again after the wizard), and deferred
+        // so the window is up first; the tour and setup offers queue behind it.
+        if (!sitesLoadErrorShown_ && sitesFile_.getLoadError() != null) {
+            sitesLoadErrorShown_ = true;
+            SwingUtilities.invokeLater(() -> PhotosUtils.showLoadError(context_, sitesFile_));
+        }
+
         boolean rerun = phase_.getBoolean(PARAM_RERUN_WIZARD, false);
         if (phase_.getBoolean(PARAM_NEW_SITE, false)) {
             // File -> New Site: everything the setup steps check has already been checked, so the

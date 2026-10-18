@@ -1,6 +1,7 @@
 package com.donohoedigital.ddphotos.config;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystemException;
 import java.nio.file.NoSuchFileException;
@@ -46,6 +47,8 @@ public final class FileErrors {
         if (root instanceof AccessDeniedException)       return "permission denied";
         if (root instanceof NotDirectoryException)       return "not a directory";
         if (root instanceof ReadOnlyFileSystemException) return "read-only file system";
+        // Its own message is just "Input length = 1".
+        if (root instanceof CharacterCodingException)    return "not valid UTF-8 text";
         // Other FileSystemExceptions have a real reason when the OS gave one; their getMessage()
         // is just the path(s), so fall through to the class name rather than repeat it.
         if (root instanceof FileSystemException fse) {

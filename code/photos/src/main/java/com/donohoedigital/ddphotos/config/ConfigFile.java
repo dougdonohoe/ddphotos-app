@@ -21,8 +21,28 @@ public abstract class ConfigFile {
     /** What the file looked like when this model was last in step with it. */
     private FileStamp stamp_ = FileStamp.MISSING;
 
+    /** Why the last load failed, or null when it succeeded (or the file was absent). */
+    private String loadError_;
+
     /** The file this model was read from, or null when it has no location yet. */
     public abstract Path getPath();
+
+    /** Why the last load failed, or null when it succeeded or there was no file to read. */
+    public final String getLoadError() { return loadError_; }
+
+    /** Records the outcome of a load: the failure's message, or null for success. */
+    protected final void setLoadError(String error) { loadError_ = error; }
+
+    /**
+     * Why a save must not go ahead, or null when it may.  A file that could not be read is still
+     * on disk holding content this model never saw, so writing the model would replace it - with
+     * nothing at all, or with whatever the user added to the empty model since.
+     */
+    protected final String saveRefusal() {
+        if (loadError_ == null) return null;
+        return "not saving " + getPath() + ": it could not be read, so saving would overwrite it ("
+               + loadError_ + ")";
+    }
 
     /**
      * True when the file has been written by someone else since this model was loaded or last

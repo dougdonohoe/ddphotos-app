@@ -271,6 +271,28 @@ public class SitesFileTest {
         return sf;
     }
 
+    // ── a file that failed to load is never overwritten ─────────────────────
+
+    @Test
+    public void loadFailed_saveRefusesAndLeavesFileUntouched() throws Exception {
+        String broken = """
+                sites:
+                  - display_name: Site One
+                    dir_path: /data/site1
+                  - dir_path: /data/site2
+                """;
+        Path f = writeYaml(broken);
+
+        SitesFile sf = new SitesFile(f).load();
+        assertNotNull(sf.getLoadError());
+        assertTrue(sf.getSites().isEmpty(), "sites read before the error must not be kept");
+
+        sf.addSite(new Site("New", "/data/new", null));
+        SitesFileException e = assertThrows(SitesFileException.class, sf::save);
+        assertTrue(e.getMessage().contains("could not be read"), e.getMessage());
+        assertEquals(broken, Files.readString(f, StandardCharsets.UTF_8));
+    }
+
     private Path writeYaml(String content) throws Exception {
         File f = Files.createFile(tmp.resolve("test.yaml")).toFile();
         Files.writeString(f.toPath(), content, StandardCharsets.UTF_8);

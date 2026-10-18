@@ -58,6 +58,7 @@ public class SyncMetadataFile extends ConfigFile {
     public SyncMetadataFile load() {
         existed_ = false;
         provider_ = albumId_ = syncedAt_ = name_ = description_ = null;
+        setLoadError(null);
         // Stamp before reading, so a write that lands mid-read still reads as a change.
         restamp();
         if (!Files.exists(path_)) return this;
@@ -75,6 +76,7 @@ public class SyncMetadataFile extends ConfigFile {
             logger.info("read {}", path_);
         } catch (IOException | YamlEngineException e) {
             logger.warn("Failed to load sync metadata: {} ({})", path_, e.getMessage());
+            setLoadError("read " + path_ + ": " + FileErrors.reason(e));
         }
         return this;
     }

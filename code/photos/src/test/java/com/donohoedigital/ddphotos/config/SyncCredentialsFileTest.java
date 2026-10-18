@@ -3,6 +3,8 @@ package com.donohoedigital.ddphotos.config;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -149,6 +151,27 @@ public class SyncCredentialsFileTest {
         SyncCredentialsFile pp = af.getSyncCredentialsFile(SyncCredentialsFile.PHOTOPRISM);
         assertEquals(tmp.resolve("photoprism.env"), pp.getPath());
         assertFalse(pp.isComplete());
+    }
+
+    @Test
+    public void loadFailed_nonUtf8_saveRefusesAndLeavesFileUntouched() throws Exception {
+        // save() rewrites only the two key lines and keeps the rest; after a failed read there is
+        // no "rest", so it would have written the two keys alone.
+        byte[] bytes = "# caf\u00e9\nIMMICH_INSTANCE_URL=http://localhost:2283\nIMMICH_API_KEY=old-key-0123456789\nOTHER=1\n"
+                .getBytes(StandardCharsets.ISO_8859_1);
+        Path f = tmp.resolve("immich.env");
+        Files.write(f, bytes);
+
+        SyncCredentialsFile c = new SyncCredentialsFile(SyncCredentialsFile.IMMICH, f).load();
+        assertNotNull(c.getLoadError());
+
+        c.setSecret("new-key-0123456789");
+        IOException e = assertThrows(IOException.class, c::save);
+        assertTrue(e.getMessage().contains("could not be read"), e.getMessage());
+        assertArrayEquals(bytes, Files.readAllBytes(f));
+
+        Files.writeString(f, "IMMICH_API_KEY=k\n");
+        assertNull(c.load().getLoadError());
     }
 
     private Path write(String content) throws Exception {

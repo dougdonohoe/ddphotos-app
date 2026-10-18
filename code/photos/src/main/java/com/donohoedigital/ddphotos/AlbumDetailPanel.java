@@ -275,11 +275,7 @@ public class AlbumDetailPanel extends EditableDetailPanel {
     protected void openPasswordDialog() {
         Site site = albumsList_.getCurrentSite();
         if (site == null || currentEntry_ == null) return;
-        TypedHashMap params = new TypedHashMap();
-        params.setObject(PasswordDialog.PARAM_SITE, site);
-        params.setObject(PasswordDialog.PARAM_ALBUM_SLUG, currentEntry_.getSlug());
-        params.setObject("dialog-windowtitle-prop", "msg.windowtitle.PasswordDialog.album");
-        albumsList_.getContext().processPhaseNow("PasswordDialog", params);
+        PasswordDialog.open(albumsList_.getContext(), site, currentEntry_.getSlug());
         updatePasswordUi();
     }
 

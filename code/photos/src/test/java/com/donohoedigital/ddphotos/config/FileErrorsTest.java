@@ -3,6 +3,7 @@ package com.donohoedigital.ddphotos.config;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.charset.MalformedInputException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystemException;
 import java.nio.file.NoSuchFileException;
@@ -58,6 +59,12 @@ public class FileErrorsTest {
         // The bug this class exists for: getMessage() on the cause is just the path again.
         AlbumsFileException e = new AlbumsFileException("write " + PATH, new NoSuchFileException(PATH));
         assertEquals("no such file or directory", FileErrors.reason(e));
+    }
+
+    @Test
+    public void reason_namesADecodingFailure() {
+        // Files.readString's own message for a non-UTF-8 byte is "Input length = 1".
+        assertEquals("not valid UTF-8 text", FileErrors.reason(new MalformedInputException(1)));
     }
 
     @Test

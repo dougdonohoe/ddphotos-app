@@ -717,6 +717,41 @@ public class PasswordsFileTest {
     // ── helpers ─────────────────────────────────────────────────────────────
 
     /** Rewrites a file so its stamp is unmistakably different from the one just taken. */
+    // ── a file that failed to load is never overwritten ─────────────────────
+
+    @Test
+    public void loadFailed_saveOrCreateRefusesAndLeavesFileUntouched() throws Exception {
+        // The editor's path: a broken file loads empty, gets a new key and site password, and
+        // saving that would wipe every album password.
+        String broken = SAMPLE_ALL + "  kenya: [unclosed\n";
+        Path f = write(broken);
+
+        PasswordsFile pf = new PasswordsFile(f).load();
+        assertNotNull(pf.getLoadError());
+        assertFalse(pf.existsOnDisk(), "a file that did not parse must not count as present");
+
+        pf.setKey("new-key");
+        pf.setSitePassword("newpass");
+        PasswordsFileException e = assertThrows(PasswordsFileException.class, pf::saveOrCreate);
+        assertTrue(e.getMessage().contains("could not be read"), e.getMessage());
+        assertEquals(broken, Files.readString(f, StandardCharsets.UTF_8));
+
+        assertThrows(PasswordsFileException.class, pf::save);
+        assertEquals(broken, Files.readString(f, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void loadFailed_successfulReloadClearsTheError() throws Exception {
+        Path f = write(":\nthis: [is: {not valid");
+        PasswordsFile pf = new PasswordsFile(f).load();
+        assertNotNull(pf.getLoadError());
+
+        writeOver(f, SAMPLE_ALL);
+        pf.load();
+        assertNull(pf.getLoadError());
+        assertTrue(pf.existsOnDisk());
+    }
+
     private void writeOver(Path path, String content) throws Exception {
         Files.writeString(path, content, StandardCharsets.UTF_8);
         Files.setLastModifiedTime(path, java.nio.file.attribute.FileTime.fromMillis(

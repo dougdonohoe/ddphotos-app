@@ -34,12 +34,14 @@ public class SitesFile extends ConfigFile {
 
     public SitesFile load()
     {
+        setLoadError(null);
         try {
             if (Files.exists(path_)) {
                 loadInternal();
             }
         } catch (SitesFileException e) {
             logger.warn("Failed to load sites file: {}", path_, e);
+            setLoadError(e.getMessage());
         }
         return this;
     }
@@ -60,6 +62,8 @@ public class SitesFile extends ConfigFile {
             throw new SitesFileException("parse " + path_ + ": " + e.getMessage(), e);
         }
 
+        // Built aside and swapped in at the end, so a bad entry leaves none of the file's sites behind.
+        List<Site> loaded = new ArrayList<>();
         if (obj instanceof Map<?, ?> root) {
             Object sitesObj = root.get("sites");
             if (sitesObj instanceof List<?> list) {
@@ -70,17 +74,22 @@ public class SitesFile extends ConfigFile {
                         if (site.getDisplayName() == null || site.getDisplayName().isBlank()) {
                             throw new SitesFileException(path_ + ": site[" + i + "]: display_name is required");
                         }
-                        sites.add(site);
+                        loaded.add(site);
                     }
                 }
-                Collections.sort(sites);
+                Collections.sort(loaded);
             }
         }
+        // In place rather than reassigned: the site combo holds this list.
+        sites.clear();
+        sites.addAll(loaded);
         restamp();
         return this;
     }
 
     public void save() throws SitesFileException {
+        String refusal = saveRefusal();
+        if (refusal != null) throw new SitesFileException(refusal);
         List<Map<String, String>> list = new ArrayList<>();
         for (Site site : sites) {
             Map<String, String> map = new LinkedHashMap<>();
