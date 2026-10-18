@@ -46,6 +46,45 @@ public class SiteTest {
         assertNull(new Site("My Site", "", null).getAlbumsFilePath());
     }
 
+    // ── saveCssSetting() ────────────────────────────────────────────────────
+
+    @Test
+    public void saveCssSetting_afterModelReloaded() throws Exception {
+        // The CSS editor keeps the model it opened with; a base change reloads the site's model
+        // while it is open.  The defaulted settings.css has to reach the model that is saved.
+        Path dir = tmp.resolve("site");
+        Files.createDirectories(dir.resolve("config"));
+        Files.writeString(dir.resolve("config/albums.yaml"), "settings:\n  id: site\nalbums: []\n");
+        Site site = new Site("Site", dir.toString(), null);
+
+        AlbumsFile editorModel = site.getOrCreateAlbumsFile();
+        TextFile css = editorModel.getOrCreateCssFile();
+        site.reloadAlbumsFile();
+        assertNotSame(editorModel, site.getAlbumsFile(), "precondition: the model was replaced");
+
+        css.setContent("body { color: red; }\n");
+        editorModel.saveCssFile();
+        site.saveCssSetting(editorModel);
+
+        assertEquals(CssFile.FILE_NAME, AlbumsFile.load(dir.resolve("config/albums.yaml")).getSettings().getCss());
+    }
+
+    @Test
+    public void saveCssSetting_sameModel() throws Exception {
+        Path dir = tmp.resolve("site");
+        Files.createDirectories(dir.resolve("config"));
+        Files.writeString(dir.resolve("config/albums.yaml"), "settings:\n  id: site\nalbums: []\n");
+        Site site = new Site("Site", dir.toString(), null);
+
+        AlbumsFile model = site.getOrCreateAlbumsFile();
+        model.getOrCreateCssFile().setContent("body { color: red; }\n");
+        model.saveCssFile();
+        site.saveCssSetting(model);
+
+        assertEquals(CssFile.FILE_NAME, AlbumsFile.load(dir.resolve("config/albums.yaml")).getSettings().getCss());
+        assertFalse(model.isCssSettingUnsaved());
+    }
+
     // ── getSiteEnvPath() ────────────────────────────────────────────────────
 
     @Test
