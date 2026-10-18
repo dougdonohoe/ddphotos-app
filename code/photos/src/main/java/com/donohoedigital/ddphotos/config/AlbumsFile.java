@@ -687,6 +687,7 @@ public class AlbumsFile extends ConfigFile {
     private AlbumEntry readAlbumEntry(MappingNode n) {
         AlbumEntry a = new AlbumEntry();
         a.setSlug(getString(n, "slug"));
+        a.setNodeSlug(a.getSlug());
         a.setName(getString(n, "name"));
         a.setDescription(getString(n, "description"));
         a.setLongDescriptionHtml(getString(n, "long_description_html"));
@@ -801,7 +802,9 @@ public class AlbumsFile extends ConfigFile {
         List<Node> oldItems = new ArrayList<>(seqNode.getValue());
 
         // Build slug → original node map so reorder/insert reuses the right node,
-        // preserving each album's ScalarStyle (quoted vs plain) and key ordering.
+        // preserving each album's comments, ScalarStyle (quoted vs plain) and key ordering.
+        // Albums are matched on the slug their node had, so a renamed album keeps its node
+        // and a new album never takes another album's.
         Map<String, MappingNode> nodeBySlug = new LinkedHashMap<>();
         for (Node n : oldItems) {
             if (n instanceof MappingNode mn) {
@@ -812,13 +815,14 @@ public class AlbumsFile extends ConfigFile {
 
         List<Node> newItems = new ArrayList<>(albums.size());
         for (AlbumEntry a : albums) {
-            MappingNode existing = nodeBySlug.get(a.getSlug());
+            MappingNode existing = a.getNodeSlug() == null ? null : nodeBySlug.remove(a.getNodeSlug());
             if (existing != null) {
                 syncAlbumEntry(existing, a);
                 newItems.add(existing);
             } else {
                 newItems.add(buildAlbumNode(a));
             }
+            a.setNodeSlug(a.getSlug());
         }
 
         seqNode.getValue().clear();
@@ -984,16 +988,18 @@ public class AlbumsFile extends ConfigFile {
     }
 
     /**
-     * Inserts a blank line before each {@code albums} item indicator that follows a
-     * non-key line.  The first item follows "albums:" so it gets no blank line;
-     * subsequent items follow a value line so they do.
+     * Inserts a blank line before each {@code albums} item that follows a non-key line,
+     * above any comment lines directly before the item, so the comment stays with it.
+     * The first item follows "albums:" so it gets no blank line; subsequent items follow
+     * a value line so they do.
      *
-     * Pattern: any character that is not ':' or newline, followed by newline, followed
-     * by "  - " at exactly the albums item indent.  Lines of a | or > value are indented
-     * at least four spaces, so a value line starting with "- " is never matched.
+     * Pattern: a line that is not a comment and does not end in ':', then any comment
+     * lines, then "  - " at exactly the albums item indent.  Lines of a | or > value are
+     * indented at least four spaces, so a value line starting with "- " or "#" is never
+     * matched.
      */
     private static String insertBlankLinesBetweenSequenceItems(String yaml) {
-        return yaml.replaceAll("([^:\n])\n( {2}- )", "$1\n\n$2");
+        return yaml.replaceAll("(?m)^(?! *#)([^\n]*[^:\n])\n((?: {2}#[^\n]*\n)* {2}- )", "$1\n\n$2");
     }
 
     // ── node helpers ────────────────────────────────────────────────────────

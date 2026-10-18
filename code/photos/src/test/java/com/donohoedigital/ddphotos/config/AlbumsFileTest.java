@@ -656,6 +656,114 @@ public class AlbumsFileTest {
     }
 
     @Test
+    public void roundTrip_blankLineGoesAboveAlbumComments() throws Exception {
+        String original = """
+                albums:
+                  # First comment
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+                    manual_sort_order: false
+                    recurse: false
+
+                  # Nepal comment
+                  # second line
+                  - slug: nepal
+                    name: Nepal
+                    source: /tmp/n
+                    manual_sort_order: false
+                    recurse: false
+                """;
+        Path f = writeYaml(original);
+        AlbumsFile.load(f).save(f);
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertEquals(original, yaml.substring(yaml.indexOf("albums:")));
+    }
+
+    @Test
+    public void roundTrip_renameAlbumKeepsItsNode() throws Exception {
+        Path f = writeYaml("""
+                albums:
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+
+                  # Nepal comment
+                  - slug: nepal
+                    name: "Nepal"
+                    sync:
+                      provider: mock
+                      album_id: n1
+                      mock:
+                        assets: assets.json
+                        media_dir: media
+                """);
+        AlbumsFile af = AlbumsFile.load(f);
+        AlbumEntry nepal = af.getAlbums().get(1);
+        nepal.setSlug("nepal-2018");
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.contains("# Nepal comment\n  - slug: nepal-2018\n    name: \"Nepal\"\n    sync:"),
+                "renamed album should keep its comment, quoting and key order:\n" + yaml);
+        assertEquals("assets.json", AlbumsFile.load(f).getAlbums().get(1).getSync().getMock().getAssets());
+
+        // A second rename from the same model still finds the node.
+        nepal.setSlug("nepal-trip");
+        af.save(f);
+        yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.contains("# Nepal comment\n  - slug: nepal-trip\n    name: \"Nepal\"\n    sync:"),
+                "second rename should keep the node too:\n" + yaml);
+        assertEquals("assets.json", AlbumsFile.load(f).getAlbums().get(1).getSync().getMock().getAssets());
+    }
+
+    @Test
+    public void roundTrip_swapAlbumSlugs() throws Exception {
+        Path f = writeYaml("""
+                albums:
+                  # A comment
+                  - slug: a
+                    name: A
+                    source: /tmp/a
+
+                  # B comment
+                  - slug: b
+                    name: B
+                    source: /tmp/b
+                """);
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getAlbums().get(0).setSlug("b");
+        af.getAlbums().get(1).setSlug("a");
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.contains("# A comment\n  - slug: b\n    name: A"), yaml);
+        assertTrue(yaml.contains("# B comment\n  - slug: a\n    name: B"), yaml);
+    }
+
+    @Test
+    public void roundTrip_newAlbumDoesNotTakeRenamedAlbumsNode() throws Exception {
+        Path f = writeYaml("""
+                albums:
+                  # Way comment
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+                """);
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getAlbums().getFirst().setSlug("camino");
+        af.getAlbums().add(albumWith("way", null, "/tmp/new"));
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.contains("# Way comment\n  - slug: camino\n    name: The Way"), yaml);
+        List<AlbumEntry> reloaded = AlbumsFile.load(f).getAlbums();
+        assertEquals("/tmp/p", reloaded.get(0).getSource());
+        assertEquals("way", reloaded.get(1).getSlug());
+        assertEquals("/tmp/new", reloaded.get(1).getSource());
+    }
+
+    @Test
     public void saveNewFile() throws Exception {
         AlbumsFile af = new AlbumsFile();
         af.getSettings().setId("mysite");
