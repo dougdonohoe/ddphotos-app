@@ -420,6 +420,118 @@ public class AlbumsFileTest {
     }
 
     @Test
+    public void save_emptySectionsAreFilledInNotDuplicated() throws Exception {
+        // "bases:" and "albums:" with nothing under them read as null values. Saving must fill in
+        // those keys, not add a second one that a reload ignores.
+        Path f = writeYaml("settings:\n  id: site\nbases:\nalbums:\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getBases().put("t7", "/Volumes/T7/Photos");
+        af.getAlbums().add(albumWith("a", "t7", "rel"));
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertEquals(1, countLines(yaml, "bases:"), yaml);
+        assertEquals(1, countLines(yaml, "albums:"), yaml);
+        AlbumsFile reloaded = AlbumsFile.load(f);
+        assertEquals("/Volumes/T7/Photos", reloaded.getBases().get("t7"));
+        assertEquals(1, reloaded.getAlbums().size());
+    }
+
+    @Test
+    public void save_emptySettingsIsFilledInNotDuplicated() throws Exception {
+        Path f = writeYaml("settings:\nalbums:\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getSettings().setId("site");
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertEquals(1, countLines(yaml, "settings:"), yaml);
+        assertEquals("site", AlbumsFile.load(f).getSettings().getId());
+    }
+
+    @Test
+    public void save_emptyHeroIsFilledInNotDuplicated() throws Exception {
+        Path f = writeYaml("settings:\n  id: site\n  hero:\nalbums:\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        HeroEntry hero = new HeroEntry();
+        hero.setImage("hero.jpg");
+        af.getSettings().setHero(hero);
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertEquals(1, countLines(yaml, "hero:"), yaml);
+        assertEquals("hero.jpg", AlbumsFile.load(f).getSettings().getHero().getImage());
+    }
+
+    @Test
+    public void save_emptySyncIsFilledInNotDuplicated() throws Exception {
+        Path f = writeYaml("albums:\n  - slug: a\n    name: A\n    source: /tmp/a\n    sync:\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        AlbumEntry album = af.getAlbums().getFirst();
+        album.setSource(null);
+        SyncEntry sync = new SyncEntry();
+        sync.setProvider(SyncEntry.PROVIDER_MOCK);
+        sync.setAlbumId("album-1");
+        album.setSync(sync);
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertEquals(1, countLines(yaml, "sync:"), yaml);
+        assertEquals("album-1", AlbumsFile.load(f).getAlbums().getFirst().getSync().getAlbumId());
+    }
+
+    @Test
+    public void save_emptyInlineSectionsBecomeMultiLine() throws Exception {
+        // "[]" and "{}" are inline (flow) style, which SnakeYAML keeps on save: the first album
+        // would be written as "albums: [{slug: a, ...}]".
+        Path f = writeYaml("settings:\n  id: site\nbases: {}\nalbums: []\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getBases().put("t7", "/Volumes/T7/Photos");
+        af.getAlbums().add(albumWith("a", "t7", "rel"));
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.contains("bases:\n  t7: /Volumes/T7/Photos\n"), yaml);
+        assertTrue(yaml.contains("albums:\n  - slug: a\n"), yaml);
+    }
+
+    @Test
+    public void save_inlineSectionWithItemsKeepsItsStyle() throws Exception {
+        Path f = writeYaml("settings:\n  id: site\nbases: {t7: /Volumes/T7/Photos}\nalbums:\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        af.save(f);
+
+        assertTrue(Files.readString(f, StandardCharsets.UTF_8).contains("bases: {t7: /Volumes/T7/Photos}"));
+    }
+
+    @Test
+    public void save_newSettingsGoesFirst() throws Exception {
+        Path f = writeYaml("albums:\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        af.getAlbums().add(albumWith("a", null, "/tmp/a"));
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.startsWith("settings:\n"), yaml);
+        assertTrue(yaml.contains("\n\nalbums:\n"), "blank line must precede albums:\n" + yaml);
+    }
+
+    @Test
+    public void save_existingSettingsStaysWhereItIs() throws Exception {
+        Path f = writeYaml("albums:\n  - slug: a\n    name: A\n    source: /tmp/a\nsettings:\n  id: site\n");
+        AlbumsFile af = AlbumsFile.load(f);
+        af.save(f);
+
+        String yaml = Files.readString(f, StandardCharsets.UTF_8);
+        assertTrue(yaml.indexOf("albums:") < yaml.indexOf("settings:"), yaml);
+    }
+
+    /** Lines that are exactly {@code key}, ignoring indentation. */
+    private static long countLines(String yaml, String key) {
+        return yaml.lines().filter(l -> l.strip().equals(key)).count();
+    }
+
+    @Test
     public void roundTrip_clearFieldViaEmptyString() throws Exception {
         AlbumsFile af = loadFixture("testdata/albums.yaml");
         assertNotNull(af.getSettings().getSiteTitleHtml(), "precondition: siteTitleHtml must be set in fixture");

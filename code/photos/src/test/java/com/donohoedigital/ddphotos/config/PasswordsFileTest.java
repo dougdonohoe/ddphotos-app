@@ -124,6 +124,34 @@ public class PasswordsFileTest {
     }
 
     @Test
+    public void save_emptySectionsAreFilledInNotDuplicated() throws Exception {
+        // "site:" and "albums:" with nothing under them read as null values. Saving must fill in
+        // those keys, not add a second one that a reload ignores.
+        Path f = write("key: just-a-key\nsite:\nalbums:\n");
+        PasswordsFile pf = new PasswordsFile(f).load();
+        pf.setSitePassword("site-pw");
+        pf.setAlbumPassword("a", "album-pw");
+        pf.save();
+
+        String yaml = read(f);
+        assertEquals(1, yaml.lines().filter(l -> l.equals("site:")).count(), yaml);
+        assertEquals(1, yaml.lines().filter(l -> l.equals("albums:")).count(), yaml);
+        PasswordsFile reloaded = new PasswordsFile(f).load();
+        assertEquals("site-pw", reloaded.getSitePassword());
+        assertEquals("album-pw", reloaded.getAlbumPassword("a"));
+    }
+
+    @Test
+    public void save_emptyInlineAlbumsBecomesMultiLine() throws Exception {
+        Path f = write("key: just-a-key\nalbums: {}\n");
+        PasswordsFile pf = new PasswordsFile(f).load();
+        pf.setAlbumPassword("a", "album-pw");
+        pf.save();
+
+        assertTrue(read(f).contains("albums:\n  a:\n    password: album-pw\n"), read(f));
+    }
+
+    @Test
     public void roundTrip_preservesComments() throws Exception {
         PasswordsFile pf = loadFixture("testdata/passwords.yaml");
         Path out = Files.createFile(tmp.resolve("out.yaml"));

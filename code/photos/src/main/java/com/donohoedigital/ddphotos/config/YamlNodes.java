@@ -5,6 +5,7 @@ import org.snakeyaml.engine.v2.comments.CommentLine;
 import org.snakeyaml.engine.v2.comments.CommentType;
 import org.snakeyaml.engine.v2.common.FlowStyle;
 import org.snakeyaml.engine.v2.common.ScalarStyle;
+import org.snakeyaml.engine.v2.nodes.CollectionNode;
 import org.snakeyaml.engine.v2.nodes.MappingNode;
 import org.snakeyaml.engine.v2.nodes.Node;
 import org.snakeyaml.engine.v2.nodes.NodeTuple;
@@ -64,10 +65,25 @@ final class YamlNodes {
 
     static MappingNode ensureMappingNode(MappingNode parent, String key) {
         MappingNode existing = getMappingNode(parent, key);
-        if (existing != null) return existing;
+        if (existing != null) return toBlockIfEmpty(existing);
         MappingNode node = new MappingNode(Tag.MAP, new ArrayList<>(), FlowStyle.BLOCK);
-        parent.getValue().add(new NodeTuple(scalar(key), node));
+        putValue(parent, key, node);
         return node;
+    }
+
+    /**
+     * Sets {@code key} to {@code value}.  A key that is already there gets the new value in place,
+     * whatever it held before: an empty {@code bases:} reads as a null scalar, and appending would
+     * leave the file with two {@code bases} keys, the second ignored on reload.  Otherwise, the key
+     * is appended.
+     */
+    static void putValue(MappingNode parent, String key, Node value) {
+        int idx = findTupleIndex(parent, key);
+        if (idx >= 0) {
+            parent.getValue().set(idx, new NodeTuple(parent.getValue().get(idx).getKeyNode(), value));
+        } else {
+            parent.getValue().add(new NodeTuple(scalar(key), value));
+        }
     }
 
     /**
@@ -124,6 +140,17 @@ final class YamlNodes {
                 node.getValue().add(new NodeTuple(scalar(key), intNode));
             }
         }
+    }
+
+    /**
+     * Switches an empty {@code {}} or {@code []} to block style.  SnakeYAML writes a node back in
+     * the style it was read in, so items added to an empty inline section would be written on one
+     * line ({@code albums: [{slug: a, ...}]}).  A section the user wrote inline with items in it
+     * keeps its style.
+     */
+    static <T extends CollectionNode<?>> T toBlockIfEmpty(T node) {
+        if (node.getValue().isEmpty()) node.setFlowStyle(FlowStyle.BLOCK);
+        return node;
     }
 
     static void removeKey(MappingNode node, String key) {
