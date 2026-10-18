@@ -574,7 +574,7 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                         process_ = null;
                         // After a user stop/kill the exit code is an artifact of how we terminated the
                         // process (e.g. 1 on Windows), not a real result - don't present it as one.
-                        console_.appendSystem(wasUserStop(code)
+                        console_.appendSystem(wasUserStop()
                                 ? PropertyConfig.getMessage("msg.cmd.stoppedTimed", elapsed)
                                 : PropertyConfig.getMessage("msg.cmd.exited", code, elapsed));
                         updateButtonState();
@@ -630,7 +630,7 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                         process_ = null;
                         // A stopped check produced no verdict - its exit code and partial output are
                         // artifacts of how we killed it, not an answer about the user's login.
-                        if (wasUserStop(code)) {
+                        if (wasUserStop()) {
                             console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
                             updateButtonState();
                             onRunAborted();
@@ -734,7 +734,7 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
                     String output = captured.toString();
                     SwingUtilities.invokeLater(() -> {
                         process_ = null;
-                        if (wasUserStop(code)) {
+                        if (wasUserStop()) {
                             console_.appendSystem(PropertyConfig.getMessage("msg.cmd.stopped"));
                             updateButtonState();
                             onRunAborted();
@@ -812,12 +812,13 @@ public abstract class AbstractRunnerPanel extends DDTabPanel implements AppEngin
     }
 
     /**
-     * True when the just-finished process exited because the user stopped/killed it - either we
-     * flagged it via {@link #onStop}/{@link #onKill}, or the exit code is a recognized stop code.
+     * True when the just-finished process exited because the user stopped/killed it, as flagged by
+     * {@link #onStop}/{@link #onKill}.  The exit code is not consulted: 137 and 143 also come from
+     * a process the system killed (for example, when it ran out of memory), and that is a failure.
      * Subclasses use this to suppress failure feedback for a deliberate stop.
      */
-    protected boolean wasUserStop(int code) {
-        return userStopped_ || CommandRunner.isUserStopCode(code);
+    protected boolean wasUserStop() {
+        return userStopped_;
     }
 
     /**

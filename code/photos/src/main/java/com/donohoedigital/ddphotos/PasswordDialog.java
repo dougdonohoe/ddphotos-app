@@ -1,7 +1,9 @@
 package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.config.AppButton;
+import com.donohoedigital.app.engine.AppContext;
 import com.donohoedigital.app.engine.EngineUtils;
+import com.donohoedigital.base.TypedHashMap;
 import com.donohoedigital.config.PropertyConfig;
 import com.donohoedigital.ddphotos.config.AlbumsFile;
 import com.donohoedigital.ddphotos.config.AlbumsFileException;
@@ -58,6 +60,26 @@ public class PasswordDialog extends PhotosDialog
     private DDTextField passwordField_;
     private DDTextField hintField_;
     private DDCheckBox  editKeyCheck_;
+
+    /**
+     * Opens the dialog for the site's password, or for one album's when {@code albumSlug} is not
+     * null.  A {@code passwords.yaml} that exists but cannot be read is reported instead: the
+     * dialog would show it as empty, and saving would replace every password in it.
+     */
+    public static void open(AppContext context, Site site, String albumSlug)
+    {
+        AlbumsFile af = site.getOrCreateAlbumsFile();
+        // The same fresh read the dialog makes (see loadPasswords), done here so it can stop first.
+        af.reloadPasswordsFile();
+        if (PhotosUtils.showLoadError(context, af.getPasswordsFile())) return;
+
+        TypedHashMap params = new TypedHashMap();
+        params.setObject(PARAM_SITE, site);
+        params.setObject(PARAM_ALBUM_SLUG, albumSlug);
+        params.setObject("dialog-windowtitle-prop", albumSlug == null
+                ? "msg.windowtitle.PasswordDialog.site" : "msg.windowtitle.PasswordDialog.album");
+        context.processPhaseNow("PasswordDialog", params);
+    }
 
     // -------------------------------------------------------------------------
     // DialogPhase API

@@ -306,6 +306,29 @@ public class PhotogenFileTest {
         assertEquals(SAMPLE, read(dir));
     }
 
+    // ── a file that failed to load is never overwritten ─────────────────────
+
+    @Test
+    public void loadFailed_nonUtf8_saveOrCreateRefusesAndLeavesFileUntouched() throws Exception {
+        // One Latin-1 caption made the file unreadable; the caption editor then showed no captions
+        // and its next save replaced every one of them.
+        byte[] bytes = "IMG_0001.jpg: Caf\u00e9 on the corner\nIMG_0002.jpg: Market\n"
+                .getBytes(StandardCharsets.ISO_8859_1);
+        Path dir = Files.createTempDirectory(tmp, "dir");
+        Path f = dir.resolve(PhotogenFile.FILE_NAME);
+        Files.write(f, bytes);
+
+        PhotogenFile pf = new PhotogenFile(dir).load();
+        assertNotNull(pf.getLoadError());
+        assertFalse(pf.existsOnDisk());
+
+        pf.setCaption("IMG_0003.jpg", "New");
+        PhotogenFileException e = assertThrows(PhotogenFileException.class, pf::saveOrCreate);
+        assertTrue(e.getMessage().contains("could not be read"), e.getMessage());
+        assertThrows(PhotogenFileException.class, pf::save);
+        assertArrayEquals(bytes, Files.readAllBytes(f));
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     private Path write(String content) throws Exception {

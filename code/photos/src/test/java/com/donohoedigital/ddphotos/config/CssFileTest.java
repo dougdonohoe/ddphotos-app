@@ -205,6 +205,26 @@ public class CssFileTest {
 
     // ── helpers ─────────────────────────────────────────────────────────────
 
+    // ── a file that failed to load is never overwritten ─────────────────────
+
+    @Test
+    public void loadFailed_nonUtf8_saveOrCreateRefusesAndLeavesFileUntouched() throws Exception {
+        // One Latin-1 byte (0xE9, "é") makes the whole file unreadable as UTF-8.  The editor then
+        // opened blank, and its next save wiped the stylesheet.
+        byte[] bytes = "/* caf\u00e9 */\nbody { color: red; }\n".getBytes(StandardCharsets.ISO_8859_1);
+        Path f = tmp.resolve("custom.css");
+        Files.write(f, bytes);
+
+        CssFile css = new CssFile(f).load();
+        assertNotNull(css.getLoadError());
+        assertEquals("", css.getContent());
+
+        css.setContent("body { color: blue; }\n");
+        TextFileException e = assertThrows(TextFileException.class, css::saveOrCreate);
+        assertTrue(e.getMessage().contains("could not be read"), e.getMessage());
+        assertArrayEquals(bytes, Files.readAllBytes(f));
+    }
+
     private Path write(String content) throws Exception {
         Path f = Files.createTempDirectory(tmp, "dir").resolve(CssFile.FILE_NAME);
         Files.writeString(f, content, StandardCharsets.UTF_8);

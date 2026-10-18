@@ -63,12 +63,14 @@ public class PhotogenFile extends ConfigFile {
     }
 
     public PhotogenFile load() {
+        setLoadError(null);
         try {
             if (Files.exists(path_)) {
                 loadInternal();
             }
         } catch (PhotogenFileException e) {
             logger.warn("Failed to load photogen file: {}", path_, e);
+            setLoadError(e.getMessage());
         }
         return this;
     }
@@ -87,6 +89,8 @@ public class PhotogenFile extends ConfigFile {
     }
 
     public void save() throws PhotogenFileException {
+        String refusal = saveRefusal();
+        if (refusal != null) throw new PhotogenFileException(refusal);
         // Never create a photogen.txt that wasn't there in the first place.
         if (!existed_) {
             return;
@@ -101,6 +105,8 @@ public class PhotogenFile extends ConfigFile {
      * folder that had no file (empty model) remains a no-op, so an untouched folder is never created.
      */
     public void saveOrCreate() throws PhotogenFileException {
+        String refusal = saveRefusal();
+        if (refusal != null) throw new PhotogenFileException(refusal);
         if (!existed_ && lines_.isEmpty()) {
             return;
         }

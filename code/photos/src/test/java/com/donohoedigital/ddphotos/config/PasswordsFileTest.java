@@ -124,6 +124,34 @@ public class PasswordsFileTest {
     }
 
     @Test
+    public void save_emptySectionsAreFilledInNotDuplicated() throws Exception {
+        // "site:" and "albums:" with nothing under them read as null values. Saving must fill in
+        // those keys, not add a second one that a reload ignores.
+        Path f = write("key: just-a-key\nsite:\nalbums:\n");
+        PasswordsFile pf = new PasswordsFile(f).load();
+        pf.setSitePassword("site-pw");
+        pf.setAlbumPassword("a", "album-pw");
+        pf.save();
+
+        String yaml = read(f);
+        assertEquals(1, yaml.lines().filter(l -> l.equals("site:")).count(), yaml);
+        assertEquals(1, yaml.lines().filter(l -> l.equals("albums:")).count(), yaml);
+        PasswordsFile reloaded = new PasswordsFile(f).load();
+        assertEquals("site-pw", reloaded.getSitePassword());
+        assertEquals("album-pw", reloaded.getAlbumPassword("a"));
+    }
+
+    @Test
+    public void save_emptyInlineAlbumsBecomesMultiLine() throws Exception {
+        Path f = write("key: just-a-key\nalbums: {}\n");
+        PasswordsFile pf = new PasswordsFile(f).load();
+        pf.setAlbumPassword("a", "album-pw");
+        pf.save();
+
+        assertTrue(read(f).contains("albums:\n  a:\n    password: album-pw\n"), read(f));
+    }
+
+    @Test
     public void roundTrip_preservesComments() throws Exception {
         PasswordsFile pf = loadFixture("testdata/passwords.yaml");
         Path out = Files.createFile(tmp.resolve("out.yaml"));
@@ -717,6 +745,41 @@ public class PasswordsFileTest {
     // ── helpers ─────────────────────────────────────────────────────────────
 
     /** Rewrites a file so its stamp is unmistakably different from the one just taken. */
+    // ── a file that failed to load is never overwritten ─────────────────────
+
+    @Test
+    public void loadFailed_saveOrCreateRefusesAndLeavesFileUntouched() throws Exception {
+        // The editor's path: a broken file loads empty, gets a new key and site password, and
+        // saving that would wipe every album password.
+        String broken = SAMPLE_ALL + "  kenya: [unclosed\n";
+        Path f = write(broken);
+
+        PasswordsFile pf = new PasswordsFile(f).load();
+        assertNotNull(pf.getLoadError());
+        assertFalse(pf.existsOnDisk(), "a file that did not parse must not count as present");
+
+        pf.setKey("new-key");
+        pf.setSitePassword("newpass");
+        PasswordsFileException e = assertThrows(PasswordsFileException.class, pf::saveOrCreate);
+        assertTrue(e.getMessage().contains("could not be read"), e.getMessage());
+        assertEquals(broken, Files.readString(f, StandardCharsets.UTF_8));
+
+        assertThrows(PasswordsFileException.class, pf::save);
+        assertEquals(broken, Files.readString(f, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void loadFailed_successfulReloadClearsTheError() throws Exception {
+        Path f = write(":\nthis: [is: {not valid");
+        PasswordsFile pf = new PasswordsFile(f).load();
+        assertNotNull(pf.getLoadError());
+
+        writeOver(f, SAMPLE_ALL);
+        pf.load();
+        assertNull(pf.getLoadError());
+        assertTrue(pf.existsOnDisk());
+    }
+
     private void writeOver(Path path, String content) throws Exception {
         Files.writeString(path, content, StandardCharsets.UTF_8);
         Files.setLastModifiedTime(path, java.nio.file.attribute.FileTime.fromMillis(

@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -283,13 +282,6 @@ public abstract class CommandRunner {
             logger.info("{}: docker error: {}", display, e.getMessage());
             if (sink != null) sink.error(PropertyConfig.getMessage("msg.cmd.dockerError", display, e.getMessage()));
         }
-    }
-
-    /** Exit codes produced by stop()/kill() (SIGTERM/SIGKILL) — not a real command failure. */
-    private static final Set<Integer> USER_STOP_EXIT_CODES = Set.of(137, 143);
-
-    public static boolean isUserStopCode(int exitCode) {
-        return USER_STOP_EXIT_CODES.contains(exitCode);
     }
 
     /** Sink for surfacing stop/kill-path activity to the UI console. Methods may be called off-EDT. */

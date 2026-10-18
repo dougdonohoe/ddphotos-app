@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Standalone resizable window for editing one of a site's plain-text config files - a
@@ -89,9 +90,12 @@ public abstract class TextEditorPhase extends BasePhase {
      *                   {@code OPEN} is the only thing keeping a second one from being created
      * @param title      the window title
      * @param params     subclass params to hand the phase; the launch params are added here
+     * @param probe      a fresh, throwaway load of the file, checked before a new window opens: a
+     *                   file that exists but cannot be read is reported instead of shown blank
      */
     protected static void open(AppContext context, Site site, String phaseName,
-                               String windowName, String title, TypedHashMap params) {
+                               String windowName, String title, TypedHashMap params,
+                               Supplier<? extends TextFile> probe) {
         if (context == null || site == null) return;
         String key = phaseName + "/" + windowName;
         TextEditorPhase existing = OPEN.get(key);
@@ -99,6 +103,7 @@ public abstract class TextEditorPhase extends BasePhase {
             existing.context_.getWindow().toFront();
             return;
         }
+        if (PhotosUtils.showLoadError(context, probe.get())) return;
         params.setObject(PARAM_SITE, site);
         params.setString(PARAM_KEY, key);
         params.setString(EngineConstants.PARAM_WINDOW_NAME, windowName);

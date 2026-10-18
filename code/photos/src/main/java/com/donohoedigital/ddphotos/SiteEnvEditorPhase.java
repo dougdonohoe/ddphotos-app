@@ -43,7 +43,7 @@ public class SiteEnvEditorPhase extends TextEditorPhase {
         open(context, site, PHASE_NAME, windowName(site, path),
              PropertyConfig.getMessage("msg.windowtitle.SiteEnvEditor.full",
                      site.getDisplayName() != null ? site.getDisplayName() : site.getIdOrDefault()),
-             params);
+             params, () -> new SiteEnvFile(path).load());
     }
 
     /** Mirrors deploy-photos.sh: {@code --site-env} wins, otherwise {@code <config-dir>/site.env}. */

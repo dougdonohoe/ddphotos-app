@@ -12,6 +12,8 @@ import com.donohoedigital.ddphotos.config.TextFileException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.nio.file.Path;
+
 /**
  * Edits a site's custom stylesheet - {@code albums.yaml}'s {@code settings.css}, {@code custom.css}
  * by convention.  See {@link CssFile} for what photogen does with it.
@@ -35,7 +37,11 @@ public class CssEditorPhase extends TextEditorPhase {
         open(context, site, PHASE_NAME, WINDOW_NAME + "-" + site.getIdOrDefault(),
              PropertyConfig.getMessage("msg.windowtitle.CssEditor.full",
                      site.getDisplayName() != null ? site.getDisplayName() : site.getIdOrDefault()),
-             new TypedHashMap());
+             new TypedHashMap(), () -> {
+                 // Not reloadCssFile(): an open editor may hold the cached copy.
+                 Path path = site.getOrCreateAlbumsFile().resolveCssPath();
+                 return path != null ? new CssFile(path).load() : null;
+             });
     }
 
     @Override

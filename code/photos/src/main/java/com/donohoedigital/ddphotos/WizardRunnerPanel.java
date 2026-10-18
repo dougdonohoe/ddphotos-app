@@ -100,7 +100,7 @@ public class WizardRunnerPanel extends AbstractRunnerPanel {
         if (code == 0) {
             if (onSuccess_ != null) onSuccess_.run();
             showSuccessDialog();
-        } else if (!wasUserStop(code)) {
+        } else if (!wasUserStop()) {
             showFailureDialog();
         }
     }

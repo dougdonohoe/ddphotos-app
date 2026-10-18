@@ -33,6 +33,12 @@ final class SyncUi {
      * @return true when the user saved
      */
     static boolean editCredentials(AppContext context, Site site, SyncProvider provider) {
+        // The same fresh read the dialog makes, done here so a file it could not read is reported
+        // instead of shown blank.
+        AlbumsFile af = site.getOrCreateAlbumsFile();
+        af.reloadSyncCredentialsFile(provider.credentialsKind());
+        if (PhotosUtils.showLoadError(context, provider.credentialsFile(af))) return false;
+
         TypedHashMap params = new TypedHashMap();
         params.setObject(SyncCredentialsDialog.PARAM_SITE, site);
         return Boolean.TRUE.equals(context.processPhaseNow(provider.credentialsDialogPhase(), params).getResult());
@@ -87,6 +93,8 @@ final class SyncUi {
         Path dir = af.resolveSyncPath(entry);
         if (dir == null) return;
         SyncMetadataFile existing = new SyncMetadataFile(dir).load();
+        // photogen's own record, unreadable for now: leave it for photogen rather than replace it.
+        if (existing.getLoadError() != null) return;
         if (existing.existsOnDisk() && entry.getSync().getAlbumId().equalsIgnoreCase(existing.getAlbumId())) return;
         try {
             SyncMetadataFile.writeStub(dir, entry.getSync().getProvider(), entry.getSync().getAlbumId(),

@@ -69,6 +69,7 @@ public class PhotogenEditorPhase extends BasePhase {
     static final String PARAM_SITE = "site";
     static final String PARAM_ALBUM = "album";
     static final String PARAM_KEY = "key";
+    static final String PARAM_FILES = "files";
 
     /** One open editor per album (key = siteId/slug); prevents duplicate windows. */
     private static final Map<String, PhotogenEditorPhase> OPEN = new HashMap<>();
@@ -81,7 +82,6 @@ public class PhotogenEditorPhase extends BasePhase {
 
     private Site site_;
     private AlbumEntry album_;
-    private AlbumsFile albumsFile_;
     private String key_;
     private Path sourceDir_;
 
@@ -123,9 +123,17 @@ public class PhotogenEditorPhase extends BasePhase {
             existing.context_.getWindow().toFront();
             return;
         }
+        // Read here rather than in start(), so a photogen.txt that cannot be read is reported
+        // before the window opens: the editor would show it without captions, and saving would
+        // replace them all.
+        AlbumsFile af = site.getAlbumsFile();
+        List<PhotogenFile> files = af != null ? af.getPhotogenFiles(album) : List.of();
+        if (PhotosUtils.showLoadErrors(context, files)) return;
+
         TypedHashMap params = new TypedHashMap();
         params.setObject(PARAM_SITE, site);
         params.setObject(PARAM_ALBUM, album);
+        params.setObject(PARAM_FILES, files);
         params.setString(PARAM_KEY, key);
         // Give each album its own window identity: a distinct title and its own remembered
         // size/position (the engine keys both off the window name).
@@ -151,7 +159,6 @@ public class PhotogenEditorPhase extends BasePhase {
             site_ = (Site) phase_.getObject(PARAM_SITE);
             album_ = (AlbumEntry) phase_.getObject(PARAM_ALBUM);
             key_ = phase_.getString(PARAM_KEY, keyFor(site_, album_));
-            albumsFile_ = site_.getAlbumsFile();
             OPEN.put(key_, this);
             buildUI();
             quitGuard_ = this::confirmDiscard;
@@ -320,9 +327,9 @@ public class PhotogenEditorPhase extends BasePhase {
     // -------------------------------------------------------------------------
 
     private void loadPhotogenFiles() {
-        if (albumsFile_ == null) return;
-        List<PhotogenFile> pfs = albumsFile_.getPhotogenFiles(album_);
-        if (pfs.isEmpty()) return;
+        @SuppressWarnings("unchecked")
+        List<PhotogenFile> pfs = (List<PhotogenFile>) phase_.getObject(PARAM_FILES);
+        if (pfs == null || pfs.isEmpty()) return;
         sourceDir_ = pfs.getFirst().getDir();
         for (PhotogenFile pf : pfs) {
             filesByDir_.put(pf.getDir(), pf);

@@ -747,6 +747,13 @@ public class AlbumsFile extends ConfigFile {
     }
 
     private void syncSettings(MappingNode root) {
+        // A file without settings (for example, one holding only "albums:") gets them at the top,
+        // where every albums.yaml has them, not appended at the end.
+        if (findTupleIndex(root, "settings") < 0) {
+            root.getValue().addFirst(new NodeTuple(scalar("settings"),
+                    new MappingNode(Tag.MAP, new ArrayList<>(), FlowStyle.BLOCK)));
+            if (root.getValue().size() > 1) ensureLeadingBlankLine(root.getValue().get(1).getKeyNode());
+        }
         MappingNode sNode = ensureMappingNode(root, "settings");
         AlbumsSettings s = settings;
         setOptionalString(sNode, "id", s.getId());
@@ -864,11 +871,15 @@ public class AlbumsFile extends ConfigFile {
         MappingNode n = getMappingNode(album, "sync");
         if (n == null) {
             n = new MappingNode(Tag.MAP, new ArrayList<>(), FlowStyle.BLOCK);
-            int after = -1;
-            for (String key : List.of("slug", "name", "description")) {
-                after = Math.max(after, findTupleIndex(album, key));
+            if (findTupleIndex(album, "sync") >= 0) {
+                putValue(album, "sync", n);   // an empty "sync:" already in the file
+            } else {
+                int after = -1;
+                for (String key : List.of("slug", "name", "description")) {
+                    after = Math.max(after, findTupleIndex(album, key));
+                }
+                album.getValue().add(after + 1, new NodeTuple(scalar("sync"), n));
             }
-            album.getValue().add(after + 1, new NodeTuple(scalar("sync"), n));
         }
         setOptionalString(n, "provider", sync.getProvider());
         setOptionalString(n, "album_id", sync.getAlbumId());
@@ -995,9 +1006,9 @@ public class AlbumsFile extends ConfigFile {
 
     private static SequenceNode ensureSequenceNode(MappingNode parent, String key) {
         SequenceNode existing = getSequenceNode(parent, key);
-        if (existing != null) return existing;
+        if (existing != null) return toBlockIfEmpty(existing);
         SequenceNode node = new SequenceNode(Tag.SEQ, new ArrayList<>(), FlowStyle.BLOCK);
-        parent.getValue().add(new NodeTuple(scalar(key), node));
+        putValue(parent, key, node);
         return node;
     }
 

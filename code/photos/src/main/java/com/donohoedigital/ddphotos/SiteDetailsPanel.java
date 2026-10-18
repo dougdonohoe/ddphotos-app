@@ -158,10 +158,7 @@ public class SiteDetailsPanel extends EditableDetailPanel {
     @Override
     protected void openPasswordDialog() {
         if (currentSite_ == null) return;
-        TypedHashMap params = new TypedHashMap();
-        params.setObject(PasswordDialog.PARAM_SITE, currentSite_);
-        params.setObject("dialog-windowtitle-prop", "msg.windowtitle.PasswordDialog.site");
-        context_.processPhaseNow("PasswordDialog", params);
+        PasswordDialog.open(context_, currentSite_, null);
         updatePasswordUi();
     }
 

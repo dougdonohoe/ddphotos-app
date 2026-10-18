@@ -221,7 +221,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
                 showCompletionFeedback(code, watcher);
                 // A user Stop on a long-running dev server (run/serve) counts as
                 // success for the tour: it's how the user advances those steps.
-                if (watcher != null) watcher.runFinished(code == 0 || wasUserStop(code));
+                if (watcher != null) watcher.runFinished(code == 0 || wasUserStop());
             });
         } catch (IOException e) {
             process_ = null;
@@ -239,7 +239,7 @@ public class CommandRunnerPanel extends AbstractRunnerPanel {
     }
 
     private void showCompletionFeedback(int code, RunWatcher watcher) {
-        if (wasUserStop(code)) return;
+        if (wasUserStop()) return;
         String displayName = runner_.getDisplayName();
         String noShowKey = runner_.getPrefsKey(true);
         // While the tour or a publish run is driving this panel, their own dialog is the

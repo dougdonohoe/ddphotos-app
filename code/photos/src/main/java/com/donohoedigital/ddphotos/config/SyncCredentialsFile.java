@@ -58,6 +58,7 @@ public class SyncCredentialsFile extends ConfigFile {
         existed_ = false;
         lines_.clear();
         secret_ = url_ = null;
+        setLoadError(null);
         restamp();
         if (!Files.exists(path_)) return this;
         try {
@@ -73,6 +74,8 @@ public class SyncCredentialsFile extends ConfigFile {
             logger.info("read {}", path_);
         } catch (IOException e) {
             logger.warn("Failed to load {}: {}", path_, FileErrors.reason(e));
+            // lines_ is empty, so a save would write the two keys and drop everything else.
+            setLoadError("read " + path_ + ": " + FileErrors.reason(e));
         }
         return this;
     }
@@ -82,6 +85,8 @@ public class SyncCredentialsFile extends ConfigFile {
      * a blank value writes an empty assignment rather than dropping the line.
      */
     public void save() throws IOException {
+        String refusal = saveRefusal();
+        if (refusal != null) throw new IOException(refusal);
         boolean sawKey = false, sawUrl = false;
         List<String> out = new ArrayList<>(lines_.size() + 2);
         for (String line : lines_) {
