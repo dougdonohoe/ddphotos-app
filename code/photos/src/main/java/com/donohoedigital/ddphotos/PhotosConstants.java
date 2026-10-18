@@ -96,6 +96,7 @@ public class PhotosConstants {
      * Release dates are recorded in help/whatsnew.html.
      */
     public static final Version VERSION = latest(
+            new Version(1, 0, 19),
             new Version(1, 0, 18),
             new Version(1, 0, 17)
     );
