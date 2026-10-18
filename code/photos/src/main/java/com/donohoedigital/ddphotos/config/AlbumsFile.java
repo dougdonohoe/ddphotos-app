@@ -984,15 +984,16 @@ public class AlbumsFile extends ConfigFile {
     }
 
     /**
-     * Inserts a blank line before each block-sequence item indicator that follows a
-     * non-key line.  The first item in a sequence follows "key:" so it gets no blank
-     * line; subsequent items follow a value line so they do.
+     * Inserts a blank line before each {@code albums} item indicator that follows a
+     * non-key line.  The first item follows "albums:" so it gets no blank line;
+     * subsequent items follow a value line so they do.
      *
      * Pattern: any character that is not ':' or newline, followed by newline, followed
-     * by an indented '-' indicator — replace with the same but with a blank line inserted.
+     * by "  - " at exactly the albums item indent.  Lines of a | or > value are indented
+     * at least four spaces, so a value line starting with "- " is never matched.
      */
     private static String insertBlankLinesBetweenSequenceItems(String yaml) {
-        return yaml.replaceAll("(?m)([^:\n])\n( *- )", "$1\n\n$2");
+        return yaml.replaceAll("([^:\n])\n( {2}- )", "$1\n\n$2");
     }
 
     // ── node helpers ────────────────────────────────────────────────────────

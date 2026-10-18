@@ -620,6 +620,42 @@ public class AlbumsFileTest {
     }
 
     @Test
+    public void roundTrip_keepsListLikeLinesInBlockScalars() throws Exception {
+        // The blank lines between album items must not also go inside | and > values.
+        String original = """
+                settings:
+                  site_overview_html: >
+                    - Nepal
+
+                    - Peru
+                albums:
+                  - slug: way
+                    name: The Way
+                    source: /tmp/p
+                    long_description_html: |
+                      <pre>
+                      - Day 1: Rome
+                      - Day 2: Florence
+                      </pre>
+
+                  - slug: nepal
+                    name: Nepal
+                    source: /tmp/n
+                """;
+        AlbumsFile af = AlbumsFile.load(writeYaml(original));
+        Path out = Files.createFile(tmp.resolve("out.yaml"));
+        af.save(out);
+
+        AlbumsFile reloaded = AlbumsFile.load(out);
+        assertEquals("- Nepal\n- Peru\n", reloaded.getSettings().getSiteOverviewHtml());
+        assertEquals("<pre>\n- Day 1: Rome\n- Day 2: Florence\n</pre>\n",
+                reloaded.getAlbums().getFirst().getLongDescriptionHtml());
+        assertEquals(2, reloaded.getAlbums().size());
+        assertTrue(Files.readString(out, StandardCharsets.UTF_8).contains("recurse: false\n\n  - slug: nepal"),
+                "albums should still be separated by a blank line");
+    }
+
+    @Test
     public void saveNewFile() throws Exception {
         AlbumsFile af = new AlbumsFile();
         af.getSettings().setId("mysite");
