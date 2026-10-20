@@ -16,7 +16,6 @@
     <module>installer</module>
     <module>engine</module>
     <module>photos</module>
-    <module>zydeco</module>
   </modules>
 
   <properties>

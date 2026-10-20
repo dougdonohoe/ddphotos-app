@@ -144,8 +144,7 @@ A few notes:
   `code/photos/target/classes` but picks up `common`, `gui` and `engine` as jars from your
   local Maven repository.  So after editing `photos` you need a `package` first, and after
   editing any of the other three you need to re-run the `install` above.
-* `installer` and `zydeco` are left out on purpose: `installer` is only used when building
-  the Install4j installer, and `zydeco` is an experimental scratch module.
+* `installer` is left out on purpose: it is only used when building the Install4j installer.
 * Under WSL2, the window opens on your Windows desktop via WSLg - nothing else to set up.
 
 ### Shell script shortcuts
@@ -209,7 +208,6 @@ means the later modules are dependent on one or more of the earlier modules.
 * `installer` - custom installer logic (e.g., cleanup); only used when building the Install4j installer
 * `engine` - core app engine and utilities
 * `photos` - DD Photos application
-* `zydeco` - experimental scratch module, not part of the app
 
 The four that matter for building and running DD Photos are `common`, `gui`, `engine` and
 `photos`, which is why they are the ones listed in the `-pl` commands above.
