@@ -64,6 +64,9 @@ public class PhotosBasePhase extends BasePhase {
     /** "do not show again" key for the incomplete-setup prompt; matches SetupIncompleteConfirm in appdef.xml. */
     private static final String NO_SHOW_SETUP_INCOMPLETE = "setup.incomplete.wizard";
 
+    /** "do not show again" key for the share-your-sites welcome; matches ShareWelcome in appdef.xml. */
+    private static final String NO_SHOW_SHARE_WELCOME = "share.welcome";
+
     public static final String HELP_STYLE = "PhotosHelp";
 
     private final SitesFile sitesFile_;
@@ -80,6 +83,9 @@ public class PhotosBasePhase extends BasePhase {
 
     // True while the wizard owns the window instead of the tabs - see buildWizardUI.
     private boolean wizardUp_;
+
+    // True while the share-your-sites welcome is up - see offerShareWelcome.
+    private boolean shareWelcomeUp_;
 
     // Set once the sites.yaml load error has been reported - see start().
     private boolean sitesLoadErrorShown_;
@@ -235,6 +241,25 @@ public class PhotosBasePhase extends BasePhase {
         return yes;
     }
 
+    /**
+     * Invites the user to share the sites they have made, on every launch until they tick "don't
+     * show again".  Only offered once the tour no longer is (finished, or opted out of), so a new
+     * user sees one welcome at a time.  Counted as busy while up, so the startup update check does
+     * not stack its own dialog on top (see {@link #isBusy}).
+     */
+    private void offerShareWelcome() {
+        if (DialogPhase.isDialogHidden(NO_SHOW_SHARE_WELCOME)) return;
+
+        TypedHashMap params = new TypedHashMap();
+        params.setString(DisplayMessage.PARAM_MESSAGE, PropertyConfig.getMessage("msg.share.welcome"));
+        shareWelcomeUp_ = true;
+        try {
+            context_.processPhaseNow("ShareWelcome", params);
+        } finally {
+            shareWelcomeUp_ = false;
+        }
+    }
+
     private void buildWizardUI(WizardPanel.Mode mode) {
         DDPanel wrapper = new DDPanel();
         wrapper.setLayout(new GridBagLayout());
@@ -341,14 +366,15 @@ public class PhotosBasePhase extends BasePhase {
         // Offer the new-user tour on every launch until it is completed or opted out of (the
         // Welcome dialog's no-show option suppresses it after that). Deferred so the frame is
         // realized first, like the showHelp call above.  Unfinished setup is offered first, and
-        // the tour only if the user stays in the editor.
+        // the tour only if the user stays in the editor.  Once the tour is no longer offered,
+        // the share-your-sites welcome takes its place.
         SwingUtilities.invokeLater(() -> {
             if (offerSetup && offerSetupWizard()) {
                 TypedHashMap params = new TypedHashMap();
                 params.setBoolean(PARAM_REPAIR_WIZARD, true);
                 context_.processPhaseNow("StartMenu", params);
-            } else {
-                tourController_.start();
+            } else if (!tourController_.start()) {
+                offerShareWelcome();
             }
         });
 
@@ -568,7 +594,7 @@ public class PhotosBasePhase extends BasePhase {
      * still fire, and a disabled item doesn't fire its accelerator (as the Edit menu notes).
      */
     private boolean isBusy() {
-        return wizardUp_
+        return wizardUp_ || shareWelcomeUp_
                 || (tourController_ != null && tourController_.isRunning())
                 || (publishController_ != null && publishController_.isRunning());
     }

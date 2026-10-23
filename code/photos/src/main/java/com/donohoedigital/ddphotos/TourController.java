@@ -126,11 +126,13 @@ public class TourController {
     /**
      * Offer the tour via the Welcome dialog. Called on every launch until the tour is completed or
      * opted out of: once the user checks "Don't ask me to do the tour again." (or finishes the
-     * tour - see {@link #runStep}), the framework's no-show option auto-triggers the default (Skip)
-     * button on subsequent launches and the tour simply ends. Ignored if a tour is already running.
+     * tour - see {@link #runStep}), the dialog is not shown and this returns false.  Also false if
+     * a tour is already running.
+     *
+     * @return true if the tour was offered
      */
-    public void start() {
-        if (running_) return;
+    public boolean start() {
+        if (running_ || DialogPhase.isDialogHidden(NO_SHOW_KEY)) return false;
         setRunning(true);
         showDialog("TourWelcome", "msg.tour.welcome", button -> {
             if (button != null && "tourstart".equals(button.getName())) {
@@ -139,6 +141,7 @@ public class TourController {
                 setRunning(false);   // declined or closed - never entered the walkthrough
             }
         });
+        return true;
     }
 
     /** Replay the tour from the first step, bypassing the Welcome opt-out gate. */
