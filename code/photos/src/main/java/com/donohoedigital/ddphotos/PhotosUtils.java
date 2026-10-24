@@ -12,18 +12,19 @@ import com.donohoedigital.ddphotos.config.PasswordsFile;
 import com.donohoedigital.ddphotos.config.PasswordsFileException;
 import com.donohoedigital.ddphotos.config.Site;
 import com.donohoedigital.ddphotos.config.SitesFile;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class PhotosUtils {
 
@@ -260,7 +261,7 @@ public class PhotosUtils {
     public static void deleteSyncFolder(AppContext context, Path dir) {
         if (dir == null || !Files.isDirectory(dir)) return;
         try {
-            FileUtils.deleteDirectory(dir.toFile());
+            deleteTree(dir);
             logger.info("deleted sync folder {}", dir);
         } catch (IOException e) {
             logger.error("Failed to delete sync folder {}", dir, e);
@@ -268,6 +269,20 @@ public class PhotosUtils {
                     PropertyConfig.getMessage("msg.syncfolder.deletefailed", escapeHtml(dir.toString()),
                                               escapeHtml(FileErrors.reason(e))),
                     "msg.windowtitle.syncFolder", null);
+        }
+    }
+
+    /**
+     * Deletes {@code dir} and everything under it, children before parents.  Symbolic links are
+     * deleted, not followed.
+     */
+    static void deleteTree(Path dir) throws IOException {
+        List<Path> paths;
+        try (Stream<Path> walk = Files.walk(dir)) {
+            paths = walk.sorted(Comparator.reverseOrder()).toList();
+        }
+        for (Path p : paths) {
+            Files.delete(p);
         }
     }
 
