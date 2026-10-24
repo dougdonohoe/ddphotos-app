@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Covers {@link PhotosUtils#renameSyncFolder} on the paths that succeed, so no error dialog (and
- * no app context) is needed, and {@link PhotosUtils#slugify}.
+ * no app context) is needed, {@link PhotosUtils#deleteTree} and {@link PhotosUtils#slugify}.
  */
 public class PhotosUtilsTest {
 
@@ -49,6 +49,22 @@ public class PhotosUtilsTest {
 
         assertEquals(List.of("trip"), names());
         assertTrue(Files.exists(tmp.resolve("trip").resolve("metadata.yaml")));
+    }
+
+    @Test
+    public void deleteTree_removesNestedFoldersButNotLinkTargets() throws Exception {
+        Path outside = Files.createDirectories(tmp.resolve("outside"));
+        Files.writeString(outside.resolve("keep.jpg"), "x");
+        Path album = tmp.resolve("album");
+        Files.createDirectories(album.resolve("a").resolve("b"));
+        Files.writeString(album.resolve("top.jpg"), "x");
+        Files.writeString(album.resolve("a").resolve("b").resolve("deep.jpg"), "x");
+        Files.createSymbolicLink(album.resolve("link"), outside);
+
+        PhotosUtils.deleteTree(album);
+
+        assertEquals(List.of("outside"), names());
+        assertTrue(Files.exists(outside.resolve("keep.jpg")), "a link is deleted, not followed");
     }
 
     @Test
