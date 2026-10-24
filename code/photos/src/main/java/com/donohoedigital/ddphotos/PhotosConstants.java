@@ -91,21 +91,9 @@ public class PhotosConstants {
     public static final int HORIZONTAL_GAP = 25;
 
     /**
-     * Version history, most recent first. The current version is always the first entry -
-     * to ship a new release, just add a line at the top (no commenting/uncommenting needed).
-     * Release dates are recorded in help/whatsnew.html.
+     * Current version. Release dates and version history are recorded in help/whatsnew.html.
      */
-    public static final Version VERSION = latest(
-            new Version(1, 0, 20),
-            new Version(1, 0, 19),
-            new Version(1, 0, 18),
-            new Version(1, 0, 17)
-    );
-
-    /** Returns the current (most recent) version, i.e. the first in the history. */
-    private static Version latest(Version... history) {
-        return history[0];
-    }
+    public static final Version VERSION = new Version(1, 0, 20);
 
     public static Preferences getAppPreferences() {
         return DDOption.getOptionPrefs(PREFS_NODE_APP);
