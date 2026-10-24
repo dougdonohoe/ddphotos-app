@@ -670,9 +670,7 @@ screenshots in the sister `ddphotos` repo (assumed to be checked out at
 
 ### Prep
 
-* Add the new version to the top of the `VERSION` history in
-  `code/photos/src/main/java/com/donohoedigital/ddphotos/PhotosConstants.java` (most
-  recent first - nothing needs commenting out).
+* Increment `VERSION` in `code/photos/src/main/java/com/donohoedigital/ddphotos/PhotosConstants.java`
 * Add a matching entry at the top of
   `code/photos/src/main/resources/config/ddphotos/help/whatsnew.html`.  The release notes
   are generated from this entry, so the version in its header must match the new version
