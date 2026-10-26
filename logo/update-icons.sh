@@ -24,6 +24,13 @@ cp_v "$ICON_SRC/icon_32x32.png"    "$WEB/favicon-32.png"
 cp_v "$ICON_SRC/icon_512x512.png"  "$WEB/favicon-512.png"
 cp_v "$ICON_SRC/icon_180x180.png"  "$WEB/apple-touch-icon.png"
 
+# --- ddphotos sample site logo ----------------------------------------------
+# Shown in the hero (site_title_html in sample/config/albums.yaml). 512px covers
+# its ~150px display size at 3x.
+SAMPLE_STATIC="$HOME/work/ddphotos/sample/config/static"
+echo "Updating sample site logo in $SAMPLE_STATIC ..."
+cp_v "$LOGO_SRC/logo_512x512.png" "$SAMPLE_STATIC/ddphotos-logo.png"
+
 # --- admin app resources ----------------------------------------------------
 # Refresh every icon_*/logo_*.png already present in the app's images dir from
 # the source of truth (matched by filename, by size).
