@@ -328,6 +328,7 @@
 	<color name="OptionsDialog.combobox.selection.bg" copy="black"/>
 	<color name="OptionsDialog.combobox.selection.fg" copy="white"/>
 	 <font name="OptionsDialog.combobox" fontname="SansSerif" pointsize="14"/>
+	<color name="OptionsDialog.scrollpane.bg" default="true"/>
 	<!-- OptionsDialog -->
 
 	<!-- PhotoChooser: the widgets inside the photo chooser dialog.  Its buttons are OptionsDialog
