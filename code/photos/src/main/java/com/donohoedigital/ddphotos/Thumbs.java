@@ -2,7 +2,6 @@ package com.donohoedigital.ddphotos;
 
 import com.donohoedigital.app.config.AppConfigUtils;
 import com.donohoedigital.base.Utils;
-import com.donohoedigital.config.ImageDef;
 import com.donohoedigital.gui.DDIconButtons;
 import com.donohoedigital.gui.RenderUtils;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
@@ -10,6 +9,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.Icon;
 import javax.swing.SwingWorker;
 import java.awt.Component;
@@ -19,6 +21,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -44,7 +47,7 @@ public final class Thumbs {
     }
 
     // Shared, capped pool for all asynchronous thumbnail decoding (see loadAsync).  A small, fixed
-    // size bounds the memory burst from concurrent full-resolution decodes and keeps thumbnail work
+    // size bounds the memory burst from concurrent decodes and keeps thumbnail work
     // off SwingWorker's app-wide pool.  Daemon threads so it never blocks JVM exit.
     private static final int LOADER_THREADS = 3;
     private static final AtomicInteger LOADER_SEQ = new AtomicInteger(1);
@@ -53,6 +56,10 @@ public final class Thumbs {
         t.setDaemon(true);
         return t;
     });
+
+    // decode() reads a photo at no less than this multiple of the thumbnail's size.  Subsampling
+    // simply drops pixels, so the extra detail lets the bilinear scale in scaled() smooth the result.
+    private static final int DECODE_OVERSAMPLE = 2;
 
     private Thumbs() {}
 
@@ -120,9 +127,8 @@ public final class Thumbs {
      * invalidate automatically.  Returns null if the image cannot be read.
      */
     public static BufferedImage load(Path path, int maxWidth, int maxHeight, String crop) {
-        // ImageIO has no reader for any video container, so a clip could only fail - and it would
-        // fail loudly, since ImageDef logs at error level.  Bail out here and let the caller draw
-        // the video-off placeholder (see placeholderIcon).
+        // ImageIO has no reader for any video container, so a clip could only fail.  Bail out here
+        // and let the caller draw the video-off placeholder (see placeholderIcon).
         if (PathValidation.isVideoFile(path.getFileName().toString())) return null;
 
         Path cacheFile = cachePathFor(path, maxWidth, maxHeight, crop);
@@ -135,17 +141,17 @@ public final class Thumbs {
             }
         }
 
-        BufferedImage full;
+        BufferedImage decoded;
         try {
-            full = ImageDef.getBufferedImage(path.toFile());
+            decoded = decode(path, maxWidth, maxHeight, crop);
         } catch (Exception e) {
             logger.warn("Failed to load image: {}", path);
             logger.warn(Utils.formatExceptionText(e));
             return null;
         }
-        if (full == null) return null;
+        if (decoded == null) return null;
 
-        BufferedImage thumb = scaled(full, maxWidth, maxHeight, crop);
+        BufferedImage thumb = scaled(decoded, maxWidth, maxHeight, crop);
 
         if (cacheFile != null) {
             try {
@@ -206,6 +212,43 @@ public final class Thumbs {
         }
         logger.info("Cleared thumbnail cache: recovered {} in {}", Utils.formatBytes(freed), dir);
         return freed;
+    }
+
+    /**
+     * Decodes {@code path} with ImageIO source subsampling: the reader keeps only every Nth pixel of
+     * every Nth row, so a large photo is never held in memory at full size.  For example, a 48 MP
+     * JPEG decoded for a 300-pixel-wide thumbnail takes under 1 MB rather than about 145 MB.
+     * Returns null when no ImageIO reader can decode the file (a HEIC, say).
+     */
+    static BufferedImage decode(Path path, int maxWidth, int maxHeight, String crop) throws IOException {
+        try (ImageInputStream in = ImageIO.createImageInputStream(path.toFile())) {
+            if (in == null) return null;
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
+            if (!readers.hasNext()) return null;
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(in, true, true);
+                int n = subsampling(reader.getWidth(0), reader.getHeight(0), maxWidth, maxHeight, crop);
+                ImageReadParam param = reader.getDefaultReadParam();
+                param.setSourceSubsampling(n, n, 0, 0);
+                return reader.read(0, param);
+            } finally {
+                reader.dispose();
+            }
+        }
+    }
+
+    /**
+     * The subsampling factor {@link #decode} uses for an {@code iw x ih} source.  It is the largest
+     * factor that still leaves the decoded image {@link #DECODE_OVERSAMPLE} times the thumbnail's
+     * size, and 1 (full size) when the thumbnail is close to or larger than the source.
+     */
+    static int subsampling(int iw, int ih, int maxWidth, int maxHeight, String crop) {
+        // Matches scaled(): a crop fills the width, otherwise the image fits both dimensions.
+        double scale = (crop != null && !crop.isEmpty())
+                ? (double) maxWidth / iw
+                : Math.min((double) maxWidth / iw, (double) maxHeight / ih);
+        return Math.max(1, (int) (1 / (scale * DECODE_OVERSAMPLE)));
     }
 
     private static BufferedImage scaled(BufferedImage src, int maxWidth, int maxHeight, String crop) {

@@ -65,8 +65,7 @@
           <arguments>
             <argument>-Dfile.encoding=UTF-8</argument>
             <argument>--enable-native-access=ALL-UNNAMED</argument>
-            <argument>-Xms32m</argument>
-            <argument>-Xmx256m</argument>
+            <argument>-Xmx2g</argument>
             <argument>-classpath</argument>
             <classpath/>
             <argument>com.donohoedigital.ddphotos.PhotosMain</argument>

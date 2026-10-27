@@ -23,7 +23,7 @@
       <executable name="ddphotos" iconSet="true" iconFile="../../logo/icons/ddphotos-logo/ddphotos-logo.ico" executableDir="." redirectStderr="false" stderrFile="log/err.txt" stdoutFile="log/out.txt" failOnStderrOutput="false" executableMode="gui" singleInstance="true" windowsSessionSingleInstance="false">
         <versionInfo include="true" fileVersion="1.0.0.0" fileDescription="http://ddphotos.donohoe.info/" legalCopyright="Copyright © 2026. Donohoe Digital LLC." internalName="DD Photos" />
       </executable>
-      <java mainClass="com.donohoedigital.ddphotos.PhotosMain" vmParameters="-Xms32m -Xmx256m --enable-native-access=ALL-UNNAMED" preferredVM="client">
+      <java mainClass="com.donohoedigital.ddphotos.PhotosMain" vmParameters="-Xmx2g --enable-native-access=ALL-UNNAMED" preferredVM="client">
         <classPath>
           <directory location="." failOnError="false" />
           <scanDirectory location="." failOnError="false" />
