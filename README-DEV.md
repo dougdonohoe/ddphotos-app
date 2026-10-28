@@ -626,6 +626,10 @@ tools/bin/create-screenshots-gif.sh
 That script lists the frames explicitly (in play order) at the top - edit `FRAMES` if a
 screen is added or removed.  It requires ImageMagick 7 (`brew install imagemagick`).
 
+It also copies `config.png` to the sister `ddphotos` repo (assumed to be checked out at
+`~/work/ddphotos`), as `images/ddphotos-app/config.png`.  Commit that change in `ddphotos`
+too.
+
 The full-size images are also linked one-by-one from `docs/SCREENSHOTS.md`, which needs a
 matching entry if a screen is added or removed.
 
@@ -652,10 +656,10 @@ Both this and `create-screenshots-gif.sh` call the `magick` command, so they nee
 **ImageMagick 7** - version 6 only provides `convert`.  These are Mac-side workflows, so
 there is nothing to set up on Linux or Windows.
 
-### Distributing icons and screenshots
+### Distributing icons
 
 `logo/` is the source of truth, so nothing else is edited directly.  After generating new
-icons or taking new screenshots, run:
+icons, run:
 
 ```shell
 logo/update-icons.sh
@@ -663,7 +667,7 @@ logo/update-icons.sh
 
 That copies the generated files to where they are actually used - the app's resources in
 this repo (`code/photos/src/main/resources/config/ddphotos/images`), and the favicons and
-screenshots in the sister `ddphotos` repo (assumed to be checked out at
+sample site logo in the sister `ddphotos` repo (assumed to be checked out at
 `~/work/ddphotos`).  Both repos then need their changes committed.
 
 ## Appendix D: Releasing a New Version

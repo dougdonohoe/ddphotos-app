@@ -131,3 +131,10 @@ echo "Wrote $OUTPUT"
 echo "  frames:   ${#FRAMES[@]} (+1 resting on ${STOP_ON:-<last>})"
 echo "  delay:    ${DELAY_MS}ms per frame, ${END_HOLD_MS}ms on final"
 echo "  loops:    $([ "$LOOP_COUNT" -eq 0 ] && echo forever || echo "$LOOP_COUNT")"
+
+# ── ddphotos website screenshots ────────────────────────────────────────────
+
+SHOTS_DEST="$HOME/work/ddphotos/images/ddphotos-app"
+echo "Updating website screenshots in $SHOTS_DEST ..."
+echo "  $SHOTS_DIR/config.png -> $SHOTS_DEST/config.png"
+cp "$SHOTS_DIR/config.png" "$SHOTS_DEST/config.png"
