@@ -1,12 +1,16 @@
 # DD Photos Desktop App
 
 [![Demo](https://img.shields.io/badge/Demo-ddphotos.donohoe.info-blue)](https://ddphotos.donohoe.info)
+[![YouTube](https://img.shields.io/badge/YouTube-Tutorial-red?logo=youtube)](https://www.youtube.com/watch?v=vCta2m40SDs)
 [![CI](https://github.com/dougdonohoe/ddphotos-app/actions/workflows/ci.yml/badge.svg)](https://github.com/dougdonohoe/ddphotos-app/actions)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ![logo_256x256.png](logo/icons/ddphotos-logo/logo_256x256.png)
 
 ## News
+
+**Video tutorial is here!** Watch [the DD Photos tutorial on YouTube↗](https://www.youtube.com/watch?v=vCta2m40SDs)
+to see the app installed, a site published, and a tour of a site's features.
 
 **PhotoPrism support is here!** Starting with version 1.0.18, DD Photos can sync albums straight
 from [PhotoPrism↗](https://www.photoprism.app), with no export needed. See [DD Photos and PhotoPrism](docs/PHOTOPRISM.md) 
@@ -28,6 +32,10 @@ The DD Photos App is a front end to the [ddphotos↗](https://github.com/dougdon
 open-source static photo album site generator. Rather than hand-editing complex configuration
 files, the app provides a friendly interface for managing your site and album data.
 You can also run all the major `ddphotos` commands to generate, test and deploy your site.
+
+Watch the video tutorial to see the app installed, a site published, and a tour of a site's features:
+
+[![DD Photos video tutorial](images/youtube-tutorial.png)](https://www.youtube.com/watch?v=vCta2m40SDs)
 
 ![screenshots.gif](images/screenshots.gif)
 
