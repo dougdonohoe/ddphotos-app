@@ -52,6 +52,7 @@ public class SiteBarPanel extends DDPanel
                 new TypedHashMap(), 675, true);
         siteCombo_ = siteOption_.getComboBox();
         siteCombo_.setRenderer(new SiteComboRenderer(siteCombo_));
+        siteCombo_.setMaximumRowCount(25);
 
         DDButton addBtn_ = DDIconButtons.iconButton("addsite",    STYLE, DDIconButtons.PLUS);
         editBtn_          = DDIconButtons.iconButton("editsite",   STYLE, DDIconButtons.EDIT);
